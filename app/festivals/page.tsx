@@ -1,45 +1,78 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, MapPin, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { festivals } from "@/data/festivals";
 import { slugify } from "@/lib/slug";
 
-export function generateStaticParams() {
-  return festivals.map((festival) => ({ slug: slugify(festival.name) }));
-}
-
-export default async function FestivalDetail({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const festival = festivals.find((item) => slugify(item.name) === slug);
-  if (!festival) notFound();
-
+export default function FestivalsPage() {
   return (
     <main>
-      <section className="detail-hero">
-        <div className="detail-layout">
-          <div className="detail-image">
-            <img src={festival.imageUrl} alt={festival.name} />
-          </div>
-          <div className="detail-copy">
-            <span className="tag">{festival.month}</span>
-            <h1>{festival.name}</h1>
-            <div className="location"><MapPin size={17} style={{ verticalAlign: "middle" }} /> {festival.place}</div>
-            <p>{festival.note}</p>
-            <div className="hero-actions">
-              <Link href="/planner" className="btn-primary" style={{ background: "#a52d15", color: "white" }}><Sparkles size={17} /> Plan a Visit</Link>
-              <Link href="/festivals" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}><ArrowLeft size={17} /> All Festivals</Link>
-            </div>
-          </div>
+      <section className="page-hero">
+        <div className="eyebrow">✦ Celebrate India&apos;s traditions</div>
+
+        <h1>Festival Explorer</h1>
+
+        <p>
+          Discover India&apos;s major festivals, their cultural significance,
+          celebration places and ideal pilgrimage seasons.
+        </p>
+      </section>
+
+      <section className="section section-light">
+        <div className="festival-grid">
+          {festivals.map((festival) => (
+            <article className="festival-card" key={festival.name}>
+              <div className="festival-image">
+                <img
+                  src={festival.imageUrl}
+                  alt={festival.name}
+                />
+
+                <span className="festival-month">
+                  {festival.month}
+                </span>
+              </div>
+
+              <div className="festival-content">
+                <h2>{festival.name}</h2>
+
+                <div className="festival-location">
+                  <MapPin size={16} />
+                  <span>{festival.place}</span>
+                </div>
+
+                <p>{festival.note}</p>
+
+                <Link
+                  href={`/festivals/${slugify(festival.name)}`}
+                  className="festival-link"
+                >
+                  Explore Festival
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
       <section className="section section-dark">
         <div className="section-heading">
-          <div className="eyebrow">✦ Plan around the festival</div>
-          <h2>Time your yatra around {festival.name}</h2>
-          <p>Use the AI planner to build a day-by-day itinerary that lines up with {festival.name} in {festival.place}.</p>
-          <div className="underline" />
-          <Link href="/planner" className="btn-primary" style={{ marginTop: 25 }}>Build My Itinerary <CalendarDays size={17} /></Link>
+          <div className="eyebrow">✦ Plan your pilgrimage</div>
+
+          <h2>Travel around the festivals that matter to you</h2>
+
+          <p>
+            Use the AI Yatra Planner to build a personalized pilgrimage
+            itinerary around festivals and temple visits.
+          </p>
+
+          <Link
+            href="/planner"
+            className="btn-primary"
+            style={{ marginTop: 25 }}
+          >
+            Plan My Yatra <Sparkles size={17} />
+          </Link>
         </div>
       </section>
     </main>

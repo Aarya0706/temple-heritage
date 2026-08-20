@@ -30,16 +30,18 @@ export function Navbar() {
       </Link>
 
       <nav className={`nav-links ${open ? "open" : ""}`}>
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`nav-link ${pathname === link.href ? "active" : ""}`}
-            onClick={() => setOpen(false)}
-          >
-            {link.label}
-          </Link>
-        ))}
+        <div className="nav-links-inner">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`nav-link ${pathname === link.href ? "active" : ""}`}
+              onClick={() => setOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
       </nav>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
