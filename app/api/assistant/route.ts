@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { groq, AI_MODEL, buildTempleContext } from "@/lib/ai";
+import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
+
+// Chat gets a bit more headroom than the planner since a real conversation
+// is several back-and-forth turns, not one request.
+const RATE_LIMIT = 20;
+const RATE_WINDOW_MS = 60_000; // 1 minute
 
 type ChatMessage = {
   role: "user" | "ai";
@@ -9,6 +15,22 @@ type ChatMessage = {
 };
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rate = checkRateLimit(`assistant:${ip}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "You're sending messages a little too fast — please wait a moment and try again." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil((rate.resetAt - Date.now()) / 1000).toString(),
+          "X-RateLimit-Limit": rate.limit.toString(),
+          "X-RateLimit-Remaining": rate.remaining.toString(),
+        },
+      }
+    );
+  }
+
   if (!process.env.GROQ_API_KEY) {
     return NextResponse.json(
       { error: "GROQ_API_KEY is not set on the server. Add it to .env.local and restart the dev server." },

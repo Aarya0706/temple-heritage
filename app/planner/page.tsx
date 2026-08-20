@@ -21,6 +21,9 @@ export default function PlannerPage() {
   const [error, setError] = useState<string | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryDay[] | null>(null);
   const [summary, setSummary] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   function toggleInterest(item: string) {
     setSelected((current) => (current.includes(item) ? current.filter((x) => x !== item) : [...current, item]));
@@ -30,6 +33,8 @@ export default function PlannerPage() {
     setLoading(true);
     setError(null);
     setItinerary(null);
+    setSaved(false);
+    setNeedsLogin(false);
     try {
       const res = await fetch("/api/planner", {
         method: "POST",
@@ -46,6 +51,32 @@ export default function PlannerPage() {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function saveItinerary() {
+    if (!itinerary) return;
+    setSaving(true);
+    setNeedsLogin(false);
+    try {
+      const res = await fetch("/api/yatra-plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${itinerary.length}-day ${region} Yatra from ${from}`,
+          itinerary: { days: itinerary, summary, region, from },
+        }),
+      });
+      if (res.status === 401) {
+        setNeedsLogin(true);
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to save");
+      setSaved(true);
+    } catch {
+      setError("Couldn't save itinerary. Try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -131,9 +162,49 @@ export default function PlannerPage() {
                     <small style={{ color: "#9d3b1b" }}>Interests: {selected.join(", ") || "General heritage"}</small>
                   </div>
                 ))}
-                <button className="btn-secondary" style={{ color: "#8d2416", borderColor: "#b85c42", width: "fit-content" }}>
-                  Save itinerary <ArrowRight size={16} />
-                </button>
+
+                {needsLogin ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      background: "#fdf1ea",
+                      border: "1px solid #e8c4ac",
+                      borderRadius: 10,
+                      padding: "12px 16px",
+                      width: "fit-content",
+                    }}
+                  >
+                    <span style={{ color: "#6b4a3d", fontSize: 14 }}>
+                      Log in to save this itinerary — it'll stay right here while you do.
+                    </span>
+                    <a
+                      href="/login"
+                      className="btn-secondary"
+                      style={{ color: "#8d2416", borderColor: "#b85c42", whiteSpace: "nowrap" }}
+                    >
+                      Log in <ArrowRight size={16} />
+                    </a>
+                  </div>
+                ) : (
+                  <button
+                    className="btn-secondary"
+                    style={{ color: "#8d2416", borderColor: "#b85c42", width: "fit-content", opacity: saving ? 0.7 : 1 }}
+                    onClick={saveItinerary}
+                    disabled={saving || saved}
+                  >
+                    {saving ? (
+                      <Loader2 size={16} className="spin" />
+                    ) : saved ? (
+                      "Saved ✓"
+                    ) : (
+                      <>
+                        Save itinerary <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>

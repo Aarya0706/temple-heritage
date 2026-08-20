@@ -9,8 +9,10 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/temples", label: "Browse Temples" },
   { href: "/festivals", label: "Festivals" },
+  { href: "/darshan", label: "Darshan" },
   { href: "/planner", label: "AI Planner" },
-  { href: "/recommender", label: "Recommender" }
+  { href: "/recommender", label: "Recommender" },
+  { href: "/my-yatras", label: "My Yatras" },
 ];
 
 export function Navbar() {

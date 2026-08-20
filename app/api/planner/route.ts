@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { groq, AI_MODEL, buildTempleContext } from "@/lib/ai";
+import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
+
+// AI calls are the most expensive thing this app does — keep this tight.
+const RATE_LIMIT = 8;
+const RATE_WINDOW_MS = 60_000; // 1 minute
 
 type PlannerRequest = {
   from: string;
@@ -24,6 +29,22 @@ function extractJson(text: string): unknown {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rate = checkRateLimit(`planner:${ip}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "You're planning yatras a little too fast — please wait a moment and try again." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil((rate.resetAt - Date.now()) / 1000).toString(),
+          "X-RateLimit-Limit": rate.limit.toString(),
+          "X-RateLimit-Remaining": rate.remaining.toString(),
+        },
+      }
+    );
+  }
+
   if (!process.env.GROQ_API_KEY) {
     return NextResponse.json(
       { error: "GROQ_API_KEY is not set on the server. Add it to .env.local and restart the dev server." },

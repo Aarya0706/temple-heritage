@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock3, MapPin, Sparkles } from "lucide-react";
 import { temples } from "@/data/temples";
+import SaveTempleButton from "@/components/SaveTempleButton";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({ slug: temple.slug }));
@@ -32,6 +33,7 @@ export default async function TempleDetail({ params }: { params: Promise<{ slug:
             <div className="hero-actions">
               <Link href="/planner" className="btn-primary" style={{ background: "#a52d15", color: "white" }}><Sparkles size={17} /> Plan a Visit</Link>
               <Link href="/temples" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}><ArrowLeft size={17} /> All Temples</Link>
+              <SaveTempleButton templeSlug={temple.slug} />
             </div>
           </div>
         </div>
