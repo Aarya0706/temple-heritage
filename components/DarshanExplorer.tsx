@@ -11,13 +11,23 @@ export function DarshanExplorer() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return temples.filter((t) => {
-      const matchesRegion = region === "All" || t.region === region;
+
+    return temples.filter((temple) => {
+      const matchesRegion =
+        region === "All" || temple.region === region;
+
       const matchesQuery =
         !q ||
-        [t.name, t.deity, t.city, t.state, t.region].some((value) =>
+        [
+          temple.name,
+          temple.deity,
+          temple.city,
+          temple.state,
+          temple.region,
+        ].some((value) =>
           value.toLowerCase().includes(q)
         );
+
       return matchesRegion && matchesQuery;
     });
   }, [query, region]);
@@ -27,17 +37,22 @@ export function DarshanExplorer() {
       <div className="toolbar">
         <div className="search-box">
           <Search size={18} />
+
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search temple, city, deity or state..."
           />
         </div>
+
         <div className="filters">
           {regions.map((item) => (
             <button
               key={item}
-              className={`filter-btn ${region === item ? "active" : ""}`}
+              type="button"
+              className={`filter-btn ${
+                region === item ? "active" : ""
+              }`}
               onClick={() => setRegion(item)}
             >
               {item}
@@ -46,47 +61,63 @@ export function DarshanExplorer() {
         </div>
       </div>
 
-      {filtered.length ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 30 }}>
+      {filtered.length > 0 ? (
+        <div className="darshan-results">
           {filtered.map((temple) => (
             <Link
-              href={`/temples/${temple.slug}`}
               key={temple.slug}
-              style={{ display: "block", color: "inherit", textDecoration: "none" }}
+              href={`/temples/${temple.slug}`}
+              className="darshan-card-link"
             >
-              <article
-                className="service-card"
-                style={{
-                  background: "#fff",
-                  color: "#4d1710",
-                  borderColor: "rgba(150,50,20,.14)",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  padding: "22px 26px"
-                }}
-              >
-                <div>
-                  <div className="eyebrow">{temple.deity}</div>
-                  <h3 style={{ margin: "4px 0" }}>{temple.name}</h3>
-                  <p style={{ margin: 0, opacity: 0.8 }}>
-                    <MapPin size={15} style={{ verticalAlign: "middle" }} /> {temple.city}, {temple.state}
-                  </p>
+              <article className="darshan-card">
+                <div className="darshan-card-image">
+                  <img
+                    src={temple.image}
+                    alt={temple.name}
+                  />
+
+                  <span className="darshan-region">
+                    {temple.region}
+                  </span>
                 </div>
-                <div style={{ textAlign: "right", minWidth: 220 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end", color: "#a42b14", fontWeight: 600 }}>
-                    <Clock3 size={16} /> Darshan timings
+
+                <div className="darshan-card-content">
+                  <div className="darshan-main-info">
+                    <div className="eyebrow">
+                      {temple.deity}
+                    </div>
+
+                    <h3>{temple.name}</h3>
+
+                    <p className="darshan-location">
+                      <MapPin size={15} />
+                      <span>
+                        {temple.city}, {temple.state}
+                      </span>
+                    </p>
                   </div>
-                  <p style={{ margin: "4px 0 0" }}>{temple.timing}</p>
+
+                  <div className="darshan-timing">
+                    <div className="darshan-timing-title">
+                      <Clock3 size={16} />
+                      <span>Darshan timings</span>
+                    </div>
+
+                    <p>{temple.timing}</p>
+
+                    <span className="darshan-view">
+                      View Temple →
+                    </span>
+                  </div>
                 </div>
               </article>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="empty">No temples found. Try another search.</div>
+        <div className="empty">
+          No temples found. Try another search.
+        </div>
       )}
     </>
   );

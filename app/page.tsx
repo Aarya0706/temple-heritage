@@ -117,11 +117,7 @@ export default function Home() {
           </div>
 
           <div className="floating-symbol">🪷</div>
-
-          <div className="image-badge">
-            <small>AI POWERED</small>
-            <strong>🤖 Smart Yatra Planner</strong>
-          </div>
+          
         </div>
       </section>
 

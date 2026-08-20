@@ -1,3 +1,4 @@
+// components/DownloadItineraryButton.tsx
 "use client";
 
 import { Download } from "lucide-react";
@@ -6,7 +7,7 @@ import {
   POPPINS_BOLD_BASE64,
 } from "@/lib/pdf-fonts";
 import {
-  LOGO_BASE64,
+  getLogoDataUrl,
   LOGO_FORMAT,
   LOGO_WIDTH_PX,
   LOGO_HEIGHT_PX,
@@ -37,12 +38,15 @@ export default function DownloadItineraryButton({
 }: Props) {
   async function handleDownload() {
     const { jsPDF } = await import("jspdf");
+
     const doc = new jsPDF({
       unit: "pt",
       format: "a4",
     });
 
-    // Fonts
+    // ----------------------------------------------------------
+    // FONTS
+    // ----------------------------------------------------------
     doc.addFileToVFS(
       "Poppins-Regular.ttf",
       POPPINS_REGULAR_BASE64
@@ -67,33 +71,44 @@ export default function DownloadItineraryButton({
     const pageHeight = doc.internal.pageSize.getHeight();
 
     const margin = 56;
+
+    // Keep content above the footer on every page.
+    const footerHeight = 42;
+    const contentBottom = pageHeight - footerHeight - 12;
+
     const maxWidth = pageWidth - margin * 2;
 
     let y = 64;
 
-    // --------------------------------------------------
-    // TEMPLE HERITAGE LOGO HEADER
-    // --------------------------------------------------
+    // ----------------------------------------------------------
+    // LOGO
+    // ----------------------------------------------------------
+    let logoDataUrl = "";
 
-    if (LOGO_BASE64) {
-      const logoHeight = 90;
+    try {
+      logoDataUrl = await getLogoDataUrl();
+    } catch {
+      // Continue without the logo if it cannot be loaded.
+    }
+
+    if (logoDataUrl) {
+      const logoHeight = 70;
       const logoWidth =
-        (LOGO_WIDTH_PX / LOGO_HEIGHT_PX) *
-        logoHeight;
+        (LOGO_WIDTH_PX / LOGO_HEIGHT_PX) * logoHeight;
 
       doc.addImage(
-        LOGO_BASE64,
+        logoDataUrl,
         LOGO_FORMAT,
         margin,
-        y - 42,
+        y - 34,
         logoWidth,
         logoHeight
       );
 
-      y += 42;
+      y += 44;
     }
 
-    // Clean divider
+    // Header divider
     doc.setDrawColor(232, 194, 161);
     doc.setLineWidth(1);
 
@@ -104,12 +119,11 @@ export default function DownloadItineraryButton({
       y
     );
 
-    y += 30;
+    y += 28;
 
-    // --------------------------------------------------
-    // WRAPPED TEXT HELPER
-    // --------------------------------------------------
-
+    // ----------------------------------------------------------
+    // WRAPPED TEXT
+    // ----------------------------------------------------------
     function writeWrapped(
       text: string,
       lineHeight: number,
@@ -119,7 +133,9 @@ export default function DownloadItineraryButton({
         doc.splitTextToSize(text, maxWidth);
 
       for (const line of lines) {
-        if (y > pageHeight - 64) {
+        // IMPORTANT:
+        // If text reaches the footer area, make a new page.
+        if (y > contentBottom) {
           doc.addPage();
           y = 64;
         }
@@ -131,20 +147,18 @@ export default function DownloadItineraryButton({
       y += gapAfter;
     }
 
-    // --------------------------------------------------
+    // ----------------------------------------------------------
     // TITLE
-    // --------------------------------------------------
-
+    // ----------------------------------------------------------
     doc.setFont("Poppins", "bold");
     doc.setFontSize(22);
     doc.setTextColor(53, 17, 14);
 
     writeWrapped(title, 27, 7);
 
-    // --------------------------------------------------
+    // ----------------------------------------------------------
     // META
-    // --------------------------------------------------
-
+    // ----------------------------------------------------------
     doc.setFont("Poppins", "normal");
     doc.setFontSize(11);
     doc.setTextColor(165, 116, 79);
@@ -186,10 +200,9 @@ export default function DownloadItineraryButton({
 
     y += 24;
 
-    // --------------------------------------------------
+    // ----------------------------------------------------------
     // SUMMARY
-    // --------------------------------------------------
-
+    // ----------------------------------------------------------
     if (summary) {
       doc.setFont("Poppins", "normal");
       doc.setFontSize(11.5);
@@ -198,12 +211,12 @@ export default function DownloadItineraryButton({
       writeWrapped(summary, 16, 22);
     }
 
-    // --------------------------------------------------
-    // DAY-BY-DAY ITINERARY
-    // --------------------------------------------------
-
+    // ----------------------------------------------------------
+    // DAYS
+    // ----------------------------------------------------------
     days.forEach((d) => {
-      if (y > pageHeight - 100) {
+      // Leave enough room for the heading itself.
+      if (y > contentBottom - 45) {
         doc.addPage();
         y = 64;
       }
@@ -229,16 +242,58 @@ export default function DownloadItineraryButton({
       );
     });
 
-    // --------------------------------------------------
-    // SAVE PDF
-    // --------------------------------------------------
+    // ----------------------------------------------------------
+    // FOOTER ON EVERY PAGE
+    // ----------------------------------------------------------
+    const totalPages = doc.getNumberOfPages();
 
+    for (let page = 1; page <= totalPages; page++) {
+      doc.setPage(page);
+
+      // Footer position is calculated from the current page.
+      const footerY = pageHeight - 20;
+
+      // Footer divider
+      doc.setDrawColor(232, 194, 161);
+      doc.setLineWidth(0.7);
+
+      doc.line(
+        margin,
+        pageHeight - 36,
+        pageWidth - margin,
+        pageHeight - 36
+      );
+
+      // Footer name
+      doc.setFont("Poppins", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(145, 104, 82);
+
+      doc.text(
+        "Temple Heritage • Created by Aarya Shirsath",
+        margin,
+        footerY
+      );
+
+      // Page number
+      doc.text(
+        `Page ${page} of ${totalPages}`,
+        pageWidth - margin,
+        footerY,
+        {
+          align: "right",
+        }
+      );
+    }
+
+    // ----------------------------------------------------------
+    // SAVE
+    // ----------------------------------------------------------
     const filename =
       title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") +
-      ".pdf";
+        .replace(/(^-|-$)/g, "") + ".pdf";
 
     doc.save(filename);
   }
