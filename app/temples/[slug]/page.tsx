@@ -123,7 +123,7 @@ export default async function TempleDetail({
                 className={`highlight-image highlight-image-${index + 1}`}
               >
                 <img
-                  src={temple.image}
+                  src={temple.highlightImages[index]}
                   alt={`${highlight} at ${temple.name}`}
                 />
 
