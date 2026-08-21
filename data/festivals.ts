@@ -34,6 +34,17 @@ export const festivals: Festival[] = [
     imageUrl: "/festivals/maha-shivaratri.jpg"
   },
   {
+    slug: "holi",
+    month: "MAR",
+    name: "Holi",
+    place: "Mathura, Vrindavan & across India",
+    note: "The festival of colours, marking the arrival of spring.",
+    description: "Holi celebrates the arrival of spring and the triumph of good over evil, with the Holika Dahan bonfire on the eve of the main day. Streets and temple courtyards erupt in clouds of coloured powder and water the next morning, accompanied by folk songs, drums and sweets. Mathura and Vrindavan, associated with Krishna's playful youth, host the most famous celebrations, including the week-long Lathmar Holi at Barsana.",
+    duration: "2 days (week-long in Braj region)",
+    relatedTempleSlugs: ["dwarkadhish"],
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Barsana%20Holi%20Festival.jpg?width=800"
+  },
+  {
     slug: "rama-navami",
     month: "APR",
     name: "Rama Navami",
@@ -43,6 +54,28 @@ export const festivals: Festival[] = [
     duration: "1 day",
     relatedTempleSlugs: ["badrinath"],
     imageUrl: "/festivals/rama-navami.jpg"
+  },
+  {
+    slug: "ratha-yatra",
+    month: "JUL",
+    name: "Ratha Yatra",
+    place: "Puri, Odisha",
+    note: "The grand chariot procession of Lord Jagannath.",
+    description: "Ratha Yatra is the annual chariot festival in which the deities Jagannath, Balabhadra and Subhadra are drawn through the streets of Puri on massive, elaborately decorated wooden chariots. Thousands of devotees pull the ropes themselves, believing that helping to move the chariots brings great merit. It is one of the oldest and largest processional festivals in the world.",
+    duration: "9 days",
+    relatedTempleSlugs: ["jagannath-puri"],
+    imageUrl: "/festivals/ratha-yatra.png"
+  },
+  {
+    slug: "guru-purnima",
+    month: "JUL",
+    name: "Guru Purnima",
+    place: "Across India",
+    note: "A day of gratitude and reverence for spiritual teachers.",
+    description: "Guru Purnima honours spiritual and academic teachers, and traditionally marks the birth anniversary of the sage Veda Vyasa, compiler of the Vedas. Devotees visit temples and ashrams to offer prayers and seek blessings from their gurus, and many spiritual centres hold discourses and special satsangs through the day.",
+    duration: "1 day",
+    relatedTempleSlugs: [],
+    imageUrl: "/festivals/guru-purnima.png"
   },
   {
     slug: "janmashtami",
@@ -89,6 +122,17 @@ export const festivals: Festival[] = [
     imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Navratri%20Garba.jpg?width=800"
   },
   {
+    slug: "durga-puja",
+    month: "OCT",
+    name: "Durga Puja",
+    place: "Kolkata & West Bengal",
+    note: "Bengal's grandest festival, honouring Goddess Durga's victory over evil.",
+    description: "Durga Puja is West Bengal's largest festival, commemorating the goddess Durga's victory over the buffalo demon Mahishasura. Elaborately themed pandals rise across Kolkata's neighbourhoods, housing intricately sculpted clay idols of Durga with her children. The five main days close with Sindoor Khela and a riverside procession for the idols' immersion.",
+    duration: "5 days",
+    relatedTempleSlugs: [],
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Durga%20%28frontal%29%20Barisha%20Sarbojanin%202010%20Arnab%20Dutta.JPG?width=800"
+  },
+  {
     slug: "diwali",
     month: "OCT",
     name: "Diwali",
@@ -98,5 +142,16 @@ export const festivals: Festival[] = [
     duration: "5 days",
     relatedTempleSlugs: ["tirupati", "akshardham-delhi"],
     imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Diwali%20Diyas%20Lamps.jpg?width=800"
+  },
+  {
+    slug: "chhath-puja",
+    month: "NOV",
+    name: "Chhath Puja",
+    place: "Bihar, Jharkhand & Eastern UP",
+    note: "Ancient worship of the sun god at the banks of rivers and ponds.",
+    description: "Chhath Puja is a rigorous four-day festival dedicated to the sun god Surya and Chhathi Maiya, observed mainly across Bihar, Jharkhand and eastern Uttar Pradesh. Devotees undertake a strict fast and stand in rivers or ponds at sunset and sunrise to offer arghya, surrounded by baskets of fruit, sugarcane and thekua sweets on decorated ghats.",
+    duration: "4 days",
+    relatedTempleSlugs: [],
+    imageUrl: "/festivals/chhath-puja.png"
   }
 ];

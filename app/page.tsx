@@ -69,6 +69,15 @@ export default function Home() {
   return (
     <main>
       <section className="hero">
+        <video
+          className="hero-bell"
+          src="/videos/temple-bell.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+
         <div className="hero-copy">
           <div className="kicker">✦ India&apos;s sacred heritage portal</div>
 

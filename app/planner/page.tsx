@@ -139,11 +139,25 @@ export default function PlannerPage() {
           <div className="panel">
             <h3>{itinerary ? `Your ${itinerary.length}-day ${region} Yatra` : "Your itinerary will appear here"}</h3>
             {!itinerary && !loading ? (
-              <div className="empty">
-                <div style={{ fontSize: 45, marginBottom: 15 }}>🪷</div>
-                <p>
-                  Starting from <strong>{from}</strong>, choose your preferences and generate a journey.
-                </p>
+              <div className="empty-itinerary">
+                <img
+                  src="/images/temple-pond.png"
+                  alt="Temple journey"
+                  className="itinerary-image"
+                />
+
+                <div className="empty-content">
+                  <div className="flower">🌺</div>
+
+                  <p>
+                    Starting from <strong>{from}</strong>, choose your preferences and
+                    generate a journey.
+                  </p>
+
+                  <span>
+                    Your personalized spiritual journey is waiting to be discovered.
+                  </span>
+                </div>
               </div>
             ) : loading ? (
               <div className="empty">
