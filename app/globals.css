@@ -97,7 +97,7 @@ button { cursor: pointer; }
   top: -6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 190px;
+  width: 130px;
   height: auto;
   z-index: 6;
   pointer-events: none;
@@ -1155,4 +1155,91 @@ img { max-width: 100%; }
 .highlight-image-4 img {
   object-position: center top;
   transform: scale(1.12);
+}
+/* Clickable highlight cards */
+.highlight-card {
+  cursor: pointer;
+}
+
+.highlight-card:focus-visible {
+  outline: 3px solid rgba(165, 45, 21, 0.3);
+  outline-offset: 4px;
+}
+
+.highlight-link-button {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Highlight details modal */
+.highlight-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(43, 20, 14, 0.58);
+}
+
+.highlight-modal {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fffaf3;
+  color: #4d1710;
+  border-radius: 28px;
+  box-shadow: 0 24px 70px rgba(43, 20, 14, 0.28);
+}
+
+.highlight-modal-image {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  display: block;
+  border-radius: 28px 28px 0 0;
+}
+
+.highlight-modal-body {
+  padding: 28px 30px 32px;
+}
+
+.highlight-modal-body h3 {
+  margin: 6px 0 12px;
+  font-size: 30px;
+}
+
+.highlight-modal-summary {
+  margin: 0 0 22px;
+  color: #6b6258;
+  line-height: 1.7;
+}
+
+.highlight-detail-section {
+  margin: 0 0 24px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: #fff4e7;
+  border: 1px solid rgba(165, 45, 21, 0.12);
+}
+
+.highlight-detail-section h4 {
+  margin: 0 0 8px;
+  color: #a52d15;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.highlight-detail-section p {
+  margin: 0;
+  color: #5f5148;
+  line-height: 1.75;
 }
