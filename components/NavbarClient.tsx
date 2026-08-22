@@ -81,15 +81,7 @@ export function NavbarClient({
             <span>Explore</span>
           </Link>
 
-          {displayName ? (
-            <Link
-              href="/profile"
-              className="user-chip"
-              title={displayName}
-            >
-              {displayName}
-            </Link>
-          ) : (
+          {!displayName && (
             <>
               <Link
                 href="/login"
@@ -120,15 +112,24 @@ export function NavbarClient({
       {/* EMAIL STRIP */}
       {email && (
         <div className="account-banner">
-          <span className="account-banner-name">
+          <Link
+            href="/profile"
+            className="account-banner-name"
+          >
             {displayName}
-          </span>
+          </Link>
 
           <span className="account-dot">•</span>
 
           <span className="account-banner-email">
             {email}
           </span>
+
+          <form action="/logout" method="POST" className="logout-form">
+            <button type="submit" className="logout-btn">
+              Logout
+            </button>
+          </form>
         </div>
       )}
 
