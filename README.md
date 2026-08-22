@@ -134,18 +134,18 @@ User Preferences
 
 ---
 
-## 👩‍💻 Authors
+## 👩‍💻 Author
 
 <table>
   <tr>
     <td align="center">
       <a href="https://github.com/Aarya0706">
-        <img src="https://github.com/Aarya0706.png" width="100px;" alt="Aarya Shirsath"/>
+        <img src="https://github.com/Aarya0706.png?size=100" width="100px;" alt="Aarya Shirsath"/>
         <br />
-        <sub><b>Aarya Shirsath</b></sub>
+        <b>Aarya Shirsath</b>
       </a>
       <br />
-      <sub>Developer & Creator</sub>
+      <sub>Developer & Creator ✨</sub>
     </td>
   </tr>
 </table>
@@ -154,18 +154,12 @@ User Preferences
 
 ## 🌸 A Little Note
 
-Temple Heritage was built with the idea of bringing together **technology, culture, spirituality, and India's timeless heritage**.
+Temple Heritage was built with the idea of bringing together **technology, culture, spirituality, and heritage**.
 
-What started as a project slowly became something more meaningful — a small digital space where people can discover sacred places, learn their stories, and create journeys of their own. 🛕
+What started as a project slowly became something more meaningful — a small digital space where people can explore India's sacred heritage and create journeys of their own.
 
 Every temple has a story.  
 Every journey creates a memory.  
 And sometimes, technology can help us discover both. ✨
 
-We hope Temple Heritage inspires you to explore, travel, learn, and connect with the incredible spiritual and cultural heritage of India.
-
-**Thank you for being a part of this journey. ❤️**
-
-### 🛕 Discover. Explore. Experience.
-
-Made with ❤️
+Made with ❤️, curiosity, and a little bit of magic.
