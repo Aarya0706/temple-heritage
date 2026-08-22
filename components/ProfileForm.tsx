@@ -31,8 +31,7 @@ export function ProfileForm({ initialFullName, initialHomeCity }: Props) {
     }
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: fullName, home_city: homeCity })
-      .eq('id', user.id)
+      .upsert({ id: user.id, full_name: fullName, home_city: homeCity })
     setLoading(false)
     if (error) {
       setError(error.message)
