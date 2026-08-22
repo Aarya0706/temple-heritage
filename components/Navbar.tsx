@@ -1,58 +1,35 @@
- "use client";
+import { createClient } from "@/lib/supabase/server";
+import { NavbarClient } from "./NavbarClient";
 
-import Link from "next/link";
-import { Menu, Sparkles, X } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+export async function Navbar() {
+  const supabase = await createClient();
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/temples", label: "Browse Temples" },
-  { href: "/festivals", label: "Festivals" },
-  { href: "/darshan", label: "Darshan" },
-  { href: "/planner", label: "AI Planner" },
-  { href: "/recommender", label: "Recommender" },
-  { href: "/my-yatras", label: "My Yatras" },
-];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export function Navbar() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  let displayName: string | null = null;
+  let email: string | null = null;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+
+    displayName =
+      profile?.full_name ||
+      user.email?.split("@")[0] ||
+      "Account";
+
+    email = user.email || null;
+  }
 
   return (
-    <header className="navbar">
-      <Link href="/" className="brand" onClick={() => setOpen(false)}>
-        <div className="brand-mark">🛕</div>
-        <div>
-          <div className="brand-title">Temple Heritage</div>
-          <div className="brand-subtitle">INDIA'S SACRED PORTALS</div>
-        </div>
-      </Link>
-
-      <nav className={`nav-links ${open ? "open" : ""}`}>
-        <div className="nav-links-inner">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`nav-link ${pathname === link.href ? "active" : ""}`}
-              onClick={() => setOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <Link href="/temples" className="explore-btn">
-          <Sparkles size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
-          Explore
-        </Link>
-        <button className="menu-btn" aria-label="Toggle navigation" onClick={() => setOpen(!open)}>
-          {open ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </div>
-    </header>
+    <NavbarClient
+      displayName={displayName}
+      email={email}
+    />
   );
 }
