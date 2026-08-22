@@ -132,25 +132,10 @@ User Preferences
            ▼
  Downloadable Itinerary
 
----
-
 ## 👩‍💻 Author
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/Aarya0706">
-        <img src="https://github.com/Aarya0706.png?size=100" width="100px;" alt="Aarya Shirsath"/>
-        <br />
-        <b>Aarya Shirsath</b>
-      </a>
-      <br />
-      <sub>Developer & Creator ✨</sub>
-    </td>
-  </tr>
-</table>
-
----
+**Aarya Shirsath**  
+Developer & Creator ✨
 
 ## 🌸 A Little Note
 
