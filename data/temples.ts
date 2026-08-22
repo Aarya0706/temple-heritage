@@ -132,6 +132,15 @@ export const temples: Temple[] = [
     state: "Uttar Pradesh",
     region: "North India",
     image: "/images/kashi-vishwanath.png",
+    accessNotes:
+      "Varanasi (Lal Bahadur Shastri Airport, VNS) has NO direct flight to " +
+      "Indore, Ujjain's nearest airport - there is no non-stop Varanasi-Indore " +
+      "route. Any itinerary leaving Varanasi for Ujjain/Indore must route " +
+      "through a connecting hub (commonly Delhi, Mumbai, Bengaluru or " +
+      "Hyderabad) and realistically takes 6-10 hours door-to-door including " +
+      "the layover - NOT a quick same-evening hop. Do not describe this leg " +
+      "as a short direct flight, and do not schedule sightseeing at the " +
+      "destination the same evening the flight departs.",
     highlightDetails: [
       "The Vishwanath shrine is dedicated to Lord Shiva and is one of Varanasi's most important pilgrimage sites. Its location in the old city places it within a dense network of lanes, shrines and sacred spaces.",
       "Ganga Aarti is an evening river ritual featuring lamps, chants and coordinated ceremony. It is one of the most atmospheric ways to experience Varanasi's living relationship with the Ganga.",
@@ -271,6 +280,14 @@ export const temples: Temple[] = [
     state: "Madhya Pradesh",
     region: "Central India",
     image: "/images/mahakaleshwar.png",
+    accessNotes:
+      "Ujjain has no airport of its own; the nearest is Devi Ahilyabai Holkar " +
+      "Airport in Indore (IDR), about 1 hour by road. Indore has NO direct " +
+      "flight from Varanasi - travelers coming from Varanasi must connect " +
+      "through a hub such as Delhi, Mumbai, Bengaluru or Hyderabad, which " +
+      "takes 6-10 hours door-to-door including the layover, not a short " +
+      "same-day hop. Do not schedule relaxed same-evening activity in Ujjain " +
+      "on a day that also includes a Varanasi departure.",
     highlightDetails: [
       "Bhasma Aarti is the best-known early-morning ritual associated with Mahakaleshwar. Because it is a special worship experience, visitors should check the current booking and entry rules before planning around it.",
       "Mahakal Lok is a large public-facing heritage and pilgrimage area designed around the Mahakaleshwar precinct. Its sculpture, pathways and open spaces give visitors more context around the main shrine.",

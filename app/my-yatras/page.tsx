@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { temples } from '@/data/temples'
 import Link from 'next/link'
 import { MapPin, Calendar, Compass, ChevronRight } from 'lucide-react'
+import UnsaveTempleButton from '@/components/UnsaveTempleButton'
+import DeleteYatraButton from '@/components/DeleteYatraButton'
 
 export default async function MyYatrasPage() {
   const supabase = await createClient()
@@ -66,6 +68,7 @@ export default async function MyYatrasPage() {
                     key={t.slug}
                     href={`/temples/${t.slug}`}
                     style={{
+                      position: "relative",
                       display: "block",
                       borderRadius: 14,
                       overflow: "hidden",
@@ -76,6 +79,7 @@ export default async function MyYatrasPage() {
                       boxShadow: "0 1px 4px rgba(139, 69, 19, 0.08)"
                     }}
                   >
+                    <UnsaveTempleButton templeSlug={t.slug} />
                     <div style={{ height: 130, overflow: "hidden" }}>
                       <img
                         src={t.image}
@@ -157,10 +161,13 @@ export default async function MyYatrasPage() {
                           color: "#a52d15",
                           display: "flex",
                           alignItems: "center",
-                          gap: 4
+                          gap: 12
                         }}
                       >
-                        View itinerary <ChevronRight size={16} />
+                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          View itinerary <ChevronRight size={16} />
+                        </span>
+                        <DeleteYatraButton yatraId={y.id} title={y.title} />
                       </span>
                     </Link>
                   );
