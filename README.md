@@ -75,19 +75,13 @@ Generated Yatras can be downloaded as a formatted itinerary report.
 
 ### 🏠 Home Page
 
-> Add your homepage screenshot here.
-
 ![Home Page](./public/screenshots/home.png)
 
 ### 🧭 AI Yatra Planner
 
-> Add your planner screenshot here.
-
 ![AI Yatra Planner](./public/screenshots/planner.png)
 
 ### 🛕 Generated Itinerary
-
-> Add your generated itinerary screenshot here.
 
 ![Generated Itinerary](./public/screenshots/itinerary.png)
 
