@@ -29,7 +29,11 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
   const days: ItineraryDay[] = yatra.itinerary?.days || [];
   const summary: string = yatra.itinerary?.summary || "";
   const from: string = yatra.itinerary?.from || "";
-  const region: string = yatra.itinerary?.region || "";
+  // displayRegion reflects the regions the temples in this itinerary actually
+  // belong to; region is only the original filter the user requested and can
+  // be stale (the planner is allowed to pull in an adjacent-region temple).
+  // Older saved plans won't have displayRegion yet, so fall back to region.
+  const region: string = yatra.itinerary?.displayRegion || yatra.itinerary?.region || "";
 
   return (
     <main>

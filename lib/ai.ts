@@ -18,7 +18,8 @@ export function buildTempleContext() {
   const templeLines = temples
     .map(
       (t) =>
-        `- ${t.name} (slug: ${t.slug}) | Deity: ${t.deity} | ${t.city}, ${t.state} (${t.region}) | Type: ${t.type} | Timing: ${t.timing} | Best time: ${t.bestTime} | Highlights: ${t.highlights.join(", ")} | ${t.shortDescription}`
+        `- ${t.name} (slug: ${t.slug}) | Deity: ${t.deity} | ${t.city}, ${t.state} (${t.region}) | Type: ${t.type} | Timing: ${t.timing} | Best time: ${t.bestTime} | Highlights: ${t.highlights.join(", ")} | ${t.shortDescription}` +
+        (t.accessNotes ? `\n  ACCESS NOTES (hard logistics facts - respect these exactly): ${t.accessNotes}` : "")
     )
     .join("\n");
 

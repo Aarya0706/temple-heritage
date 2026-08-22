@@ -2,8 +2,37 @@
 
 import { useState } from "react";
 import { ArrowRight, Sparkles, Loader2 } from "lucide-react";
+import { temples } from "@/data/temples";
 
 const interests = ["Temples", "Architecture", "Food", "Nature", "History", "Festivals"];
+
+// The AI planner is allowed to pull in a temple from an adjacent region when
+// it meaningfully improves the trip (see the system prompt in
+// app/api/planner/route.ts). That means the user's *requested* region filter
+// can no longer be trusted as a label for what the itinerary actually
+// contains — e.g. asking for "North India" can still come back with
+// Mahakaleshwar in Ujjain, which is Central India. Instead of echoing the
+// requested filter, look up every temple actually included via its
+// templeSlugs and build the label from the real regions represented.
+function actualRegionsLabel(itinerary: ItineraryDay[], requestedRegion: string): string {
+  const slugToRegion = new Map(temples.map((t) => [t.slug, t.region]));
+  const regionsUsed = new Set<string>();
+
+  for (const day of itinerary) {
+    for (const slug of day.templeSlugs || []) {
+      const r = slugToRegion.get(slug);
+      if (r) regionsUsed.add(r);
+    }
+  }
+
+  if (regionsUsed.size === 0) {
+    // No temple slugs came back (unlikely, but be defensive) — fall back to
+    // the requested filter rather than showing an empty label.
+    return requestedRegion;
+  }
+
+  return Array.from(regionsUsed).sort().join(" & ");
+}
 
 type ItineraryDay = {
   day: string;
@@ -59,12 +88,16 @@ export default function PlannerPage() {
     setSaving(true);
     setNeedsLogin(false);
     try {
+      const displayRegion = actualRegionsLabel(itinerary, region);
       const res = await fetch("/api/yatra-plans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: `${itinerary.length}-day ${region} Yatra from ${from}`,
-          itinerary: { days: itinerary, summary, region, from },
+          title: `${itinerary.length}-day ${displayRegion} Yatra from ${from}`,
+          // Keep both: `region` stays the user's requested filter (useful for
+          // "plan again" / analytics), `displayRegion` is what should actually
+          // be shown to the user since it reflects the real itinerary content.
+          itinerary: { days: itinerary, summary, region, displayRegion, from },
         }),
       });
       if (res.status === 401) {
@@ -137,7 +170,7 @@ export default function PlannerPage() {
           </div>
 
           <div className="panel">
-            <h3>{itinerary ? `Your ${itinerary.length}-day ${region} Yatra` : "Your itinerary will appear here"}</h3>
+            <h3>{itinerary ? `Your ${itinerary.length}-day ${actualRegionsLabel(itinerary, region)} Yatra` : "Your itinerary will appear here"}</h3>
             {!itinerary && !loading ? (
               <div className="empty-itinerary">
                 <img

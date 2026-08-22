@@ -15,6 +15,13 @@ export type Temple = {
   bestTime: string;
   type: string;
   highlights: string[];
+  // Concrete, numeric logistics facts for temples that are hard to reach.
+  // Optional — most temples in a city with an airport/station don't need
+  // this. Populated for remote/high-altitude shrines where an AI planner
+  // (or a human) is likely to underestimate travel time if left to guess.
+  // Keep this to hard facts (distances, hours, "no road access", nearest
+  // transport hub) — not itinerary advice, which belongs in the prompt.
+  accessNotes?: string;
 };
 
 export const temples: Temple[] = [
@@ -158,6 +165,13 @@ export const temples: Temple[] = [
     state: "Uttarakhand",
     region: "North India",
     image: "https://commons.wikimedia.org/wiki/Special:FilePath/The%20temple%20of%20Kedernath.jpg?width=1400",
+    accessNotes:
+      "No road access to the shrine itself. Road ends at Gaurikund/Sonprayag; " +
+      "from there it is a 16-18 km trek (5-8 hours each way) gaining roughly " +
+      "1,400 m of altitude to reach 3,583 m. Rishikesh/Haridwar to Gaurikund " +
+      "by road is ~210 km and takes 7-10 hours on its own. The drive to " +
+      "Gaurikund and the trek must NOT be scheduled on the same day - treat " +
+      "them as two separate dedicated days at minimum, in each direction.",
     highlightDetails: [
       "The Kedarnath shrine is a historic Shiva temple surrounded by high Himalayan peaks. The setting makes the temple experience as much about landscape and pilgrimage as architecture.",
       "The mountain approach is a major part of the Kedarnath journey, with a long route through steep Himalayan terrain. The physical journey is an important part of the pilgrimage experience.",
@@ -290,6 +304,15 @@ export const temples: Temple[] = [
     state: "Uttarakhand",
     region: "North India",
     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Badrinath%20Temple.JPG?width=1400",
+    accessNotes:
+      "Badrinath has NO airport and NO railway station. The nearest airport " +
+      "(Dehradun/Jolly Grant) and nearest railhead (Rishikesh/Haridwar) are " +
+      "both roughly 300 km / 8-10 hours away by mountain road. Any itinerary " +
+      "leaving Badrinath by flight or train needs a full dedicated transfer " +
+      "day back to Rishikesh/Haridwar/Dehradun BEFORE that flight or train, " +
+      "never on the same day. Badrinath to/from Kedarnath (via Sonprayag, " +
+      "Rudraprayag, Chamoli, Joshimath) is ~215-225 km and takes 7-10 hours " +
+      "by road - it is its own dedicated travel day, not a same-day hop.",
     highlightDetails: [
       "The main Badrinath shrine is dedicated to Lord Vishnu and is one of the Char Dham pilgrimage destinations. Its Himalayan location is central to the character of the visit.",
       "Tapt Kund is a natural hot-water spring near the temple and is traditionally associated with pilgrimage bathing. It adds a distinct ritual and geothermal element to the Badrinath experience.",
