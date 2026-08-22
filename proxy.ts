@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PROTECTED_PATHS = ['/my-yatras', '/profile']
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
 
@@ -21,7 +23,28 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const isProtected = PROTECTED_PATHS.some(
+    (path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(`${path}/`)
+  )
+
+  if (isProtected && !user) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', request.nextUrl.pathname)
+    const redirectResponse = NextResponse.redirect(loginUrl)
+    redirectResponse.headers.set('Cache-Control', 'no-store, must-revalidate')
+    return redirectResponse
+  }
+
+  if (isProtected) {
+    // Prevent the browser from serving a logged-in snapshot of this page
+    // from the back-forward cache after the user has logged out.
+    response.headers.set('Cache-Control', 'no-store, must-revalidate')
+  }
+
   return response
 }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MapPin, Sparkles } from "lucide-react";
+import { CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { festivals } from "@/data/festivals";
 import { slugify } from "@/lib/slug";
 
@@ -20,37 +20,47 @@ export default function FestivalsPage() {
       <section className="section section-light">
         <div className="festival-grid">
           {festivals.map((festival) => (
-            <article className="festival-card" key={festival.name}>
-              <div className="festival-image">
-                <img
-                  src={festival.imageUrl}
-                  alt={festival.name}
-                />
+            <Link
+              key={festival.name}
+              href={`/festivals/${slugify(festival.name)}`}
+              className="festival-card-link"
+            >
+              <article className="festival-card">
+                <div className="festival-image">
+                  <img src={festival.imageUrl} alt={festival.name} />
 
-                <span className="festival-month">
-                  {festival.month}
-                </span>
-              </div>
-
-              <div className="festival-content">
-                <h2>{festival.name}</h2>
-
-                <div className="festival-location">
-                  <MapPin size={16} />
-                  <span>{festival.place}</span>
+                  <span className="festival-month">
+                    {festival.month}
+                  </span>
                 </div>
 
-                <p>{festival.note}</p>
+                <div className="festival-content">
+                  <div className="festival-main-info">
+                    <div className="eyebrow">Festival</div>
 
-                <Link
-                  href={`/festivals/${slugify(festival.name)}`}
-                  className="festival-link"
-                >
-                  Explore Festival
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            </article>
+                    <h3>{festival.name}</h3>
+
+                    <p className="festival-location">
+                      <MapPin size={15} />
+                      <span>{festival.place}</span>
+                    </p>
+                  </div>
+
+                  <div className="festival-duration">
+                    <div className="festival-duration-title">
+                      <CalendarDays size={16} />
+                      <span>Celebration duration</span>
+                    </div>
+
+                    <p>{festival.duration}</p>
+
+                    <span className="festival-view">
+                      Explore Festival →
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       </section>

@@ -69,6 +69,13 @@ Prefer temples whose region matches the user's preferred region where possible, 
 
 ${buildTempleContext()}
 
+TRAVEL FEASIBILITY RULES (violating these produces an itinerary nobody can actually follow — treat them as hard constraints, not suggestions):
+- Kedarnath and Badrinath are remote high-Himalayan shrines in Uttarakhand. Reaching either from Rishikesh/Dehradun is itself a full day of mountain driving, and Kedarnath additionally requires a ~16-18 km trek (6-8 hours each way) from Gaurikund. NEVER schedule travel into Kedarnath or Badrinath on the same day as departing from a city outside Uttarakhand/Delhi-NCR — give each its own dedicated day, and give the Kedarnath trek its own day separate from any other travel.
+- Kedarnath and Badrinath are in the same state but are NOT adjacent to each other — moving between them still takes most of a day via Rudraprayag. Do not treat "visit Kedarnath in the morning, Badrinath in the afternoon" as feasible.
+- Treat any two temples in DIFFERENT states as requiring a dedicated travel day (flight or long train/road journey) UNLESS both states are immediate neighbors on a well-connected route (e.g. Delhi <-> Uttar Pradesh, Gujarat <-> Maharashtra). Never sequence three or more different states across three or fewer consecutive days.
+- For trips of ${safeDays <= 4 ? "4 days or fewer, stay within a single state or a pair of well-connected neighboring states" : safeDays <= 7 ? "5-7 days, span at most 2-3 states that are realistically connected by direct flights or a shared travel corridor" : "8-10 days, you may span multiple regions, but still budget a full travel day for each major state change and never combine a remote Himalayan shrine with a same-day city change"}.
+- If the preferred region and starting city cannot realistically support ${safeDays} days of temple visits without impossible travel, it is better to include a couple of well-connected temples from an adjacent region than to force in a geographically distant one — never sacrifice feasibility for coverage.
+
 Respond with ONLY valid JSON (no markdown fences, no commentary) matching this exact shape:
 {
   "days": [
@@ -85,16 +92,30 @@ Return exactly ${safeDays} day objects.`;
   try {
     const response = await groq.chat.completions.create({
       model: AI_MODEL,
-      max_tokens: 1500,
+      // Higher than before: the added travel-feasibility rules make the
+      // system prompt heavier, and openai/gpt-oss-120b spends tokens on
+      // internal reasoning before writing the actual JSON — too low a
+      // cap here means reasoning alone can exhaust the budget and leave
+      // no room for the response itself (seen as an empty completion).
+      max_tokens: 4096,
       messages: [
         { role: "system", content: system },
         { role: "user", content: userMessage },
       ],
     });
 
-    const text = response.choices[0]?.message?.content;
+    const choice = response.choices[0];
+    const text = choice?.message?.content;
     if (!text) {
-      return NextResponse.json({ error: "AI did not return a text response." }, { status: 502 });
+      const reason = choice?.finish_reason;
+      const hint =
+        reason === "length"
+          ? " The model ran out of tokens before writing a response — try a shorter trip or fewer interests."
+          : "";
+      return NextResponse.json(
+        { error: `AI did not return a text response.${hint}` },
+        { status: 502 }
+      );
     }
 
     let parsed: { days: ItineraryDay[]; summary: string };

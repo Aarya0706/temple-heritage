@@ -122,6 +122,25 @@ export default function DownloadItineraryButton({
     y += 28;
 
     // ----------------------------------------------------------
+    // TEXT SANITIZING
+    // ----------------------------------------------------------
+    // The embedded Poppins subset only includes the glyphs this app
+    // actually uses. AI-generated text can include characters outside
+    // that subset (most commonly an arrow like "→" in day titles,
+    // e.g. "Lucknow → Varanasi"), which jsPDF silently drops instead
+    // of rendering — so replace known offenders with safe equivalents
+    // before anything reaches doc.text(). Characters already confirmed
+    // to render fine (·, –, •) are left untouched.
+    function sanitizeForPdf(text: string): string {
+      return text
+        .replace(/[\u2192\u21D2\u27A1]/g, " - ") // →, ⇒, ➡
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    // ----------------------------------------------------------
     // WRAPPED TEXT
     // ----------------------------------------------------------
     function writeWrapped(
@@ -130,7 +149,7 @@ export default function DownloadItineraryButton({
       gapAfter: number
     ) {
       const lines: string[] =
-        doc.splitTextToSize(text, maxWidth);
+        doc.splitTextToSize(sanitizeForPdf(text), maxWidth);
 
       for (const line of lines) {
         // IMPORTANT:
@@ -270,7 +289,7 @@ export default function DownloadItineraryButton({
       doc.setTextColor(145, 104, 82);
 
       doc.text(
-        "Temple Heritage • Created by Aarya Shirsath",
+        sanitizeForPdf("Temple Heritage • Created by Aarya Shirsath"),
         margin,
         footerY
       );

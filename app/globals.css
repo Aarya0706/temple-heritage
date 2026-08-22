@@ -255,9 +255,30 @@ button { cursor: pointer; }
 .filter-btn { border:1px solid var(--border);background:white;color:#674c43;padding:10px 15px;border-radius:999px;font-weight:600; }
 .filter-btn.active,.filter-btn:hover { background:#8d2216;color:white;border-color:#8d2216; }
 
-.planner-grid { max-width:1100px;margin:auto;display:grid;grid-template-columns:.9fr 1.1fr;gap:25px; }
-.panel { background:white;border:1px solid var(--border);border-radius:24px;padding:30px;box-shadow:var(--shadow); }
+.planner-grid { max-width:1100px;margin:auto;display:grid;grid-template-columns:.9fr 1.1fr;gap:25px;align-items:stretch; }
+.panel { background:white;border:1px solid var(--border);border-radius:24px;padding:30px;box-shadow:var(--shadow);display:flex;flex-direction:column;height:100%; }
 .panel h3 { font:700 27px "Playfair Display",serif;margin:0 0 25px; }
+
+.empty-itinerary { display:flex;flex-direction:column;flex:1; }
+.itinerary-image {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  object-position: center 25%;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin: auto 0;
+  color: #6b4a3d;
+}
+.empty-content .flower { font-size: 26px; margin-bottom: 4px; }
+.empty-content span { color: #a3806f; font-size: 13.5px; }
 .form-group { margin-bottom:18px; }
 .form-group label { display:block;font-weight:700;margin-bottom:8px;color:#5e443c; }
 .form-group input,.form-group select { width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:#fffaf4;outline:none; }
@@ -425,23 +446,37 @@ img { max-width: 100%; }
   to { transform: rotate(360deg); }
 }
 
+.festival-grid {
+  max-width: 1250px;
+  margin: 30px auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px;
+}
+
+.festival-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .festival-card {
   overflow: hidden;
   background: #fffdf9;
   border: 1px solid var(--border);
   border-radius: 24px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 12px 30px rgba(88, 32, 15, 0.10);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .festival-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 24px 50px rgba(78, 24, 13, 0.16);
+  box-shadow: 0 20px 40px rgba(88, 32, 15, 0.16);
 }
 
 .festival-image {
   position: relative;
-  height: 270px;
+  height: 250px;
   overflow: hidden;
 }
 
@@ -450,67 +485,99 @@ img { max-width: 100%; }
   height: 100%;
   display: block;
   object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.festival-card:hover .festival-image img {
+  transform: scale(1.05);
 }
 
 .festival-month {
   position: absolute;
   top: 16px;
   right: 16px;
-  padding: 8px 14px;
+  padding: 8px 13px;
   border-radius: 999px;
   background: rgba(255, 250, 244, 0.95);
   color: #8a2414;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .festival-content {
-  padding: 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  padding: 23px;
+  align-items: center;
 }
 
-.festival-content h2 {
-  margin: 0 0 10px;
-  font: 700 26px "Playfair Display", serif;
-  color: var(--ink);
+.festival-main-info h3 {
+  margin: 5px 0 8px;
+  color: #542019;
+  font: 700 25px "Playfair Display", serif;
 }
 
 .festival-location {
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #a13a1e;
+  gap: 6px;
+  color: #80665d;
   font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 13px;
 }
 
-.festival-content p {
-  margin: 0 0 18px;
-  color: var(--muted);
-  line-height: 1.65;
+.festival-duration {
+  min-width: 210px;
+  text-align: right;
 }
 
-.festival-link {
-  display: inline-flex;
+.festival-duration-title {
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: 7px;
-  color: #a52d15;
+  gap: 6px;
+  color: #a42b14;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.festival-duration p {
+  margin: 8px 0 10px;
+  color: #725d55;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.festival-view {
+  color: #b43a17;
+  font-size: 13px;
   font-weight: 700;
 }
 
-.festival-link:hover {
-  color: #7e1f12;
-}
-
-@media (max-width: 1000px) {
+@media (max-width: 900px) {
   .festival-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 650px) {
-  .festival-grid {
+  .festival-image {
+    height: 220px;
+  }
+
+  .festival-content {
     grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .festival-duration {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .festival-duration-title {
+    justify-content: flex-start;
   }
 }
 /* =================================
