@@ -745,6 +745,94 @@ img { max-width: 100%; }
     font-size: 20px;
   }
 }
+
+/* =================================
+   YATRA ROUTE MAP
+================================= */
+
+.yatra-route-day-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.yatra-route-map {
+  border: 1px solid #f0ddc8;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+}
+
+.yatra-route-map-loading {
+  height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9b7a6c;
+  font-size: 14px;
+  background: #fff8f0;
+  border: 1px solid #f0ddc8;
+  border-radius: 16px;
+}
+
+/* Leaflet ships its own base styles; this keeps its default z-index stack
+   from climbing above the site navbar. */
+.yatra-route-map .leaflet-container {
+  z-index: 0;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.yatra-route-marker span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #a52d15;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(78, 24, 13, 0.35);
+}
+
+.yatra-route-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+}
+
+.yatra-route-stops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.yatra-route-stop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b4a3d;
+  font-size: 13px;
+}
+
+.yatra-route-stop-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f0ddc8;
+  color: #8c2416;
+  font-size: 10px;
+  font-weight: 700;
+}
 /* =================================
    TEMPLE GUIDE QUICK SUGGESTIONS
 ================================= */

@@ -15,6 +15,12 @@ export type Temple = {
   bestTime: string;
   type: string;
   highlights: string[];
+  // Coordinates for the temple's actual site (Wikipedia-verified), used by
+  // YatraRouteMap to plot multi-stop pilgrimage routes. Not the same as a
+  // city-center lookup — several of these temples sit well outside their
+  // listed city (e.g. Nageshwar is ~15km from Dwarka).
+  lat: number;
+  lng: number;
   // Concrete, numeric logistics facts for temples that are hard to reach.
   // Optional — most temples in a city with an airport/station don't need
   // this. Populated for remote/high-altitude shrines where an AI planner
@@ -27,6 +33,8 @@ export type Temple = {
 export const temples: Temple[] = [
   {
     slug: "meenakshi-amman",
+    lat: 9.9195,
+    lng: 78.1191,
     name: "Meenakshi Amman Temple",
     deity: "Goddess Meenakshi",
     city: "Madurai",
@@ -60,6 +68,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "dwarkadhish",
+    lat: 22.2379,
+    lng: 68.9676,
     name: "Dwarkadhish Temple",
     deity: "Lord Krishna",
     city: "Dwarka",
@@ -93,6 +103,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "jagannath-puri",
+    lat: 19.8047,
+    lng: 85.8183,
     name: "Jagannath Temple",
     deity: "Lord Jagannath",
     city: "Puri",
@@ -126,6 +138,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "kashi-vishwanath",
+    lat: 25.3108,
+    lng: 83.0106,
     name: "Kashi Vishwanath Temple",
     deity: "Lord Shiva",
     city: "Varanasi",
@@ -168,6 +182,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "kedarnath",
+    lat: 30.7352,
+    lng: 79.0669,
     name: "Kedarnath Temple",
     deity: "Lord Shiva",
     city: "Kedarnath",
@@ -208,6 +224,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "somnath",
+    lat: 20.888,
+    lng: 70.4014,
     name: "Somnath Temple",
     deity: "Lord Shiva",
     city: "Somnath",
@@ -241,6 +259,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "tirupati",
+    lat: 13.6809,
+    lng: 79.3506,
     name: "Tirumala Venkateswara Temple",
     deity: "Lord Venkateswara",
     city: "Tirupati",
@@ -274,6 +294,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "mahakaleshwar",
+    lat: 23.1828,
+    lng: 75.7683,
     name: "Mahakaleshwar Temple",
     deity: "Lord Shiva",
     city: "Ujjain",
@@ -315,6 +337,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "badrinath",
+    lat: 30.7447,
+    lng: 79.4912,
     name: "Badrinath Temple",
     deity: "Lord Vishnu",
     city: "Badrinath",
@@ -357,6 +381,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "akshardham-delhi",
+    lat: 28.6125,
+    lng: 77.2772,
     name: "Swaminarayan Akshardham",
     deity: "Lord Swaminarayan",
     city: "New Delhi",
@@ -390,6 +416,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "konark-sun-temple",
+    lat: 19.8875,
+    lng: 86.0947,
     name: "Konark Sun Temple",
     deity: "Surya (Sun God)",
     city: "Konark",
@@ -423,6 +451,8 @@ export const temples: Temple[] = [
   },
   {
     slug: "brihadeeswarar",
+    lat: 10.7828,
+    lng: 79.1317,
     name: "Brihadeeswarar Temple",
     deity: "Lord Shiva",
     city: "Thanjavur",
@@ -456,6 +486,8 @@ export const temples: Temple[] = [
   }
   ,{
     slug: "mallikarjuna",
+    lat: 16.0742,
+    lng: 78.8681,
     name: "Mallikarjuna Swamy Temple",
     deity: "Lord Shiva",
     city: "Srisailam",
@@ -498,6 +530,8 @@ export const temples: Temple[] = [
 
   {
     slug: "omkareshwar",
+    lat: 22.2456,
+    lng: 76.1511,
     name: "Omkareshwar Temple",
     deity: "Lord Shiva",
     city: "Khandwa",
@@ -539,6 +573,8 @@ export const temples: Temple[] = [
 
   {
     slug: "bhimashankar",
+    lat: 19.072,
+    lng: 73.536,
     name: "Bhimashankar Temple",
     deity: "Lord Shiva",
     city: "Bhimashankar",
@@ -580,6 +616,8 @@ export const temples: Temple[] = [
 
   {
     slug: "trimbakeshwar",
+    lat: 19.9322,
+    lng: 73.5308,
     name: "Trimbakeshwar Temple",
     deity: "Lord Shiva",
     city: "Trimbak",
@@ -621,6 +659,8 @@ export const temples: Temple[] = [
 
   {
     slug: "vaidyanath",
+    lat: 24.4925,
+    lng: 86.7,
     name: "Baba Baidyanath Temple",
     deity: "Lord Shiva",
     city: "Deoghar",
@@ -663,6 +703,8 @@ export const temples: Temple[] = [
 
   {
     slug: "nageshwar",
+    lat: 22.3359,
+    lng: 69.0869,
     name: "Nageshwar Jyotirlinga Temple",
     deity: "Lord Shiva",
     city: "Dwarka",
@@ -704,6 +746,8 @@ export const temples: Temple[] = [
 
   {
     slug: "rameshwaram",
+    lat: 9.2881,
+    lng: 79.3174,
     name: "Ramanathaswamy Temple",
     deity: "Lord Shiva",
     city: "Rameswaram",
@@ -746,6 +790,8 @@ export const temples: Temple[] = [
 
   {
     slug: "grishneshwar",
+    lat: 20.025,
+    lng: 75.1699,
     name: "Grishneshwar Temple",
     deity: "Lord Shiva",
     city: "Chhatrapati Sambhajinagar",

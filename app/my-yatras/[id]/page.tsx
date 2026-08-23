@@ -3,6 +3,8 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, MapPin } from 'lucide-react'
 import DownloadItineraryButton from '@/components/DownloadItineraryButton'
+import YatraRouteMapLoader, { YatraRouteDay } from '@/components/YatraRouteMapLoader'
+import { resolveTemples } from '@/lib/yatra-route'
 
 type ItineraryDay = {
   day: string;
@@ -34,6 +36,11 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
   // be stale (the planner is allowed to pull in an adjacent-region temple).
   // Older saved plans won't have displayRegion yet, so fall back to region.
   const region: string = yatra.itinerary?.displayRegion || yatra.itinerary?.region || "";
+
+  const routeDays: YatraRouteDay[] = days.map((d) => ({
+    label: d.day,
+    stops: resolveTemples(d.templeSlugs),
+  }));
 
   return (
     <main>
@@ -106,6 +113,8 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
               ))}
             </div>
           )}
+
+          <YatraRouteMapLoader days={routeDays} />
 
           <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
             <DownloadItineraryButton
