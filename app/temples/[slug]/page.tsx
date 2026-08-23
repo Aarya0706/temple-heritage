@@ -9,6 +9,7 @@ import {
 import { temples } from "@/data/temples";
 import SaveTempleButton from "@/components/SaveTempleButton";
 import HighlightCard from "@/components/HighlightCard";
+import ReviewsSection from "@/components/ReviewsSection";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -138,6 +139,8 @@ export default async function TempleDetail({
           </Link>
         </div>
       </section>
+
+      <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
     </main>
   );
 }
