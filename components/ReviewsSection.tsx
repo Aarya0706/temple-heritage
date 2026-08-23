@@ -3,17 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import StarRating from "./StarRating";
 import ReviewForm from "./ReviewForm";
 import DeleteReviewButton from "./DeleteReviewButton";
-import ReviewPhotoGallery from "./ReviewPhotoGallery";
-
-type ReviewRow = {
-  id: string;
-  user_id: string;
-  rating: number;
-  review_text: string | null;
-  reviewer_name: string;
-  created_at: string;
-  temple_review_photos: { storage_path: string }[];
-};
+import ReviewList, { PAGE_SIZE, type ReviewRow } from "./ReviewList";
 
 export default async function ReviewsSection({
   templeSlug,
@@ -28,27 +18,49 @@ export default async function ReviewsSection({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: reviews }, { data: summary }] = await Promise.all([
-    supabase
-      .from("temple_reviews")
-      .select(
-        "id, user_id, rating, review_text, reviewer_name, created_at, temple_review_photos(storage_path)"
-      )
-      .eq("temple_slug", templeSlug)
-      .eq("status", "published")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("temple_rating_summary")
-      .select("average_rating, review_count")
-      .eq("temple_slug", templeSlug)
-      .maybeSingle(),
-  ]);
+  // First page only — pagination beyond this is handled client-side by
+  // ReviewList so a temple with hundreds of reviews doesn't load them all
+  // on every page view.
+  const [{ data: reviews, count }, { data: summary }, { data: savers }, { data: ownReview }] =
+    await Promise.all([
+      supabase
+        .from("temple_reviews")
+        .select(
+          "id, user_id, rating, review_text, reviewer_name, created_at, temple_review_photos(storage_path)",
+          { count: "exact" }
+        )
+        .eq("temple_slug", templeSlug)
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+        .range(0, PAGE_SIZE - 1),
+      supabase
+        .from("temple_rating_summary")
+        .select("average_rating, review_count")
+        .eq("temple_slug", templeSlug)
+        .maybeSingle(),
+      // Users who've saved this temple to My Yatras — used to show a
+      // "Verified visitor" badge on their reviews. Not fetched paginated:
+      // this is bounded by how many people saved the temple, not by review
+      // count, so the full set covers reviews loaded later via "Load more" too.
+      supabase.from("saved_temples").select("user_id").eq("temple_slug", templeSlug),
+      // The current user's own review, regardless of status. Fetched
+      // separately from the public list above (which only shows
+      // status='published') so a flagged/hidden review still surfaces the
+      // "already reviewed" gating and the moderation notice below — without
+      // this, a hidden review would vanish from `rows`, the author would see
+      // the write-review form again, and a repost attempt would just 409.
+      user
+        ? supabase
+            .from("temple_reviews")
+            .select("id, status")
+            .eq("temple_slug", templeSlug)
+            .eq("user_id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
   const rows = (reviews ?? []) as ReviewRow[];
-  const ownReview = user ? rows.find((r) => r.user_id === user.id) : undefined;
-
-  const photoUrl = (path: string) =>
-    supabase.storage.from("review-photos").getPublicUrl(path).data.publicUrl;
+  const verifiedUserIds = (savers ?? []).map((s) => s.user_id);
 
   return (
     <section className="detail-section" id="reviews">
@@ -71,10 +83,39 @@ export default async function ReviewsSection({
 
       {user ? (
         ownReview ? (
-          <p style={{ color: "#705d55", marginBottom: 24 }}>
-            You've already reviewed {templeName}. You can delete it from the list below and
-            post a new one.
-          </p>
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ color: "#705d55", margin: 0 }}>
+              You've already reviewed {templeName}.{" "}
+              {ownReview.status === "published"
+                ? "You can delete it from the list below and post a new one."
+                : "You can delete it and post a new one."}
+            </p>
+            {ownReview.status !== "published" && (
+              <>
+                <p
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    color: "#a5661a",
+                    background: "#fdf0dc",
+                    border: "1px solid #f3ddb0",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    marginTop: 10,
+                    fontSize: 14,
+                  }}
+                >
+                  {ownReview.status === "hidden"
+                    ? "Your review has been hidden by a moderator and isn't visible to other visitors."
+                    : "Your review has been flagged for moderator review and isn't visible to other visitors yet."}
+                </p>
+                <div style={{ marginTop: 8 }}>
+                  <DeleteReviewButton reviewId={ownReview.id} />
+                </div>
+              </>
+            )}
+          </div>
         ) : (
           <ReviewForm templeSlug={templeSlug} />
         )
@@ -87,59 +128,14 @@ export default async function ReviewsSection({
         </p>
       )}
 
-      {rows.length === 0 ? (
-        <div className="empty">Be the first to share your experience at {templeName}.</div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          {rows.map((review) => (
-            <article
-              key={review.id}
-              style={{
-                border: "1px solid #f0ddc8",
-                borderRadius: 14,
-                padding: 18,
-                background: "white",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: 8,
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <strong style={{ color: "#542019" }}>{review.reviewer_name}</strong>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                    <StarRating value={review.rating} size={14} />
-                    <span style={{ color: "#9b6958", fontSize: 12 }}>
-                      {new Date(review.created_at).toLocaleDateString("en-IN", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                </div>
-                {user?.id === review.user_id && <DeleteReviewButton reviewId={review.id} />}
-              </div>
-
-              {review.review_text && (
-                <p style={{ color: "#705d55", lineHeight: 1.7, margin: "8px 0" }}>
-                  {review.review_text}
-                </p>
-              )}
-
-              <ReviewPhotoGallery
-                photoUrls={review.temple_review_photos.map((p) => photoUrl(p.storage_path))}
-                reviewerName={review.reviewer_name}
-              />
-            </article>
-          ))}
-        </div>
-      )}
+      <ReviewList
+        templeSlug={templeSlug}
+        templeName={templeName}
+        initialReviews={rows}
+        totalCount={count ?? rows.length}
+        currentUserId={user?.id}
+        verifiedUserIds={verifiedUserIds}
+      />
     </section>
   );
 }

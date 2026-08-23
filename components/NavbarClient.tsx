@@ -1,18 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Sparkles, X } from "lucide-react";
+import { ChevronDown, Menu, Sparkles, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/temples", label: "Browse Temples" },
   { href: "/festivals", label: "Festivals" },
-  { href: "/darshan", label: "Darshan" },
-  { href: "/planner", label: "AI Planner" },
-  { href: "/recommender", label: "Recommender" },
-  { href: "/my-yatras", label: "My Yatras" },
+];
+
+// Grouped under a single "Services" dropdown rather than flat top-level
+// links — these are the practical, logged-in-adjacent tools (planning,
+// recommendations, saved trips) as opposed to the browsing pages above.
+const serviceLinks = [
+  { href: "/planner", label: "AI Planner", blurb: "Build a pilgrimage itinerary" },
+  { href: "/recommender", label: "Recommender", blurb: "Find temples matched to you" },
+  { href: "/darshan", label: "Darshan", blurb: "Check timings and crowd info" },
+  { href: "/my-yatras", label: "My Yatras", blurb: "Saved temples and trip plans" },
 ];
 
 type NavbarClientProps = {
@@ -28,7 +34,29 @@ export function NavbarClient({
 }: NavbarClientProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const visibleLinks = isAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const servicesRef = useRef<HTMLDivElement>(null);
+
+  const isServiceActive = serviceLinks.some((link) => link.href === pathname);
+
+  // Close the dropdown on outside click (desktop hover/click) — doesn't
+  // interfere with the mobile accordion, which only opens via its own
+  // toggle button and closes on link click / menu close below.
+  useEffect(() => {
+    if (!servicesOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (servicesRef.current && !servicesRef.current.contains(e.target as Node)) {
+        setServicesOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [servicesOpen]);
+
+  const closeAll = () => {
+    setOpen(false);
+    setServicesOpen(false);
+  };
 
   return (
     <header className="navbar">
@@ -40,7 +68,7 @@ export function NavbarClient({
         <Link
           href="/"
           className="brand"
-          onClick={() => setOpen(false)}
+          onClick={closeAll}
         >
           <div className="brand-mark">🛕</div>
 
@@ -58,18 +86,65 @@ export function NavbarClient({
         {/* NAVIGATION */}
         <nav className={`nav-links ${open ? "open" : ""}`}>
           <div className="nav-links-inner">
-            {visibleLinks.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={`nav-link ${
                   pathname === link.href ? "active" : ""
                 }`}
-                onClick={() => setOpen(false)}
+                onClick={closeAll}
               >
                 {link.label}
               </Link>
             ))}
+
+            <div className="nav-dropdown" ref={servicesRef}>
+              <button
+                type="button"
+                className={`nav-link nav-dropdown-toggle ${
+                  isServiceActive || servicesOpen ? "active" : ""
+                }`}
+                onClick={() => setServicesOpen((v) => !v)}
+                aria-expanded={servicesOpen}
+              >
+                Services
+                <ChevronDown
+                  size={15}
+                  style={{
+                    marginLeft: 5,
+                    transition: "transform 0.2s ease",
+                    transform: servicesOpen ? "rotate(180deg)" : "none",
+                  }}
+                />
+              </button>
+
+              <div className={`nav-dropdown-panel ${servicesOpen ? "open" : ""}`}>
+                {serviceLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`nav-dropdown-link ${
+                      pathname === link.href ? "active" : ""
+                    }`}
+                    onClick={closeAll}
+                  >
+                    <span className="nav-dropdown-link-label">{link.label}</span>
+                    <span className="nav-dropdown-link-blurb">{link.blurb}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={`nav-link ${pathname === "/admin" ? "active" : ""}`}
+                onClick={closeAll}
+              >
+                Admin
+              </Link>
+            )}
           </div>
         </nav>
 

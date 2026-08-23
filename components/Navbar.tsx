@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NavbarClient } from "./NavbarClient";
+import { AnnouncementBar } from "./AnnouncementBar";
 
 export async function Navbar() {
   const supabase = await createClient();
@@ -29,10 +30,13 @@ export async function Navbar() {
   }
 
   return (
-    <NavbarClient
-      displayName={displayName}
-      email={email}
-      isAdmin={isAdmin}
-    />
+    <>
+      <AnnouncementBar />
+      <NavbarClient
+        displayName={displayName}
+        email={email}
+        isAdmin={isAdmin}
+      />
+    </>
   );
 }
