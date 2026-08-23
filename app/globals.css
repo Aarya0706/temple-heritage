@@ -391,6 +391,7 @@ button { cursor: pointer; }
 .info-box span { display:block;color:#9b6958;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px; }
 .info-box strong { color:#542019; }
 .detail-section { max-width:1200px;margin:0 auto;padding:70px 5.5vw; }
+.detail-section#reviews { scroll-margin-top: 130px; }
 .detail-section h2 { font:700 34px "Playfair Display",serif; }
 .detail-section p { color:#705d55;line-height:1.85; }
 

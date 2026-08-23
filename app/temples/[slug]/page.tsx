@@ -5,11 +5,13 @@ import {
   CalendarDays,
   Sparkles,
   MapPin,
+  Star,
 } from "lucide-react";
 import { temples } from "@/data/temples";
 import SaveTempleButton from "@/components/SaveTempleButton";
 import HighlightCard from "@/components/HighlightCard";
 import ReviewsSection from "@/components/ReviewsSection";
+import { createClient } from "@/lib/supabase/server";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -30,6 +32,15 @@ export default async function TempleDetail({
     notFound();
   }
 
+  // Small hero badge only — ReviewsSection independently fetches the same
+  // summary (and the full review list) further down the page.
+  const supabase = await createClient();
+  const { data: ratingSummary } = await supabase
+    .from("temple_rating_summary")
+    .select("average_rating, review_count")
+    .eq("temple_slug", temple.slug)
+    .maybeSingle();
+
   return (
     <main>
       <section className="detail-hero">
@@ -43,9 +54,37 @@ export default async function TempleDetail({
 
             <h1>{temple.name}</h1>
 
-            <div className="location">
-              <MapPin size={17} style={{ verticalAlign: "middle" }} />
-              {temple.city}, {temple.state}
+            <div
+              className="location"
+              style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14 }}
+            >
+              <span>
+                <MapPin size={17} style={{ verticalAlign: "middle" }} />{" "}
+                {temple.city}, {temple.state}
+              </span>
+
+              <a
+                href="#reviews"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  color: "#9b6958",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  borderBottom: "1px dashed #c9a58f",
+                }}
+              >
+                {ratingSummary && ratingSummary.review_count > 0 ? (
+                  <>
+                    <Star size={14} fill="#f28a18" color="#f28a18" strokeWidth={1.5} />
+                    {ratingSummary.average_rating} · {ratingSummary.review_count}{" "}
+                    {ratingSummary.review_count === 1 ? "review" : "reviews"}
+                  </>
+                ) : (
+                  "No reviews yet — be the first"
+                )}
+              </a>
             </div>
 
             <p>{temple.description}</p>
