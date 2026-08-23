@@ -8,11 +8,14 @@ export type Festival = {
   duration: string;
   relatedTempleSlugs: string[];
   imageUrl: string;
+  /** Verified next-occurrence date (ISO, Drik Panchang) — refresh yearly since Hindu festival dates shift. */
+  date2026: string;
 };
 
 export const festivals: Festival[] = [
   {
     slug: "makar-sankranti",
+    date2026: "2026-01-14",
     month: "JAN",
     name: "Makar Sankranti",
     place: "Across India",
@@ -24,6 +27,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "maha-shivaratri",
+    date2026: "2026-02-15",
     month: "MAR",
     name: "Maha Shivaratri",
     place: "Shiva temples nationwide",
@@ -35,6 +39,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "holi",
+    date2026: "2026-03-04",
     month: "MAR",
     name: "Holi",
     place: "Mathura, Vrindavan & across India",
@@ -46,6 +51,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "rama-navami",
+    date2026: "2026-03-26",
     month: "APR",
     name: "Rama Navami",
     place: "Ayodhya & across India",
@@ -57,6 +63,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "ratha-yatra",
+    date2026: "2026-07-16",
     month: "JUL",
     name: "Ratha Yatra",
     place: "Puri, Odisha",
@@ -68,6 +75,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "guru-purnima",
+    date2026: "2026-07-29",
     month: "JUL",
     name: "Guru Purnima",
     place: "Across India",
@@ -79,6 +87,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "janmashtami",
+    date2026: "2026-08-15",
     month: "AUG",
     name: "Janmashtami",
     place: "Mathura & Vrindavan",
@@ -90,6 +99,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "onam",
+    date2026: "2026-08-26",
     month: "AUG",
     name: "Onam",
     place: "Kerala",
@@ -101,6 +111,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "ganesh-chaturthi",
+    date2026: "2026-09-07",
     month: "SEP",
     name: "Ganesh Chaturthi",
     place: "Maharashtra & beyond",
@@ -112,6 +123,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "navratri",
+    date2026: "2026-10-10",
     month: "OCT",
     name: "Navratri",
     place: "Gujarat & across India",
@@ -123,6 +135,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "durga-puja",
+    date2026: "2026-10-17",
     month: "OCT",
     name: "Durga Puja",
     place: "Kolkata & West Bengal",
@@ -134,6 +147,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "diwali",
+    date2026: "2026-11-08",
     month: "OCT",
     name: "Diwali",
     place: "Across India",
@@ -145,6 +159,7 @@ export const festivals: Festival[] = [
   },
   {
     slug: "chhath-puja",
+    date2026: "2026-11-15",
     month: "NOV",
     name: "Chhath Puja",
     place: "Bihar, Jharkhand & Eastern UP",

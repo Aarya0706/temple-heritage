@@ -582,6 +582,169 @@ img { max-width: 100%; }
     justify-content: flex-start;
   }
 }
+
+/* =================================
+   FESTIVAL COUNTDOWN
+================================= */
+
+.festival-days-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(74, 12, 8, 0.85);
+  color: #ffd9a8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.festival-countdown {
+  margin: 22px 0;
+}
+
+.festival-countdown-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #a03318;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.section-dark .festival-countdown-label,
+.next-festival-banner .festival-countdown-label {
+  color: #ffbc55;
+}
+
+.festival-countdown-units {
+  display: inline-flex;
+  gap: 10px;
+}
+
+.festival-countdown-unit {
+  min-width: 62px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  background: #fff5e9;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.next-festival-banner .festival-countdown-unit {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.festival-countdown-value {
+  display: block;
+  font: 700 26px "Playfair Display", serif;
+  color: #542019;
+}
+
+.next-festival-banner .festival-countdown-value {
+  color: white;
+}
+
+.festival-countdown-unit-label {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9b7a6c;
+}
+
+.next-festival-banner .festival-countdown-unit-label {
+  color: #f2c9ad;
+}
+
+.festival-countdown-passed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9b7a6c;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.festival-countdown-compact {
+  margin: 8px 0 0;
+}
+
+.festival-countdown-compact .festival-countdown-unit {
+  min-width: 46px;
+  padding: 6px 4px;
+  border-radius: 10px;
+}
+
+.festival-countdown-compact .festival-countdown-value {
+  font-size: 18px;
+}
+
+.festival-countdown-compact .festival-countdown-unit-label {
+  font-size: 9px;
+}
+
+/* Next-up banner on the Festival Explorer page */
+.next-festival-banner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  box-shadow: var(--shadow);
+}
+
+.next-festival-banner-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.28;
+}
+
+.next-festival-banner-content {
+  position: relative;
+  z-index: 1;
+  padding: 44px 5vw;
+}
+
+.next-festival-banner-content h2 {
+  margin: 8px 0 6px;
+  font: 800 40px "Playfair Display", serif;
+  color: white;
+}
+
+.next-festival-banner-place {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #f2c9ad;
+  font-size: 14px;
+}
+
+@media (max-width: 650px) {
+  .next-festival-banner-content h2 {
+    font-size: 30px;
+  }
+
+  .festival-countdown-unit {
+    min-width: 50px;
+    padding: 8px 4px;
+  }
+
+  .festival-countdown-value {
+    font-size: 20px;
+  }
+}
 /* =================================
    TEMPLE GUIDE QUICK SUGGESTIONS
 ================================= */

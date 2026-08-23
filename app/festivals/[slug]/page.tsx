@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { festivals } from "@/data/festivals";
 import { slugify } from "@/lib/slug";
+import FestivalCountdown from "@/components/FestivalCountdown";
 
 export function generateStaticParams() {
   return festivals.map((festival) => ({ slug: slugify(festival.name) }));
@@ -25,6 +26,7 @@ export default async function FestivalDetail({ params }: { params: Promise<{ slu
             <h1>{festival.name}</h1>
             <div className="location"><MapPin size={17} style={{ verticalAlign: "middle" }} /> {festival.place}</div>
             <p>{festival.note}</p>
+            <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} />
             <div className="hero-actions">
               <Link href="/planner" className="btn-primary" style={{ background: "#a52d15", color: "white" }}><Sparkles size={17} /> Plan a Visit</Link>
               <Link href="/festivals" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}><ArrowLeft size={17} /> All Festivals</Link>
