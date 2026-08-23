@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/ratelimit";
+
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -8,6 +12,21 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const rate = checkRateLimit(`review:${user.id}`, RATE_LIMIT, RATE_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "You've posted several reviews recently — please try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil((rate.resetAt - Date.now()) / 1000).toString(),
+          "X-RateLimit-Limit": rate.limit.toString(),
+          "X-RateLimit-Remaining": rate.remaining.toString(),
+        },
+      }
+    );
   }
 
   const { id, temple_slug, rating, review_text, photo_paths } =
@@ -23,7 +42,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Review is too long" }, { status: 400 });
   }
 
-  // Same display-name fallback the navbar uses: full_name, else email prefix.
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name")
@@ -43,23 +61,19 @@ export async function POST(request: Request) {
   });
 
   if (reviewError) {
-    // Most common case: the unique(temple_slug, user_id) constraint —
-    // the user already reviewed this temple.
     const status = reviewError.code === "23505" ? 409 : 500;
     return NextResponse.json({ error: reviewError.message }, { status });
   }
 
   if (Array.isArray(photo_paths) && photo_paths.length > 0) {
     const rows = photo_paths
-      .slice(0, 3) // hard cap, in case the client check is bypassed
+      .slice(0, 3)
       .map((storage_path: string) => ({ review_id: id, storage_path }));
 
     const { error: photoError } = await supabase
       .from("temple_review_photos")
       .insert(rows);
 
-    // The review itself already succeeded — don't fail the whole request
-    // over photo rows, just surface the issue.
     if (photoError) {
       return NextResponse.json(
         { success: true, id, photoWarning: photoError.message },
@@ -83,15 +97,28 @@ export async function DELETE(request: Request) {
   const { id } = await request.json();
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  // temple_review_photos rows are removed automatically via ON DELETE CASCADE.
-  // The underlying storage objects are not cleaned up here — acceptable for
-  // v1, worth a cleanup job later if orphaned files become a real cost.
-  const { error } = await supabase
+  const { data: photos } = await supabase
+    .from("temple_review_photos")
+    .select("storage_path")
+    .eq("review_id", id);
+
+  const { error, count } = await supabase
     .from("temple_reviews")
-    .delete()
+    .delete({ count: "exact" })
     .eq("id", id)
     .eq("user_id", user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (count && count > 0 && photos && photos.length > 0) {
+    const { error: storageError } = await supabase.storage
+      .from("review-photos")
+      .remove(photos.map((p: { storage_path: string }) => p.storage_path));
+
+    if (storageError) {
+      return NextResponse.json({ success: true, storageWarning: storageError.message });
+    }
+  }
+
   return NextResponse.json({ success: true });
 }

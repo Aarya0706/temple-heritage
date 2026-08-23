@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import StarRating from "./StarRating";
 import ReviewForm from "./ReviewForm";
 import DeleteReviewButton from "./DeleteReviewButton";
+import ReviewPhotoGallery from "./ReviewPhotoGallery";
 
 type ReviewRow = {
   id: string;
@@ -131,23 +132,10 @@ export default async function ReviewsSection({
                 </p>
               )}
 
-              {review.temple_review_photos.length > 0 && (
-                <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                  {review.temple_review_photos.map((photo) => (
-                    <img
-                      key={photo.storage_path}
-                      src={photoUrl(photo.storage_path)}
-                      alt={`Photo from ${review.reviewer_name}'s visit`}
-                      style={{
-                        width: 96,
-                        height: 96,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+              <ReviewPhotoGallery
+                photoUrls={review.temple_review_photos.map((p) => photoUrl(p.storage_path))}
+                reviewerName={review.reviewer_name}
+              />
             </article>
           ))}
         </div>
