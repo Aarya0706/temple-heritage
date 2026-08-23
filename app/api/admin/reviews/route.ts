@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 const VALID_STATUSES = ["published", "flagged", "hidden"];
 
 async function requireAdmin() {
