@@ -10,11 +10,12 @@ export async function Navbar() {
 
   let displayName: string | null = null;
   let email: string | null = null;
+  let isAdmin = false;
 
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, is_admin")
       .eq("id", user.id)
       .single();
 
@@ -24,12 +25,14 @@ export async function Navbar() {
       "Account";
 
     email = user.email || null;
+    isAdmin = !!profile?.is_admin;
   }
 
   return (
     <NavbarClient
       displayName={displayName}
       email={email}
+      isAdmin={isAdmin}
     />
   );
 }

@@ -69,6 +69,15 @@ Users can access previously generated spiritual journeys and revisit their perso
 
 Generated Yatras can be downloaded as a formatted itinerary report.
 
+### ⭐ Reviews & Visitor Photos
+
+Logged-in users can share their experience at a temple:
+
+- Star rating (1–5) with a short written review
+- Up to 3 photos per review, resized and compressed client-side before upload
+- One review per user per temple, with the ability to delete their own review
+- Aggregate rating shown on Browse Temples cards and the temple detail page
+
 ---
 
 ## 🖥️ Screenshots
@@ -96,6 +105,7 @@ Generated Yatras can be downloaded as a formatted itinerary report.
 | React | User interface |
 | CSS | Styling and responsive design |
 | Groq API | AI-powered itinerary generation |
+| Supabase | Auth, Postgres, Storage (Saved Temples, My Yatras, Reviews & Photos) |
 | Node.js | Server-side runtime |
 | Next.js API Routes | Backend API endpoints |
 
@@ -131,6 +141,7 @@ User Preferences
            │
            ▼
  Downloadable Itinerary
+```
 
 ## 👩‍💻 Author
 

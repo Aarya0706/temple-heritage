@@ -11,6 +11,7 @@ import { temples } from "@/data/temples";
 import SaveTempleButton from "@/components/SaveTempleButton";
 import HighlightCard from "@/components/HighlightCard";
 import ReviewsSection from "@/components/ReviewsSection";
+import TempleMap from "@/components/TempleMap";
 import { createClient } from "@/lib/supabase/server";
 
 export function generateStaticParams() {
@@ -62,6 +63,18 @@ export default async function TempleDetail({
                 <MapPin size={17} style={{ verticalAlign: "middle" }} />{" "}
                 {temple.city}, {temple.state}
               </span>
+
+              <a
+                href="#location"
+                style={{
+                  color: "#9b6958",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  borderBottom: "1px dashed #c9a58f",
+                }}
+              >
+                View on map
+              </a>
 
               <a
                 href="#reviews"
@@ -155,6 +168,12 @@ export default async function TempleDetail({
             />
           ))}
         </div>
+      </section>
+
+      <section className="detail-section" id="location">
+        <div className="eyebrow">✦ Getting There</div>
+        <h2>Location</h2>
+        <TempleMap name={temple.name} city={temple.city} state={temple.state} />
       </section>
 
       <section className="section section-dark">

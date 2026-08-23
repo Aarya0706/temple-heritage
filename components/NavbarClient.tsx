@@ -18,14 +18,17 @@ const links = [
 type NavbarClientProps = {
   displayName: string | null;
   email: string | null;
+  isAdmin?: boolean;
 };
 
 export function NavbarClient({
   displayName,
   email,
+  isAdmin = false,
 }: NavbarClientProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const visibleLinks = isAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
 
   return (
     <header className="navbar">
@@ -55,7 +58,7 @@ export function NavbarClient({
         {/* NAVIGATION */}
         <nav className={`nav-links ${open ? "open" : ""}`}>
           <div className="nav-links-inner">
-            {links.map((link) => (
+            {visibleLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
