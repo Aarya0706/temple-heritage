@@ -13,6 +13,7 @@ import HighlightCard from "@/components/HighlightCard";
 import ReviewsSection from "@/components/ReviewsSection";
 import TempleMap from "@/components/TempleMap";
 import { createClient } from "@/lib/supabase/server";
+import TempleAskWidget from "@/components/TempleAskWidget";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -197,6 +198,9 @@ export default async function TempleDetail({
           </Link>
         </div>
       </section>
+
+      <TempleAskWidget templeSlug={temple.slug} templeName={temple.name} />
+      <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
 
       <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
     </main>
