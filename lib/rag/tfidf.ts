@@ -26,12 +26,36 @@ const STOPWORDS = new Set([
   "i", "we", "my", "our",
 ]);
 
+// Deliberately conservative suffix stripper — not a real stemmer, just
+// enough to bridge everyday inflections ("visiting"/"visit", "hours"/"hour",
+// "temples"/"temple") so a visitor's phrasing matches curated copy that
+// happens to use a different form of the same word. Length guards keep it
+// from mangling short words.
+function stem(word: string): string {
+  if (word.length > 5 && word.endsWith("ing")) {
+    const stripped = word.slice(0, -3);
+    // "getting" -> "gett" is wrong; doubled trailing consonant after
+    // stripping "-ing" means the double was just there to protect the
+    // short vowel (get -> getting, run -> running, sit -> sitting) — drop
+    // the extra letter so it matches the base word visitors actually type.
+    const last = stripped[stripped.length - 1];
+    const secondLast = stripped[stripped.length - 2];
+    if (last && last === secondLast) return stripped.slice(0, -1);
+    return stripped;
+  }
+  if (word.length > 4 && word.endsWith("ies")) return word.slice(0, -3) + "y";
+  if (word.length > 4 && word.endsWith("es")) return word.slice(0, -2);
+  if (word.length > 3 && word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+  return word;
+}
+
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
-    .filter((t) => t.length > 1 && !STOPWORDS.has(t));
+    .filter((t) => t.length > 1 && !STOPWORDS.has(t))
+    .map(stem);
 }
 
 function buildIdf(docsTokens: string[][]): Map<string, number> {
@@ -87,7 +111,7 @@ function cosineSimilarity(a: Map<string, number>, b: Map<string, number>): numbe
 export function rankChunks(chunks: Chunk[], query: string, topK = 5): RankedChunk[] {
   if (chunks.length === 0) return [];
 
-  const docsTokens = chunks.map((c) => tokenize(c.text));
+  const docsTokens = chunks.map((c) => tokenize(`${c.section} ${c.text}`));
   const idf = buildIdf(docsTokens);
   const queryVec = vectorize(tokenize(query), idf);
 

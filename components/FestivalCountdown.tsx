@@ -39,12 +39,47 @@ export default function FestivalCountdown({
   compact?: boolean;
 }) {
   const target = new Date(`${date2026}T00:00:00`);
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() => getTimeLeft(target));
+  // Start as null on both server and the client's first render pass, and only
+  // compute the real (Date.now()-based) value after mount. Computing it eagerly
+  // in the useState initializer runs once on the server and again on the client
+  // a few seconds later, so the server and client markup disagree on the
+  // seconds/minutes shown — a classic hydration mismatch. Deferring the real
+  // value to useEffect keeps the first client render identical to the SSR
+  // output; the ticking numbers then appear a beat after mount, which is
+  // invisible to the user.
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setTimeLeft(getTimeLeft(target));
     const id = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date2026]);
+
+  if (!mounted) {
+    // Same shape as the "counting down" state below, with placeholder dashes,
+    // so there's no layout shift once the real numbers appear a moment later.
+    return (
+      <div className={`festival-countdown ${compact ? "festival-countdown-compact" : ""}`}>
+        {!compact && (
+          <div className="festival-countdown-label">
+            <CalendarHeart size={16} />
+            <span>Countdown to {festivalName} · {formatFestivalDate(target)}</span>
+          </div>
+        )}
+        <div className="festival-countdown-units">
+          {["days", "hrs", "min", "sec"].map((label) => (
+            <div className="festival-countdown-unit" key={label}>
+              <span className="festival-countdown-value">--</span>
+              <span className="festival-countdown-unit-label">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!timeLeft) {
     return (

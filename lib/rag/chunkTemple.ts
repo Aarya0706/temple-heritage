@@ -31,7 +31,12 @@ export function buildTempleChunks(temple: Temple, reviews: ReviewRow[]): Chunk[]
   chunks.push({
     id: `${temple.slug}-visit-info`,
     section: "Timings & Best Time to Visit",
-    text: `${temple.name} darshan timing: ${temple.timing}. Best time to visit: ${temple.bestTime}. Temple type: ${temple.type}.`,
+    // Say the same thing multiple ways ("timing", "visiting hours", "opening
+    // hours") because retrieval below is plain keyword/TF-IDF matching with
+    // no synonym awareness — a visitor asking "what are the visiting hours"
+    // needs the word "hours" to actually appear somewhere in this chunk, or
+    // it scores zero relevance and the bot claims it has no info.
+    text: `${temple.name} darshan timing / visiting hours / opening hours: ${temple.timing}. Best time to visit: ${temple.bestTime}. Temple type: ${temple.type}.`,
   });
 
   if (temple.accessNotes) {

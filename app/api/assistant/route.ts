@@ -101,7 +101,12 @@ export async function POST(req: NextRequest) {
   try {
     const response = await groq.chat.completions.create({
       model: AI_MODEL,
-      max_tokens: 500,
+      // 500 was tuned for short conversational replies, but the system
+      // prompt also invites longer structured answers (multi-day
+      // breakdowns, bulleted temple lists) — those routinely ran out of
+      // budget mid-list (a heading with no bullets under it). 1200 gives
+      // that headroom while still bounding cost per turn.
+      max_tokens: 1200,
       messages: apiMessages,
     });
 

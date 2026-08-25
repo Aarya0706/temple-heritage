@@ -64,7 +64,8 @@ export const temples: Temple[] = [
     timing: "5:00 AM – 12:30 PM, 4:00 PM – 10:00 PM",
     bestTime: "October – March",
     type: "Historic Temple",
-    highlights: ["South Tower", "Hall of Thousand Pillars", "Meenakshi Shrine", "Evening ceremonies"]
+    highlights: ["South Tower", "Hall of Thousand Pillars", "Meenakshi Shrine", "Evening ceremonies"],
+    accessNotes: "Nearest airport: Madurai Airport (IXM), about 10-12 km away, with flights from Chennai, Bengaluru and Delhi. Nearest railway station: Madurai Junction, about 2-3 km from the temple, well connected to major Indian cities. Auto-rickshaws and taxis run from both to the temple."
   },
   {
     slug: "dwarkadhish",
@@ -99,7 +100,8 @@ export const temples: Temple[] = [
     timing: "6:30 AM – 1:00 PM, 5:00 PM – 9:30 PM",
     bestTime: "November – February",
     type: "Vaishnav Temple",
-    highlights: ["Main shrine", "Gomti Ghat", "Dwarka heritage walk", "Sunset by the coast"]
+    highlights: ["Main shrine", "Gomti Ghat", "Dwarka heritage walk", "Sunset by the coast"],
+    accessNotes: "Dwarka has no airport of its own; the nearest is Jamnagar Airport, roughly 130 km away, with flights from Mumbai and Ahmedabad. Dwarka Railway Station is only about 2 km from the temple and is well connected to Ahmedabad, Mumbai, Delhi and other major cities. Auto-rickshaws and taxis cover the short last stretch to the temple."
   },
   {
     slug: "jagannath-puri",
@@ -134,7 +136,8 @@ export const temples: Temple[] = [
     timing: "5:00 AM – 11:00 PM (varies by ritual)",
     bestTime: "October – February",
     type: "Vaishnav Temple",
-    highlights: ["Main temple", "Rath Yatra traditions", "Grand Road", "Puri beach"]
+    highlights: ["Main temple", "Rath Yatra traditions", "Grand Road", "Puri beach"],
+    accessNotes: "Puri has no airport; the nearest is Biju Patnaik International Airport in Bhubaneswar, about 60 km away, with flights from Delhi, Mumbai, Kolkata, Chennai and Bengaluru. Puri Railway Station is only 2-3 km from the temple and has direct trains from Delhi, Kolkata, Chennai and Mumbai. Konark's Sun Temple is about 35 km away and makes an easy same-day add-on by taxi or bus."
   },
   {
     slug: "kashi-vishwanath",
@@ -147,7 +150,8 @@ export const temples: Temple[] = [
     region: "North India",
     image: "/images/kashi-vishwanath.png",
     accessNotes:
-      "Varanasi (Lal Bahadur Shastri Airport, VNS) has NO direct flight to " +
+      "Nearest airport: Lal Bahadur Shastri International Airport (VNS), Varanasi, about 20-25 km from the temple, with flights from Delhi, Mumbai and Kolkata. Nearest railway station: Varanasi Junction (Cantt), about 4-6 km away. Vehicles aren't allowed in the final lanes to the temple, so the last stretch is on foot or by cycle-rickshaw. " +
+      "Varanasi (VNS) has NO direct flight to " +
       "Indore, Ujjain's nearest airport - there is no non-stop Varanasi-Indore " +
       "route. Any itinerary leaving Varanasi for Ujjain/Indore must route " +
       "through a connecting hub (commonly Delhi, Mumbai, Bengaluru or " +
@@ -255,7 +259,8 @@ export const temples: Temple[] = [
     timing: "6:00 AM – 10:00 PM",
     bestTime: "October – February",
     type: "Jyotirlinga",
-    highlights: ["Main shrine", "Sea-facing promenade", "Evening sound-and-light show", "Nearby Prabhas Patan"]
+    highlights: ["Main shrine", "Sea-facing promenade", "Evening sound-and-light show", "Nearby Prabhas Patan"],
+    accessNotes: "Nearest airport: Diu Airport, about 60-65 km away; Rajkot Airport (around 200 km) is a larger alternative with more connections. Nearest railway station: Somnath Railway Station, right by the temple (Veraval Junction, about 6-7 km away, is the better-connected option), with trains from Ahmedabad, Mumbai and Rajkot. Somnath is also linked by NH51 and other highways to major Gujarat cities."
   },
   {
     slug: "tirupati",
@@ -290,7 +295,8 @@ export const temples: Temple[] = [
     timing: "Varies by sewa and darshan",
     bestTime: "September – February",
     type: "Vaishnav Temple",
-    highlights: ["Tirumala hills", "Darshan", "Temple traditions", "Nearby waterfalls"]
+    highlights: ["Tirumala hills", "Darshan", "Temple traditions", "Nearby waterfalls"],
+    accessNotes: "Nearest airport: Tirupati International Airport (Renigunta), about 15-16 km from Tirupati town and around 30-40 km from the Tirumala hilltop temple. Nearest railway station: Tirupati Railway Station, well connected to Chennai, Bengaluru, Hyderabad and Mumbai; from there, free APSRTC buses and taxis run up the ghat road to Tirumala. Pilgrims can also trek up via the Alipiri or Srivari Mettu footpaths."
   },
   {
     slug: "mahakaleshwar",
@@ -303,6 +309,7 @@ export const temples: Temple[] = [
     region: "Central India",
     image: "/images/mahakaleshwar.png",
     accessNotes:
+      "Nearest railway station: Ujjain Junction, only about 2 km from the temple, on the Western Railway network. " +
       "Ujjain has no airport of its own; the nearest is Devi Ahilyabai Holkar " +
       "Airport in Indore (IDR), about 1 hour by road. Indore has NO direct " +
       "flight from Varanasi - travelers coming from Varanasi must connect " +
@@ -412,7 +419,8 @@ export const temples: Temple[] = [
     timing: "9:30 AM – 6:30 PM (closed Mondays)",
     bestTime: "October – March",
     type: "Modern Temple",
-    highlights: ["Main monument", "Musical fountain show", "Exhibition halls", "Yagnapurush Kund"]
+    highlights: ["Main monument", "Musical fountain show", "Exhibition halls", "Yagnapurush Kund"],
+    accessNotes: "Nearest airport: Indira Gandhi International Airport, Delhi, about 20-25 km away. Nearest metro station: Akshardham on the Delhi Metro Blue Line, a short walk from the temple gate — the easiest way in from anywhere in the city. Nearest railway stations: Hazrat Nizamuddin (about 6 km) and New Delhi Railway Station (about 7-11 km), both linked to Akshardham by metro."
   },
   {
     slug: "konark-sun-temple",
@@ -447,7 +455,8 @@ export const temples: Temple[] = [
     timing: "6:00 AM – 8:00 PM",
     bestTime: "October – February",
     type: "Historic Temple",
-    highlights: ["Chariot wheels", "Stone carvings", "Nearby Chandrabhaga beach", "Konark Dance Festival"]
+    highlights: ["Chariot wheels", "Stone carvings", "Nearby Chandrabhaga beach", "Konark Dance Festival"],
+    accessNotes: "Konark has no airport or railway station of its own. Nearest airport: Biju Patnaik International Airport, Bhubaneswar, about 60-65 km away. Nearest railway station: Puri, about 30-35 km away (Bhubaneswar station is a farther alternative at roughly 60-65 km). Both Puri and Bhubaneswar are connected to Konark by regular buses and taxis, about a 1-1.5 hour drive."
   },
   {
     slug: "brihadeeswarar",
@@ -482,7 +491,8 @@ export const temples: Temple[] = [
     timing: "6:00 AM – 12:30 PM, 4:00 PM – 8:30 PM",
     bestTime: "October – March",
     type: "Historic Temple",
-    highlights: ["Vimana tower", "Nandi statue", "Chola frescoes", "Temple tank"]
+    highlights: ["Vimana tower", "Nandi statue", "Chola frescoes", "Temple tank"],
+    accessNotes: "Thanjavur has no airport; the nearest is Tiruchirappalli (Trichy) International Airport, about 55-60 km away, with flights from Chennai, Bengaluru and international routes to Singapore and Dubai. Nearest railway station: Thanjavur Junction, about 2-3 km from the temple, connected to Chennai, Madurai and Trichy."
   }
   ,{
     slug: "mallikarjuna",
@@ -526,6 +536,7 @@ export const temples: Temple[] = [
       "Srisailam hills",
       "Krishna River",
     ],
+    accessNotes: "Nearest airport: Rajiv Gandhi International Airport, Hyderabad, about 200-220 km away. Nearest railway station: Markapur Road, about 80-90 km away, from where buses and taxis cover the rest via NH183. Srisailam is most commonly reached by direct bus or taxi from Hyderabad, roughly 5-6 hours by road.",
   },
 
   {
@@ -569,6 +580,7 @@ export const temples: Temple[] = [
       "Narmada River",
       "Mamleshwar Temple",
     ],
+    accessNotes: "Nearest airport: Devi Ahilyabai Holkar Airport, Indore, about 75-80 km away. Nearest railway station: Omkareshwar Road (Mortakka), about 12 km from the temple, though only a few trains stop there; Khandwa Junction (about 70-72 km) and Indore (about 77 km) are the better-connected railheads. Most pilgrims drive from Indore via NH-52, about 2-2.5 hours.",
   },
 
   {
@@ -612,6 +624,7 @@ export const temples: Temple[] = [
       "Temple architecture",
       "Wildlife sanctuary",
     ],
+    accessNotes: "There is no airport or major railway station near Bhimashankar. Nearest airport: Pune Airport, about 110-120 km away. Nearest railway station: Pune Junction, about 110 km away (Karjat, roughly 100-170 km depending on route, is a secondary option). Buses run from Pune's Shivajinagar bus stand; the drive takes about 3-4 hours through the Sahyadri hills.",
   },
 
   {
@@ -655,6 +668,7 @@ export const temples: Temple[] = [
       "Godavari source",
       "Nivruttinath Temple",
     ],
+    accessNotes: "Nearest airport: Nashik Airport (Ozar), about 50-55 km away, though flight options are limited; Mumbai's Chhatrapati Shivaji Maharaj International Airport (about 180 km) has far more connections. Nearest railway station: Nashik Road, about 28-30 km from the temple. From Nashik city, it's about a 45-75 minute drive via Trimbak Road.",
   },
 
   {
@@ -699,6 +713,7 @@ export const temples: Temple[] = [
       "Shravani Mela",
       "Deoghar pilgrimage",
     ],
+    accessNotes: "Nearest airport: Deoghar Airport, about 7-12 km from the temple, with flights from Delhi, Kolkata and Patna (Ranchi's Birsa Munda Airport, about 250 km away, is a well-connected backup). Nearest railway station: Jasidih Junction, about 7 km away, on the Delhi-Howrah line with strong connectivity to Kolkata, Delhi and Patna. Autos and taxis cover the last stretch into Deoghar.",
   },
 
   {
@@ -742,6 +757,7 @@ export const temples: Temple[] = [
       "Dwarka pilgrimage circuit",
       "Arabian Sea coast",
     ],
+    accessNotes: "Nageshwar sits about 15-17 km from Dwarka and shares Dwarka's transport hubs. Nearest airport: Jamnagar Airport, roughly 130-145 km away, with flights from Mumbai and Ahmedabad. Nearest railway station: Dwarka Railway Station, about 15-17 km away, well connected to Ahmedabad, Mumbai and Delhi. It's commonly combined with Dwarkadhish Temple in the same day trip by taxi or auto.",
   },
 
   {
@@ -786,6 +802,7 @@ export const temples: Temple[] = [
       "Sacred wells",
       "Rameswaram pilgrimage",
     ],
+    accessNotes: "Nearest airport: Madurai Airport, about 170-180 km away, with flights from Chennai, Bengaluru and other major cities. Nearest railway station: Rameswaram Railway Station, only about 1-2 km from the temple, connected to Chennai, Madurai, Coimbatore and Tiruchirappalli. Rameswaram sits on Pamban Island, linked to the mainland by the Pamban Bridge.",
   },
 
   {
@@ -830,6 +847,7 @@ export const temples: Temple[] = [
       "Temple architecture",
       "Verul heritage area",
     ],
+    accessNotes: "Nearest airport: Chhatrapati Sambhajinagar (Aurangabad) Airport, about 30-37 km away, with flights from Mumbai, Delhi and Hyderabad. Nearest railway station: Aurangabad Railway Station, about 25-30 km away, connected to Mumbai and Pune. The temple sits right by the Ellora Caves, so the two are easily combined in one visit by taxi or bus from Aurangabad.",
   },
 ];
 
