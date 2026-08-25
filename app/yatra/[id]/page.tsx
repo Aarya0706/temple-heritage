@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, MapPin } from 'lucide-react'
-import DownloadItineraryButton from '@/components/DownloadItineraryButton'
-import ShareYatraButton from '@/components/ShareYatraButton'
+import type { Metadata } from 'next'
+import { Calendar, MapPin, Sparkles, Globe } from 'lucide-react'
 import YatraRouteMapLoader, { YatraRouteDay } from '@/components/YatraRouteMapLoader'
 import { resolveTemples } from '@/lib/yatra-route'
 
@@ -14,28 +13,52 @@ type ItineraryDay = {
   templeSlugs?: string[];
 };
 
-export default async function YatraDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+async function getPublicYatra(id: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: yatra, error } = await supabase
+  // No user_id filter here on purpose — this route is unauthenticated.
+  // The "yatra_plans_select_public" RLS policy (is_public = true) is what
+  // actually scopes this: a private plan's id simply won't return a row.
+  const { data: yatra } = await supabase
     .from('yatra_plans')
     .select('id, title, itinerary, created_at, is_public')
     .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
+    .eq('is_public', true)
+    .maybeSingle();
+  return yatra;
+}
 
-  if (error || !yatra) notFound();
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const yatra = await getPublicYatra(id);
+  if (!yatra) return { title: 'Yatra not found | Temple Heritage' };
+
+  const dayCount = yatra.itinerary?.days?.length || 0;
+  const summary: string = yatra.itinerary?.summary || `A ${dayCount}-day pilgrimage itinerary planned on Temple Heritage.`;
+
+  return {
+    title: `${yatra.title} | Temple Heritage`,
+    description: summary,
+    openGraph: {
+      title: yatra.title,
+      description: summary,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: yatra.title,
+      description: summary,
+    },
+  };
+}
+
+export default async function PublicYatraPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const yatra = await getPublicYatra(id);
+  if (!yatra) notFound();
 
   const days: ItineraryDay[] = yatra.itinerary?.days || [];
   const summary: string = yatra.itinerary?.summary || "";
   const from: string = yatra.itinerary?.from || "";
-  // displayRegion reflects the regions the temples in this itinerary actually
-  // belong to; region is only the original filter the user requested and can
-  // be stale (the planner is allowed to pull in an adjacent-region temple).
-  // Older saved plans won't have displayRegion yet, so fall back to region.
   const region: string = yatra.itinerary?.displayRegion || yatra.itinerary?.region || "";
 
   const routeDays: YatraRouteDay[] = days.map((d) => ({
@@ -46,31 +69,24 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
   return (
     <main>
       <section className="page-hero">
-        <Link
-          href="/my-yatras"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            color: "#ffc05a",
-            textDecoration: "none",
-            fontSize: 14,
-            marginBottom: 14
-          }}
+        <div
+          className="eyebrow"
+          style={{ color: "#ffc05a", display: "flex", alignItems: "center", gap: 6 }}
         >
-          <ArrowLeft size={15} /> Back to My Yatras
-        </Link>
+          <Globe size={13} /> Shared Yatra
+        </div>
         <h1>{yatra.title}</h1>
         <p style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <Calendar size={15} />
-            Saved on {new Date(yatra.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+            Planned {new Date(yatra.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
           </span>
           {from && (
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <MapPin size={15} /> From {from}
             </span>
           )}
+          {region && <span>{region}</span>}
         </p>
       </section>
 
@@ -117,21 +133,21 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
 
           <YatraRouteMapLoader days={routeDays} />
 
-          <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-            <DownloadItineraryButton
-              title={yatra.title}
-              summary={summary}
-              from={from}
-              region={region}
-              createdAt={yatra.created_at}
-              days={days}
-            />
-            <ShareYatraButton yatraId={yatra.id} initialIsPublic={!!yatra.is_public} />
-            <Link href="/planner" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}>
-              Plan another Yatra
-            </Link>
-            <Link href="/my-yatras" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}>
-              Back to My Yatras
+          <div style={{
+            marginTop: 32,
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderTop: "1px solid #f0ddc8",
+            paddingTop: 24
+          }}>
+            <p style={{ color: "#8c6a54", fontSize: 14, margin: 0 }}>
+              Made with Temple Heritage's AI Yatra Planner.
+            </p>
+            <Link href="/planner" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Sparkles size={16} /> Plan Your Own Yatra
             </Link>
           </div>
         </div>

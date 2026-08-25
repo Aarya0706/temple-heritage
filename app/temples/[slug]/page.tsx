@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -19,6 +20,33 @@ export function generateStaticParams() {
   return temples.map((temple) => ({
     slug: temple.slug,
   }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const temple = temples.find((item) => item.slug === slug);
+  if (!temple) return { title: "Temple not found | Temple Heritage" };
+
+  const description = temple.shortDescription || temple.description;
+
+  return {
+    title: `${temple.name} | Temple Heritage`,
+    description,
+    openGraph: {
+      title: temple.name,
+      description,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: temple.name,
+      description,
+    },
+  };
 }
 
 export default async function TempleDetail({

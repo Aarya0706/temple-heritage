@@ -44,6 +44,7 @@ can reference it).
 | `0004_yatra_plans.sql` | `yatra_plans` table + RLS |
 | `0005_temple_reviews.sql` | `temple_reviews`, `temple_review_photos`, `temple_rating_summary` view, 3-photo trigger, RLS |
 | `0006_storage_review_photos.sql` | `review-photos` storage bucket + object policies |
+| `0007_yatra_sharing.sql` | `yatra_plans.is_public` + public-read/owner-update RLS for shareable links |
 
 ## Going forward
 
