@@ -1,36 +1,89 @@
  "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Sparkles, Loader2, Heart, Star, TrendingUp } from "lucide-react";
 import { temples } from "@/data/temples";
 import Link from "next/link";
 
 const options = ["Lord Shiva", "Lord Vishnu / Krishna", "Goddess", "Architecture", "History", "Nature", "Jyotirlinga"];
 
+type Reason =
+  | { type: "saved_by_similar_users"; count: number }
+  | { type: "matches_interests" }
+  | { type: "popular" };
+
+type RecommendationResponse = {
+  recommendations: { slug: string; reason: Reason }[];
+  hasSavedTemples: boolean;
+};
+
+function ReasonBadge({ reason }: { reason: Reason }) {
+  if (reason.type === "saved_by_similar_users") {
+    return (
+      <span className="reason-badge">
+        <Heart size={13} /> Saved by {reason.count} visitor{reason.count === 1 ? "" : "s"} with similar taste
+      </span>
+    );
+  }
+  if (reason.type === "matches_interests") {
+    return (
+      <span className="reason-badge">
+        <Sparkles size={13} /> Matches your interests
+      </span>
+    );
+  }
+  return (
+    <span className="reason-badge">
+      <TrendingUp size={13} /> Popular with visitors
+    </span>
+  );
+}
+
 export default function RecommenderPage() {
   const [selected, setSelected] = useState<string[]>(["Architecture"]);
   const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<RecommendationResponse | null>(null);
 
-  const results = useMemo(() => {
-    return [...temples].sort((a, b) => {
-      const score = (t: typeof temples[number]) => {
-        let s = 0;
-        if (selected.includes(t.deity)) s += 5;
-        if (selected.includes("Lord Shiva") && t.deity.includes("Shiva")) s += 4;
-        if (selected.includes("Lord Vishnu / Krishna") && (t.deity.includes("Vishnu") || t.deity.includes("Krishna"))) s += 4;
-        if (selected.includes("Goddess") && t.deity.includes("Goddess")) s += 4;
-        if (selected.includes("Architecture")) s += 2;
-        if (selected.includes("History")) s += t.type.includes("Historic") ? 3 : 1;
-        if (selected.includes("Nature")) s += ["North India", "West India"].includes(t.region) ? 2 : 1;
-        if (selected.includes("Jyotirlinga") && t.type === "Jyotirlinga") s += 5;
-        return s;
-      };
-      return score(b) - score(a);
-    }).slice(0, 4);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    const params = selected.length ? `?preferences=${encodeURIComponent(selected.join(","))}` : "";
+
+    fetch(`/api/recommendations${params}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Couldn't load recommendations.");
+        return res.json();
+      })
+      .then((json: RecommendationResponse) => {
+        if (!cancelled) setData(json);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Something went wrong.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selected]);
 
+  const results = useMemo(() => {
+    if (!data) return [];
+    const bySlug = new Map(temples.map((t) => [t.slug, t]));
+    return data.recommendations
+      .map((r) => ({ temple: bySlug.get(r.slug), reason: r.reason }))
+      .filter((r): r is { temple: (typeof temples)[number]; reason: Reason } => !!r.temple);
+  }, [data]);
+
   function toggle(item: string) {
-    setSelected((current) => current.includes(item) ? current.filter((x) => x !== item) : [...current, item]);
+    setSelected((current) => (current.includes(item) ? current.filter((x) => x !== item) : [...current, item]));
+    setDone(true);
   }
 
   return (
@@ -38,7 +91,10 @@ export default function RecommenderPage() {
       <section className="page-hero">
         <div className="eyebrow" style={{ color: "#ffc05a" }}>✦ Smart discovery</div>
         <h1>Find Your Temple</h1>
-        <p>Choose what interests you and get personalized temple suggestions from the heritage collection.</p>
+        <p>
+          Personalized picks based on what visitors with similar taste saved, your stated
+          interests, and what's popular right now.
+        </p>
       </section>
 
       <section className="section section-light">
@@ -53,24 +109,50 @@ export default function RecommenderPage() {
                 </label>
               ))}
             </div>
-            <button className="btn-primary" style={{ background: "#a52d15", color: "white", border: 0, width: "100%", marginTop: 20 }} onClick={() => setDone(true)}>
+            <button
+              className="btn-primary"
+              style={{ background: "#a52d15", color: "white", border: 0, width: "100%", marginTop: 20 }}
+              onClick={() => setDone(true)}
+            >
               <Sparkles size={17} /> Recommend Temples
             </button>
+
+            {data && !data.hasSavedTemples && (
+              <p style={{ marginTop: 16, fontSize: 13, color: "#9b6958", lineHeight: 1.5 }}>
+                <Star size={13} style={{ verticalAlign: "-2px" }} /> Save a few temples on their pages
+                and come back — recommendations get sharper once we know what you actually like,
+                not just what you clicked.
+              </p>
+            )}
           </div>
 
           <div className="panel">
             <h3>{done ? "Your recommendations" : "Recommendations preview"}</h3>
-            {results.map((temple) => (
-              <Link href={`/temples/${temple.slug}`} className="result-card" key={temple.slug}>
-                <img src={temple.image} alt={temple.name} />
-                <div style={{ flex: 1 }}>
-                  <h4>{temple.name}</h4>
-                  <p>📍 {temple.city}, {temple.state}</p>
-                  <p style={{ marginTop: 6 }}>{temple.shortDescription}</p>
-                </div>
-                <ArrowRight size={18} color="#a52d15" />
-              </Link>
-            ))}
+
+            {loading && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#9b6958", padding: "20px 0" }}>
+                <Loader2 size={18} className="spin" /> Finding temples for you...
+              </div>
+            )}
+
+            {error && <p style={{ color: "#b3261e" }}>{error}</p>}
+
+            {!loading &&
+              !error &&
+              results.map(({ temple, reason }) => (
+                <Link href={`/temples/${temple.slug}`} className="result-card" key={temple.slug}>
+                  <img src={temple.image} alt={temple.name} />
+                  <div style={{ flex: 1 }}>
+                    <h4>{temple.name}</h4>
+                    <p>📍 {temple.city}, {temple.state}</p>
+                    <p style={{ marginTop: 6 }}>{temple.shortDescription}</p>
+                    <div style={{ marginTop: 8 }}>
+                      <ReasonBadge reason={reason} />
+                    </div>
+                  </div>
+                  <ArrowRight size={18} color="#a52d15" />
+                </Link>
+              ))}
           </div>
         </div>
       </section>
