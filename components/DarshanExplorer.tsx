@@ -4,32 +4,15 @@ import Link from "next/link";
 import { Clock3, MapPin, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { regions, temples } from "@/data/temples";
+import { searchTemples } from "@/lib/temple-search";
 
 export function DarshanExplorer() {
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("All");
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
-
-    return temples.filter((temple) => {
-      const matchesRegion =
-        region === "All" || temple.region === region;
-
-      const matchesQuery =
-        !q ||
-        [
-          temple.name,
-          temple.deity,
-          temple.city,
-          temple.state,
-          temple.region,
-        ].some((value) =>
-          value.toLowerCase().includes(q)
-        );
-
-      return matchesRegion && matchesQuery;
-    });
+    const regionMatched = region === "All" ? temples : temples.filter((t) => t.region === region);
+    return searchTemples(query, regionMatched).map((r) => r.temple);
   }, [query, region]);
 
   return (

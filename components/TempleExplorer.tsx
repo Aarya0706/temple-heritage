@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { TempleCard } from "./TempleCard";
 import { regions, temples } from "@/data/temples";
+import { searchTemples } from "@/lib/temple-search";
 
 type RatingMap = Record<string, { average_rating: number; review_count: number }>;
 
@@ -30,16 +31,13 @@ export function TempleExplorer() {
   }, []);
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    return temples.filter((t) => {
-      const matchesRegion = region === "All" || t.region === region;
-      const matchesQuery =
-        !q ||
-        [t.name, t.deity, t.city, t.state, t.region].some((value) =>
-          value.toLowerCase().includes(q)
-        );
-      return matchesRegion && matchesQuery;
-    });
+    const regionMatched = region === "All" ? temples : temples.filter((t) => t.region === region);
+
+    // searchTemples does typo-tolerant, weighted-relevance ranking (name >
+    // deity/city > region/description) instead of a plain substring check —
+    // see lib/temple-search.ts for why this is client-side rather than a
+    // Postgres full-text search.
+    return searchTemples(query, regionMatched).map((r) => r.temple);
   }, [query, region]);
 
   return (

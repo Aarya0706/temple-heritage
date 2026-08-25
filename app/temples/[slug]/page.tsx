@@ -201,8 +201,6 @@ export default async function TempleDetail({
 
       <TempleAskWidget templeSlug={temple.slug} templeName={temple.name} />
       <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
-
-      <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
     </main>
   );
 }
