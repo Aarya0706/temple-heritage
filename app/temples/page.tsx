@@ -1,5 +1,7 @@
 import { SectionHeading } from "@/components/SectionHeading";
 import { TempleExplorer } from "@/components/TempleExplorer";
+import AllTemplesMapLoader from "@/components/AllTemplesMapLoader";
+import { temples } from "@/data/temples";
 
 export default function TemplesPage() {
   return (
@@ -10,6 +12,7 @@ export default function TemplesPage() {
         <p>Search temples by name, deity, city, state or region and open a detailed heritage profile.</p>
       </section>
       <section className="section section-light">
+        <AllTemplesMapLoader temples={temples} />
         <TempleExplorer />
       </section>
     </main>

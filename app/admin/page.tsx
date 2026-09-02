@@ -48,6 +48,33 @@ export default async function AdminReviewsPage({
   // supabase/migrations/0003_admin.sql; this is a courtesy redirect.
   if (!profile?.is_admin) notFound();
 
+  // Platform-wide counts for the stats bar. Each uses head:true so
+  // Postgres returns only the count, not the rows themselves. These rely
+  // on the admin-select RLS policies added in 0009_admin_stats.sql --
+  // without them, an admin querying through this RLS-scoped client would
+  // only see their own profile/yatra_plans row, undercounting badly.
+  const [
+    { count: userCount },
+    { count: savedTempleCount },
+    { count: yatraPlanCount },
+    { count: completedYatraCount },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("saved_temples").select("*", { count: "exact", head: true }),
+    supabase.from("yatra_plans").select("*", { count: "exact", head: true }),
+    supabase
+      .from("yatra_plans")
+      .select("*", { count: "exact", head: true })
+      .not("completed_at", "is", null),
+  ]);
+
+  const stats: { label: string; value: number }[] = [
+    { label: "Registered users", value: userCount ?? 0 },
+    { label: "Saved temples", value: savedTempleCount ?? 0 },
+    { label: "Yatra plans saved", value: yatraPlanCount ?? 0 },
+    { label: "Yatras completed", value: completedYatraCount ?? 0 },
+  ];
+
   let query = supabase
     .from("temple_reviews")
     .select(
@@ -85,6 +112,32 @@ export default async function AdminReviewsPage({
 
       <section className="section section-light">
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+              gap: 14,
+              marginBottom: 32,
+            }}
+          >
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                style={{
+                  border: "1px solid #f0ddc8",
+                  borderRadius: 14,
+                  padding: "16px 18px",
+                  background: "white",
+                }}
+              >
+                <div style={{ fontSize: 26, fontWeight: 700, color: "#542019" }}>{stat.value}</div>
+                <div style={{ color: "#9b6958", fontSize: 13, marginTop: 4 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ color: "#3a1a10", marginBottom: 14 }}>Review Moderation</h3>
+
           <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
             {tabs.map((tab) => (
               <a
