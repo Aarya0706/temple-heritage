@@ -51,10 +51,24 @@ export default function FestivalCountdown({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setTimeLeft(getTimeLeft(target));
+    let cancelled = false;
+
+    // Defer the first state update out of the effect body itself (same
+    // reasoning as elsewhere in this codebase): calling setState synchronously
+    // during the effect can trigger an extra cascading render before the
+    // interval even starts. A microtask tick avoids that while still updating
+    // before the next paint in practice.
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setMounted(true);
+      setTimeLeft(getTimeLeft(target));
+    });
+
     const id = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date2026]);
 

@@ -1,0 +1,387 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+new file mode 100644
+index 0000000..dc0eab9
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@ -0,0 +1,31 @@
++name: CI
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++    branches: [main]
++
++jobs:
++  test:
++    name: Lint & Test
++    runs-on: ubuntu-latest
++
++    steps:
++      - name: Checkout repository
++        uses: actions/checkout@v4
++
++      - name: Set up Node.js
++        uses: actions/setup-node@v4
++        with:
++          node-version: "20"
++          cache: "npm"
++
++      - name: Install dependencies
++        run: npm ci
++
++      - name: Run lint
++        run: npm run lint
++
++      - name: Run tests
++        run: npm run test
+diff --git a/app/about/page.tsx b/app/about/page.tsx
+index 285896e..92ba6e7 100644
+--- a/app/about/page.tsx
++++ b/app/about/page.tsx
+@@ -6,7 +6,7 @@ export default function AboutPage() {
+       <section className="page-hero">
+         <div className="eyebrow" style={{ color: "#f5be64" }}>✦ Our mission</div>
+         <h1>Preserving Sacred Legacy</h1>
+-        <p>Making India's temple heritage easier to discover, understand and experience responsibly.</p>
++        <p>Making India&apos;s temple heritage easier to discover, understand and experience responsibly.</p>
+       </section>
+       <section className="section section-light">
+         <div className="why-grid">
+diff --git a/app/darshan/page.tsx b/app/darshan/page.tsx
+index bb9dc75..8074834 100644
+--- a/app/darshan/page.tsx
++++ b/app/darshan/page.tsx
+@@ -11,7 +11,7 @@ export default function DarshanPage() {
+       <section className="section section-light">
+         <DarshanExplorer />
+         <p style={{ marginTop: 30, opacity: 0.7, fontSize: 14 }}>
+-          Timings can shift around festivals, special sewa and seasonal changes — it's worth confirming with the temple directly before you travel.
++          Timings can shift around festivals, special sewa and seasonal changes — it&apos;s worth confirming with the temple directly before you travel.
+         </p>
+       </section>
+     </main>
+diff --git a/app/forgot-password/page.tsx b/app/forgot-password/page.tsx
+index 1f54d8b..0120e25 100644
+--- a/app/forgot-password/page.tsx
++++ b/app/forgot-password/page.tsx
+@@ -19,7 +19,14 @@ export default function ForgotPasswordPage() {
+     })
+     setLoading(false)
+     if (error) {
+-      setError(error.message)
++      const message = error.message?.toLowerCase() || ''
++      if (message.includes('rate limit')) {
++        setError('Too many reset requests right now. Please wait a few minutes and try again.')
++      } else if (message.includes('invalid') && message.includes('email')) {
++        setError('Please enter a valid email address.')
++      } else {
++        setError('Something went wrong sending the reset link. Please try again shortly.')
++      }
+       return
+     }
+     setSent(true)
+diff --git a/app/horoscope/page.tsx b/app/horoscope/page.tsx
+index 7339219..909041c 100644
+--- a/app/horoscope/page.tsx
++++ b/app/horoscope/page.tsx
+@@ -57,15 +57,19 @@ export default function HoroscopePage() {
+ 
+   useEffect(() => {
+     if (!birthDate || !sign) {
+-      setData(null);
++      Promise.resolve().then(() => setData(null));
+       return;
+     }
+ 
+     let cancelled = false;
+-    setLoading(true);
+-    setError(null);
+ 
+-    fetch(`/api/recommendations?birthdate=${encodeURIComponent(birthDate)}`)
++    Promise.resolve()
++      .then(() => {
++        if (cancelled) return Promise.reject(new Error("cancelled"));
++        setLoading(true);
++        setError(null);
++        return fetch(`/api/recommendations?birthdate=${encodeURIComponent(birthDate)}`);
++      })
+       .then((res) => {
+         if (!res.ok) throw new Error("Couldn't load recommendations.");
+         return res.json();
+@@ -74,7 +78,9 @@ export default function HoroscopePage() {
+         if (!cancelled) setData(json);
+       })
+       .catch((err) => {
+-        if (!cancelled) setError(err instanceof Error ? err.message : "Something went wrong.");
++        if (!cancelled && err?.message !== "cancelled") {
++          setError(err instanceof Error ? err.message : "Something went wrong.");
++        }
+       })
+       .finally(() => {
+         if (!cancelled) setLoading(false);
+@@ -99,8 +105,8 @@ export default function HoroscopePage() {
+         <div className="eyebrow" style={{ color: "#ffc05a" }}>✦ Astrology-guided discovery</div>
+         <h1>Find Your Temple by Horoscope</h1>
+         <p>
+-          Enter your birth date and we'll point you to temples traditionally associated with
+-          your sun sign's ruling planet — a fun, well-known thread in Indian temple culture.
++          Enter your birth date and we&apos;ll point you to temples traditionally associated with
++          your sun sign&apos;s ruling planet — a fun, well-known thread in Indian temple culture.
+         </p>
+       </section>
+ 
+@@ -147,7 +153,7 @@ export default function HoroscopePage() {
+ 
+             {birthDate && !sign && (
+               <p style={{ marginTop: 16, fontSize: 13, color: "#b3261e" }}>
+-                Couldn't read that date — try picking it again from the calendar.
++                Couldn&apos;t read that date — try picking it again from the calendar.
+               </p>
+             )}
+ 
+diff --git a/app/my-yatras/[id]/page.tsx b/app/my-yatras/[id]/page.tsx
+index 405c6cc..ab1de76 100644
+--- a/app/my-yatras/[id]/page.tsx
++++ b/app/my-yatras/[id]/page.tsx
+@@ -92,7 +92,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
+               color: "#8c6a54",
+               background: "#fff8f0"
+             }}>
+-              <p>This itinerary doesn't have any day-by-day details saved.</p>
++              <p>This itinerary doesn&apos;t have any day-by-day details saved.</p>
+             </div>
+           ) : (
+             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+diff --git a/app/planner/page.tsx b/app/planner/page.tsx
+index a325079..ec226e9 100644
+--- a/app/planner/page.tsx
++++ b/app/planner/page.tsx
+@@ -224,7 +224,7 @@ export default function PlannerPage() {
+                     }}
+                   >
+                     <span style={{ color: "#6b4a3d", fontSize: 14 }}>
+-                      Log in to save this itinerary — it'll stay right here while you do.
++                      Log in to save this itinerary — it&apos;ll stay right here while you do.
+                     </span>
+                     <a
+                       href="/login"
+diff --git a/app/recommender/page.tsx b/app/recommender/page.tsx
+index 2a72cfb..8906742 100644
+--- a/app/recommender/page.tsx
++++ b/app/recommender/page.tsx
+@@ -56,12 +56,19 @@ export default function RecommenderPage() {
+ 
+   useEffect(() => {
+     let cancelled = false;
+-    setLoading(true);
+-    setError(null);
+ 
+     const params = selected.length ? `?preferences=${encodeURIComponent(selected.join(","))}` : "";
+ 
+-    fetch(`/api/recommendations${params}`)
++    // Reset loading/error state as part of the fetch's first tick rather than
++    // synchronously in the effect body, so we don't trigger an extra render
++    // pass before the request has even started.
++    Promise.resolve()
++      .then(() => {
++        if (cancelled) return Promise.reject(new Error("cancelled"));
++        setLoading(true);
++        setError(null);
++        return fetch(`/api/recommendations${params}`);
++      })
+       .then((res) => {
+         if (!res.ok) throw new Error("Couldn't load recommendations.");
+         return res.json();
+@@ -70,7 +77,9 @@ export default function RecommenderPage() {
+         if (!cancelled) setData(json);
+       })
+       .catch((err) => {
+-        if (!cancelled) setError(err instanceof Error ? err.message : "Something went wrong.");
++        if (!cancelled && err?.message !== "cancelled") {
++          setError(err instanceof Error ? err.message : "Something went wrong.");
++        }
+       })
+       .finally(() => {
+         if (!cancelled) setLoading(false);
+@@ -101,7 +110,7 @@ export default function RecommenderPage() {
+         <h1>Find Your Temple</h1>
+         <p>
+           Personalized picks based on what visitors with similar taste saved, your stated
+-          interests, and what's popular right now.
++          interests, and what&apos;s popular right now.
+         </p>
+       </section>
+ 
+diff --git a/app/temples/[slug]/opengraph-image.tsx b/app/temples/[slug]/opengraph-image.tsx
+index 7c4bacf..8c99e5d 100644
+--- a/app/temples/[slug]/opengraph-image.tsx
++++ b/app/temples/[slug]/opengraph-image.tsx
+@@ -26,7 +26,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
+         }}
+       >
+         {image && (
+-          // eslint-disable-next-line @next/next/no-img-element
+           <img
+             src={image}
+             alt=""
+diff --git a/app/yatra/[id]/page.tsx b/app/yatra/[id]/page.tsx
+index 271b54b..b737a32 100644
+--- a/app/yatra/[id]/page.tsx
++++ b/app/yatra/[id]/page.tsx
+@@ -107,7 +107,7 @@ export default async function PublicYatraPage({ params }: { params: Promise<{ id
+               color: "#8c6a54",
+               background: "#fff8f0"
+             }}>
+-              <p>This itinerary doesn't have any day-by-day details saved.</p>
++              <p>This itinerary doesn&apos;t have any day-by-day details saved.</p>
+             </div>
+           ) : (
+             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+@@ -144,7 +144,7 @@ export default async function PublicYatraPage({ params }: { params: Promise<{ id
+             paddingTop: 24
+           }}>
+             <p style={{ color: "#8c6a54", fontSize: 14, margin: 0 }}>
+-              Made with Temple Heritage's AI Yatra Planner.
++              Made with Temple Heritage&apos;s AI Yatra Planner.
+             </p>
+             <Link href="/planner" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+               <Sparkles size={16} /> Plan Your Own Yatra
+diff --git a/components/FestivalCountdown.tsx b/components/FestivalCountdown.tsx
+index 85c860d..c6090bf 100644
+--- a/components/FestivalCountdown.tsx
++++ b/components/FestivalCountdown.tsx
+@@ -51,10 +51,24 @@ export default function FestivalCountdown({
+   const [mounted, setMounted] = useState(false);
+ 
+   useEffect(() => {
+-    setMounted(true);
+-    setTimeLeft(getTimeLeft(target));
++    let cancelled = false;
++
++    // Defer the first state update out of the effect body itself (same
++    // reasoning as elsewhere in this codebase): calling setState synchronously
++    // during the effect can trigger an extra cascading render before the
++    // interval even starts. A microtask tick avoids that while still updating
++    // before the next paint in practice.
++    Promise.resolve().then(() => {
++      if (cancelled) return;
++      setMounted(true);
++      setTimeLeft(getTimeLeft(target));
++    });
++
+     const id = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
+-    return () => clearInterval(id);
++    return () => {
++      cancelled = true;
++      clearInterval(id);
++    };
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [date2026]);
+ 
+diff --git a/components/ProfileForm.tsx b/components/ProfileForm.tsx
+index 8d8816a..75b155c 100644
+--- a/components/ProfileForm.tsx
++++ b/components/ProfileForm.tsx
+@@ -73,7 +73,7 @@ export function ProfileForm({ initialFullName, initialHomeCity }: Props) {
+             fontSize: 15
+           }}
+         />
+-        <span style={{ fontSize: 12, color: "#a5744f" }}>Used to pre-fill "From" when you plan a yatra.</span>
++        <span style={{ fontSize: 12, color: "#a5744f" }}>Used to pre-fill &quot;From&quot; when you plan a yatra.</span>
+       </label>
+ 
+       {error && <p style={{ color: "#b3261e", fontSize: 14, margin: 0 }}>{error}</p>}
+diff --git a/components/ReviewsSection.tsx b/components/ReviewsSection.tsx
+index 3d8cce9..f16dc8e 100644
+--- a/components/ReviewsSection.tsx
++++ b/components/ReviewsSection.tsx
+@@ -85,7 +85,7 @@ export default async function ReviewsSection({
+         ownReview ? (
+           <div style={{ marginBottom: 24 }}>
+             <p style={{ color: "#705d55", margin: 0 }}>
+-              You've already reviewed {templeName}.{" "}
++              You&apos;ve already reviewed {templeName}.{" "}
+               {ownReview.status === "published"
+                 ? "You can delete it from the list below and post a new one."
+                 : "You can delete it and post a new one."}
+diff --git a/components/YatraRouteMap.tsx b/components/YatraRouteMap.tsx
+index aa26155..d0425db 100644
+--- a/components/YatraRouteMap.tsx
++++ b/components/YatraRouteMap.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useMemo } from "react";
++import { useEffect, useMemo } from "react";
+ import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+ import { divIcon } from "leaflet";
+ import { ExternalLink } from "lucide-react";
+@@ -20,7 +20,13 @@ function numberedIcon(index: number) {
+ /** Pans/zooms the map to fit every stop once, after the map instance exists. */
+ function FitToStops({ stops }: { stops: Temple[] }) {
+   const map = useMap();
+-  useMemo(() => {
++  // fitBounds/setView are side effects on the Leaflet map instance, not a
++  // computed value, so this belongs in useEffect. We derive a stable string
++  // key from the stops first so the effect's dependency array only contains
++  // simple expressions (map, stopsKey) rather than an inline .map().join().
++  const stopsKey = useMemo(() => stops.map((t) => t.slug).join(","), [stops]);
++
++  useEffect(() => {
+     if (stops.length === 1) {
+       map.setView([stops[0].lat, stops[0].lng], 7);
+     } else if (stops.length > 1) {
+@@ -30,7 +36,7 @@ function FitToStops({ stops }: { stops: Temple[] }) {
+       );
+     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+-  }, [stops.map((t) => t.slug).join(","), map]);
++  }, [stopsKey, map]);
+   return null;
+ }
+ 
+diff --git a/eslint.config.mjs b/eslint.config.mjs
+new file mode 100644
+index 0000000..946b45e
+--- /dev/null
++++ b/eslint.config.mjs
+@@ -0,0 +1,16 @@
++import nextConfig from "eslint-config-next";
++
++const eslintConfig = [
++  ...nextConfig,
++  {
++    ignores: [
++      "node_modules/**",
++      ".next/**",
++      "out/**",
++      "build/**",
++      "next-env.d.ts",
++    ],
++  },
++];
++
++export default eslintConfig;
+diff --git a/package.json b/package.json
+index ed1bc75..a030918 100644
+--- a/package.json
++++ b/package.json
+@@ -6,7 +6,7 @@
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
+-    "lint": "next lint",
++    "lint": "eslint .",
+     "test": "vitest run",
+     "test:watch": "vitest"
+   },
+@@ -28,6 +28,8 @@
+     "@types/node": "latest",
+     "@types/react": "latest",
+     "@types/react-dom": "latest",
++    "eslint": "^9.39.5",
++    "eslint-config-next": "^16.3.4",
+     "typescript": "latest",
+     "vitest": "^4.1.11"
+   }

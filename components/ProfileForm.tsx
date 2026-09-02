@@ -73,7 +73,7 @@ export function ProfileForm({ initialFullName, initialHomeCity }: Props) {
             fontSize: 15
           }}
         />
-        <span style={{ fontSize: 12, color: "#a5744f" }}>Used to pre-fill "From" when you plan a yatra.</span>
+        <span style={{ fontSize: 12, color: "#a5744f" }}>Used to pre-fill &quot;From&quot; when you plan a yatra.</span>
       </label>
 
       {error && <p style={{ color: "#b3261e", fontSize: 14, margin: 0 }}>{error}</p>}

@@ -11,7 +11,7 @@ export default function DarshanPage() {
       <section className="section section-light">
         <DarshanExplorer />
         <p style={{ marginTop: 30, opacity: 0.7, fontSize: 14 }}>
-          Timings can shift around festivals, special sewa and seasonal changes — it's worth confirming with the temple directly before you travel.
+          Timings can shift around festivals, special sewa and seasonal changes — it&apos;s worth confirming with the temple directly before you travel.
         </p>
       </section>
     </main>

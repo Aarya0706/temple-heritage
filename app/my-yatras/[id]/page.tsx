@@ -92,7 +92,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
               color: "#8c6a54",
               background: "#fff8f0"
             }}>
-              <p>This itinerary doesn't have any day-by-day details saved.</p>
+              <p>This itinerary doesn&apos;t have any day-by-day details saved.</p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

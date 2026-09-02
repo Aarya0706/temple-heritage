@@ -19,7 +19,14 @@ export default function ForgotPasswordPage() {
     })
     setLoading(false)
     if (error) {
-      setError(error.message)
+      const message = error.message?.toLowerCase() || ''
+      if (message.includes('rate limit')) {
+        setError('Too many reset requests right now. Please wait a few minutes and try again.')
+      } else if (message.includes('invalid') && message.includes('email')) {
+        setError('Please enter a valid email address.')
+      } else {
+        setError('Something went wrong sending the reset link. Please try again shortly.')
+      }
       return
     }
     setSent(true)

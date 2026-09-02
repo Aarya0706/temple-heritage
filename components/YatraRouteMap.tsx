@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import { divIcon } from "leaflet";
 import { ExternalLink } from "lucide-react";
@@ -20,7 +20,13 @@ function numberedIcon(index: number) {
 /** Pans/zooms the map to fit every stop once, after the map instance exists. */
 function FitToStops({ stops }: { stops: Temple[] }) {
   const map = useMap();
-  useMemo(() => {
+  // fitBounds/setView are side effects on the Leaflet map instance, not a
+  // computed value, so this belongs in useEffect. We derive a stable string
+  // key from the stops first so the effect's dependency array only contains
+  // simple expressions (map, stopsKey) rather than an inline .map().join().
+  const stopsKey = useMemo(() => stops.map((t) => t.slug).join(","), [stops]);
+
+  useEffect(() => {
     if (stops.length === 1) {
       map.setView([stops[0].lat, stops[0].lng], 7);
     } else if (stops.length > 1) {
@@ -30,7 +36,7 @@ function FitToStops({ stops }: { stops: Temple[] }) {
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stops.map((t) => t.slug).join(","), map]);
+  }, [stopsKey, map]);
   return null;
 }
 

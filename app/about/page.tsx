@@ -6,7 +6,7 @@ export default function AboutPage() {
       <section className="page-hero">
         <div className="eyebrow" style={{ color: "#f5be64" }}>✦ Our mission</div>
         <h1>Preserving Sacred Legacy</h1>
-        <p>Making India's temple heritage easier to discover, understand and experience responsibly.</p>
+        <p>Making India&apos;s temple heritage easier to discover, understand and experience responsibly.</p>
       </section>
       <section className="section section-light">
         <div className="why-grid">
