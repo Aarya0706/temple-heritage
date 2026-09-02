@@ -199,6 +199,19 @@ export default function HoroscopePage() {
                   <ArrowRight size={18} color="#a52d15" />
                 </Link>
               ))}
+
+            <div style={{ marginTop: 24, textAlign: "center" }}>
+              <img
+                src="/images/zodiac-wheel.png"
+                alt="Zodiac wheel"
+                style={{
+                  maxWidth: 220,
+                  width: "100%",
+                  borderRadius: "50%",
+                  boxShadow: "0 4px 20px rgba(165,45,21,0.2)",
+                }}
+              />
+            </div>
           </div>
         </div>
       </section>
