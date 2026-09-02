@@ -113,8 +113,8 @@ export default function HoroscopePage() {
       <section className="section section-light">
         <div className="recommend-grid">
           <div className="panel">
-            <h3>When were you born?</h3>
-            <p style={{ fontSize: 13, color: "#9b6958", marginTop: 4, marginBottom: 14, lineHeight: 1.5 }}>
+            <h3 style={{ fontSize: 21, marginBottom: 10 }}>When were you born?</h3>
+            <p style={{ fontSize: 13, color: "#9b6958", marginTop: 0, marginBottom: 16, lineHeight: 1.5 }}>
               This uses your sun sign (Western zodiac) worked out purely from the date — not a
               full Vedic birth chart, which would need your birth time and place too.
             </p>
@@ -167,10 +167,12 @@ export default function HoroscopePage() {
           </div>
 
           <div className="panel">
-            <h3>{sign ? `Temples suited to ${sign.name}` : "Your recommendations"}</h3>
+            <h3 style={{ fontSize: 21, marginBottom: 10 }}>
+              {sign ? `Temples suited to ${sign.name}` : "Your recommendations"}
+            </h3>
 
             {!birthDate && (
-              <p style={{ color: "#9b6958", fontSize: 14, padding: "20px 0" }}>
+              <p style={{ color: "#9b6958", fontSize: 14, padding: "8px 0" }}>
                 Add your birth date to see temples matched to your sign.
               </p>
             )}
