@@ -834,6 +834,53 @@ img { max-width: 100%; }
   font-size: 10px;
   font-weight: 700;
 }
+
+/* =================================
+   ALL TEMPLES MAP
+================================= */
+
+.all-temples-map {
+  border: 1px solid #f0ddc8;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  margin-bottom: 32px;
+}
+
+.all-temples-map-loading {
+  height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9b7a6c;
+  font-size: 14px;
+  background: #fff8f0;
+  border: 1px solid #f0ddc8;
+  border-radius: 16px;
+  margin-bottom: 32px;
+}
+
+.all-temples-map .leaflet-container {
+  z-index: 0;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.all-temples-marker span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgba(78, 24, 13, 0.35));
+  transition: transform 0.15s ease;
+}
+
+.all-temples-marker span.active {
+  transform: scale(1.25);
+}
+
 /* =================================
    TEMPLE GUIDE QUICK SUGGESTIONS
 ================================= */

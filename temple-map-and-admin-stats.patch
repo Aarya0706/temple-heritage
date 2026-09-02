@@ -1,0 +1,301 @@
+diff --git a/app/admin/page.tsx b/app/admin/page.tsx
+index dc2a3de..55dc101 100644
+--- a/app/admin/page.tsx
++++ b/app/admin/page.tsx
+@@ -48,6 +48,33 @@ export default async function AdminReviewsPage({
+   // supabase/migrations/0003_admin.sql; this is a courtesy redirect.
+   if (!profile?.is_admin) notFound();
+ 
++  // Platform-wide counts for the stats bar. Each uses head:true so
++  // Postgres returns only the count, not the rows themselves. These rely
++  // on the admin-select RLS policies added in 0009_admin_stats.sql --
++  // without them, an admin querying through this RLS-scoped client would
++  // only see their own profile/yatra_plans row, undercounting badly.
++  const [
++    { count: userCount },
++    { count: savedTempleCount },
++    { count: yatraPlanCount },
++    { count: completedYatraCount },
++  ] = await Promise.all([
++    supabase.from("profiles").select("*", { count: "exact", head: true }),
++    supabase.from("saved_temples").select("*", { count: "exact", head: true }),
++    supabase.from("yatra_plans").select("*", { count: "exact", head: true }),
++    supabase
++      .from("yatra_plans")
++      .select("*", { count: "exact", head: true })
++      .not("completed_at", "is", null),
++  ]);
++
++  const stats: { label: string; value: number }[] = [
++    { label: "Registered users", value: userCount ?? 0 },
++    { label: "Saved temples", value: savedTempleCount ?? 0 },
++    { label: "Yatra plans saved", value: yatraPlanCount ?? 0 },
++    { label: "Yatras completed", value: completedYatraCount ?? 0 },
++  ];
++
+   let query = supabase
+     .from("temple_reviews")
+     .select(
+@@ -85,6 +112,32 @@ export default async function AdminReviewsPage({
+ 
+       <section className="section section-light">
+         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
++          <div
++            style={{
++              display: "grid",
++              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
++              gap: 14,
++              marginBottom: 32,
++            }}
++          >
++            {stats.map((stat) => (
++              <div
++                key={stat.label}
++                style={{
++                  border: "1px solid #f0ddc8",
++                  borderRadius: 14,
++                  padding: "16px 18px",
++                  background: "white",
++                }}
++              >
++                <div style={{ fontSize: 26, fontWeight: 700, color: "#542019" }}>{stat.value}</div>
++                <div style={{ color: "#9b6958", fontSize: 13, marginTop: 4 }}>{stat.label}</div>
++              </div>
++            ))}
++          </div>
++
++          <h3 style={{ color: "#3a1a10", marginBottom: 14 }}>Review Moderation</h3>
++
+           <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
+             {tabs.map((tab) => (
+               <a
+diff --git a/app/globals.css b/app/globals.css
+index 6d78aa5..7d13b3d 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -834,6 +834,53 @@ img { max-width: 100%; }
+   font-size: 10px;
+   font-weight: 700;
+ }
++
++/* =================================
++   ALL TEMPLES MAP
++================================= */
++
++.all-temples-map {
++  border: 1px solid #f0ddc8;
++  border-radius: 16px;
++  overflow: hidden;
++  background: white;
++  margin-bottom: 32px;
++}
++
++.all-temples-map-loading {
++  height: 480px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  color: #9b7a6c;
++  font-size: 14px;
++  background: #fff8f0;
++  border: 1px solid #f0ddc8;
++  border-radius: 16px;
++  margin-bottom: 32px;
++}
++
++.all-temples-map .leaflet-container {
++  z-index: 0;
++  font-family: "DM Sans", system-ui, sans-serif;
++}
++
++.all-temples-marker span {
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  width: 30px;
++  height: 30px;
++  font-size: 18px;
++  cursor: pointer;
++  filter: drop-shadow(0 2px 4px rgba(78, 24, 13, 0.35));
++  transition: transform 0.15s ease;
++}
++
++.all-temples-marker span.active {
++  transform: scale(1.25);
++}
++
+ /* =================================
+    TEMPLE GUIDE QUICK SUGGESTIONS
+ ================================= */
+diff --git a/app/temples/page.tsx b/app/temples/page.tsx
+index e4179ac..e603452 100644
+--- a/app/temples/page.tsx
++++ b/app/temples/page.tsx
+@@ -1,5 +1,7 @@
+ import { SectionHeading } from "@/components/SectionHeading";
+ import { TempleExplorer } from "@/components/TempleExplorer";
++import AllTemplesMapLoader from "@/components/AllTemplesMapLoader";
++import { temples } from "@/data/temples";
+ 
+ export default function TemplesPage() {
+   return (
+@@ -10,6 +12,7 @@ export default function TemplesPage() {
+         <p>Search temples by name, deity, city, state or region and open a detailed heritage profile.</p>
+       </section>
+       <section className="section section-light">
++        <AllTemplesMapLoader temples={temples} />
+         <TempleExplorer />
+       </section>
+     </main>
+diff --git a/components/AllTemplesMap.tsx b/components/AllTemplesMap.tsx
+new file mode 100644
+index 0000000..3a138c6
+--- /dev/null
++++ b/components/AllTemplesMap.tsx
+@@ -0,0 +1,86 @@
++"use client";
++
++import { useRouter } from "next/navigation";
++import { useMemo, useState } from "react";
++import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
++import { divIcon } from "leaflet";
++import Link from "next/link";
++import { Temple } from "@/data/temples";
++import "leaflet/dist/leaflet.css";
++
++function templeIcon(isActive: boolean) {
++  return divIcon({
++    className: "all-temples-marker",
++    html: `<span class="${isActive ? "active" : ""}">🛕</span>`,
++    iconSize: [30, 30],
++    iconAnchor: [15, 28],
++  });
++}
++
++/** Fits the map to every temple once, on first render. */
++function FitToTemples({ temples }: { temples: Temple[] }) {
++  const map = useMap();
++  useMemo(() => {
++    if (temples.length > 0) {
++      map.fitBounds(
++        temples.map((t) => [t.lat, t.lng] as [number, number]),
++        { padding: [28, 28] }
++      );
++    }
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, []);
++  return null;
++}
++
++export default function AllTemplesMap({ temples }: { temples: Temple[] }) {
++  const router = useRouter();
++  const [hovered, setHovered] = useState<string | null>(null);
++
++  if (temples.length === 0) return null;
++
++  const center: [number, number] = [22.5, 79.5]; // rough geographic center of India
++
++  return (
++    <div className="all-temples-map">
++      <MapContainer
++        center={center}
++        zoom={5}
++        style={{ height: 480, width: "100%" }}
++        scrollWheelZoom={true}
++      >
++        <TileLayer
++          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
++          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
++        />
++        {temples.map((t) => (
++          <Marker
++            key={t.slug}
++            position={[t.lat, t.lng]}
++            icon={templeIcon(hovered === t.slug)}
++            eventHandlers={{
++              mouseover: () => setHovered(t.slug),
++              mouseout: () => setHovered(null),
++              click: () => router.push(`/temples/${t.slug}`),
++            }}
++          >
++            <Popup>
++              <div style={{ minWidth: 160 }}>
++                <strong>{t.name}</strong>
++                <p style={{ margin: "4px 0", color: "#705d55", fontSize: 13 }}>
++                  {t.city}, {t.state}
++                </p>
++                <Link
++                  href={`/temples/${t.slug}`}
++                  style={{ color: "#a52d15", fontWeight: 600, fontSize: 13 }}
++                >
++                  View temple →
++                </Link>
++              </div>
++            </Popup>
++          </Marker>
++        ))}
++        <FitToTemples temples={temples} />
++      </MapContainer>
++    </div>
++  );
++}
+diff --git a/components/AllTemplesMapLoader.tsx b/components/AllTemplesMapLoader.tsx
+new file mode 100644
+index 0000000..06c3355
+--- /dev/null
++++ b/components/AllTemplesMapLoader.tsx
+@@ -0,0 +1,18 @@
++"use client";
++
++import dynamic from "next/dynamic";
++import { Temple } from "@/data/temples";
++
++const AllTemplesMap = dynamic(() => import("./AllTemplesMap"), {
++  ssr: false,
++  loading: () => <div className="all-temples-map-loading">Loading map…</div>,
++});
++
++/**
++ * Leaflet touches `window` on import, so the map itself is dynamically
++ * imported with ssr:false — mirrors YatraRouteMapLoader's pattern. This
++ * wrapper just hands the full temple list down once the map is ready.
++ */
++export default function AllTemplesMapLoader({ temples }: { temples: Temple[] }) {
++  return <AllTemplesMap temples={temples} />;
++}
+diff --git a/supabase/migrations/0009_admin_stats.sql b/supabase/migrations/0009_admin_stats.sql
+new file mode 100644
+index 0000000..9b0ac4e
+--- /dev/null
++++ b/supabase/migrations/0009_admin_stats.sql
+@@ -0,0 +1,30 @@
++-- Admin dashboard stats: profiles_select_own (0001) and yatra_plans_select_own
++-- (0004) only let a user see their own row, which is correct for normal
++-- use but blocks an admin from running platform-wide counts (total users,
++-- total yatra plans) through the regular RLS-scoped client. saved_temples
++-- already has a public select policy (0002), so no change needed there.
++--
++-- The temple_reviews policies (0005) check admin status with an inline
++-- "exists (select 1 from public.profiles where id = auth.uid() and
++-- is_admin = true)" subquery, which is safe there because those policies
++-- live on a *different* table. A policy directly on profiles can't reuse
++-- that same inline subquery -- a policy that queries its own table inside
++-- its own USING clause recurses under Postgres RLS. Route the check
++-- through a SECURITY DEFINER function instead, which evaluates with RLS
++-- bypassed and breaks the recursion.
++
++create or replace function public.is_admin()
++returns boolean as $$
++  select coalesce(
++    (select is_admin from public.profiles where id = auth.uid()),
++    false
++  );
++$$ language sql security definer stable;
++
++create policy "profiles_select_admin"
++  on public.profiles for select
++  using (public.is_admin());
++
++create policy "yatra_plans_select_admin"
++  on public.yatra_plans for select
++  using (public.is_admin());
