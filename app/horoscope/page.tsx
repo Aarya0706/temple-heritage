@@ -205,13 +205,13 @@ export default function HoroscopePage() {
                 src="/images/zodiac-wheel.png"
                 alt="Zodiac wheel"
                 style={{
-                  width: 320,
-                  height: 320,
-                  maxWidth: "100%",
+                  display: "inline-block",
+                  width: "min(320px, 100%)",
+                  height: "auto",
                   aspectRatio: "1 / 1",
                   objectFit: "cover",
                   borderRadius: "50%",
-                  boxShadow: "0 4px 20px rgba(165,45,21,0.2)",
+                  boxShadow: "0 0 20px rgba(165,45,21,0.2)",
                 }}
               />
             </div>
