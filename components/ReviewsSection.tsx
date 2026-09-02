@@ -85,7 +85,7 @@ export default async function ReviewsSection({
         ownReview ? (
           <div style={{ marginBottom: 24 }}>
             <p style={{ color: "#705d55", margin: 0 }}>
-              You've already reviewed {templeName}.{" "}
+              You&apos;ve already reviewed {templeName}.{" "}
               {ownReview.status === "published"
                 ? "You can delete it from the list below and post a new one."
                 : "You can delete it and post a new one."}

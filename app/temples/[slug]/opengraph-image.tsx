@@ -26,7 +26,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         }}
       >
         {image && (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={image}
             alt=""

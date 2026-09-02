@@ -57,15 +57,19 @@ export default function HoroscopePage() {
 
   useEffect(() => {
     if (!birthDate || !sign) {
-      setData(null);
+      Promise.resolve().then(() => setData(null));
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    fetch(`/api/recommendations?birthdate=${encodeURIComponent(birthDate)}`)
+    Promise.resolve()
+      .then(() => {
+        if (cancelled) return Promise.reject(new Error("cancelled"));
+        setLoading(true);
+        setError(null);
+        return fetch(`/api/recommendations?birthdate=${encodeURIComponent(birthDate)}`);
+      })
       .then((res) => {
         if (!res.ok) throw new Error("Couldn't load recommendations.");
         return res.json();
@@ -74,7 +78,9 @@ export default function HoroscopePage() {
         if (!cancelled) setData(json);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Something went wrong.");
+        if (!cancelled && err?.message !== "cancelled") {
+          setError(err instanceof Error ? err.message : "Something went wrong.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -99,8 +105,8 @@ export default function HoroscopePage() {
         <div className="eyebrow" style={{ color: "#ffc05a" }}>✦ Astrology-guided discovery</div>
         <h1>Find Your Temple by Horoscope</h1>
         <p>
-          Enter your birth date and we'll point you to temples traditionally associated with
-          your sun sign's ruling planet — a fun, well-known thread in Indian temple culture.
+          Enter your birth date and we&apos;ll point you to temples traditionally associated with
+          your sun sign&apos;s ruling planet — a fun, well-known thread in Indian temple culture.
         </p>
       </section>
 
@@ -147,7 +153,7 @@ export default function HoroscopePage() {
 
             {birthDate && !sign && (
               <p style={{ marginTop: 16, fontSize: 13, color: "#b3261e" }}>
-                Couldn't read that date — try picking it again from the calendar.
+                Couldn&apos;t read that date — try picking it again from the calendar.
               </p>
             )}
 

@@ -56,12 +56,19 @@ export default function RecommenderPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
     const params = selected.length ? `?preferences=${encodeURIComponent(selected.join(","))}` : "";
 
-    fetch(`/api/recommendations${params}`)
+    // Reset loading/error state as part of the fetch's first tick rather than
+    // synchronously in the effect body, so we don't trigger an extra render
+    // pass before the request has even started.
+    Promise.resolve()
+      .then(() => {
+        if (cancelled) return Promise.reject(new Error("cancelled"));
+        setLoading(true);
+        setError(null);
+        return fetch(`/api/recommendations${params}`);
+      })
       .then((res) => {
         if (!res.ok) throw new Error("Couldn't load recommendations.");
         return res.json();
@@ -70,7 +77,9 @@ export default function RecommenderPage() {
         if (!cancelled) setData(json);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Something went wrong.");
+        if (!cancelled && err?.message !== "cancelled") {
+          setError(err instanceof Error ? err.message : "Something went wrong.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -101,7 +110,7 @@ export default function RecommenderPage() {
         <h1>Find Your Temple</h1>
         <p>
           Personalized picks based on what visitors with similar taste saved, your stated
-          interests, and what's popular right now.
+          interests, and what&apos;s popular right now.
         </p>
       </section>
 

@@ -224,7 +224,7 @@ export default function PlannerPage() {
                     }}
                   >
                     <span style={{ color: "#6b4a3d", fontSize: 14 }}>
-                      Log in to save this itinerary — it'll stay right here while you do.
+                      Log in to save this itinerary — it&apos;ll stay right here while you do.
                     </span>
                     <a
                       href="/login"
