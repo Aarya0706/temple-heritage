@@ -1,0 +1,606 @@
+diff --git a/app/api/recommendations/route.ts b/app/api/recommendations/route.ts
+index ea37b1e..fda723f 100644
+--- a/app/api/recommendations/route.ts
++++ b/app/api/recommendations/route.ts
+@@ -5,11 +5,14 @@ import { recommendTemples } from "@/lib/recommend";
+ 
+ export const runtime = "nodejs";
+ 
+-// GET /api/recommendations?preferences=Architecture,History
++// GET /api/recommendations?preferences=Architecture,History&birthdate=1999-08-15
+ //
+ // Auth-optional. Logged-out visitors still get preference + popularity
+ // based recommendations; logged-in visitors with saved temples also get
+-// the collaborative "saved by similar users" signal.
++// the collaborative "saved by similar users" signal. `birthdate`
++// ("YYYY-MM-DD") is optional too — when present it's converted to a Sun
++// sign and adds the "matches_horoscope" signal. Never persisted; it's
++// used for this one request and discarded.
+ //
+ // IMPORTANT — depends on a migration: the collaborative signal needs to
+ // read every user's saved_temples rows (not just the current user's), so
+@@ -25,6 +28,7 @@ export async function GET(req: NextRequest) {
+     .split(",")
+     .map((p) => p.trim())
+     .filter(Boolean);
++  const birthDate = req.nextUrl.searchParams.get("birthdate");
+ 
+   const supabase = await createClient();
+ 
+@@ -46,6 +50,7 @@ export async function GET(req: NextRequest) {
+     savedSlugs: (ownSaved ?? []).map((r) => r.temple_slug),
+     allSaved: allSaved ?? [],
+     ratings: ratings ?? [],
++    birthDate,
+     limit: 4,
+   });
+ 
+diff --git a/app/horoscope/page.tsx b/app/horoscope/page.tsx
+new file mode 100644
+index 0000000..7339219
+--- /dev/null
++++ b/app/horoscope/page.tsx
+@@ -0,0 +1,201 @@
++"use client";
++
++import { useEffect, useMemo, useState } from "react";
++import { ArrowRight, Heart, Loader2, Moon, Sparkles, TrendingUp } from "lucide-react";
++import Link from "next/link";
++import { temples } from "@/data/temples";
++import { getZodiacSign, getHoroscopeGuidance } from "@/lib/zodiac";
++
++type Reason =
++  | { type: "saved_by_similar_users"; count: number }
++  | { type: "matches_horoscope"; sign: string }
++  | { type: "matches_interests" }
++  | { type: "popular" };
++
++type RecommendationResponse = {
++  recommendations: { slug: string; reason: Reason }[];
++  hasSavedTemples: boolean;
++};
++
++function ReasonBadge({ reason }: { reason: Reason }) {
++  if (reason.type === "saved_by_similar_users") {
++    return (
++      <span className="reason-badge">
++        <Heart size={13} /> Saved by {reason.count} visitor{reason.count === 1 ? "" : "s"} with similar taste
++      </span>
++    );
++  }
++  if (reason.type === "matches_horoscope") {
++    return (
++      <span className="reason-badge">
++        <Moon size={13} /> Suited to {reason.sign}
++      </span>
++    );
++  }
++  if (reason.type === "matches_interests") {
++    return (
++      <span className="reason-badge">
++        <Sparkles size={13} /> Matches your interests
++      </span>
++    );
++  }
++  return (
++    <span className="reason-badge">
++      <TrendingUp size={13} /> Popular with visitors
++    </span>
++  );
++}
++
++export default function HoroscopePage() {
++  const [birthDate, setBirthDate] = useState("");
++  const [loading, setLoading] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++  const [data, setData] = useState<RecommendationResponse | null>(null);
++
++  const sign = useMemo(() => (birthDate ? getZodiacSign(birthDate) : null), [birthDate]);
++  const guidance = useMemo(() => (sign ? getHoroscopeGuidance(sign) : null), [sign]);
++
++  useEffect(() => {
++    if (!birthDate || !sign) {
++      setData(null);
++      return;
++    }
++
++    let cancelled = false;
++    setLoading(true);
++    setError(null);
++
++    fetch(`/api/recommendations?birthdate=${encodeURIComponent(birthDate)}`)
++      .then((res) => {
++        if (!res.ok) throw new Error("Couldn't load recommendations.");
++        return res.json();
++      })
++      .then((json: RecommendationResponse) => {
++        if (!cancelled) setData(json);
++      })
++      .catch((err) => {
++        if (!cancelled) setError(err instanceof Error ? err.message : "Something went wrong.");
++      })
++      .finally(() => {
++        if (!cancelled) setLoading(false);
++      });
++
++    return () => {
++      cancelled = true;
++    };
++  }, [birthDate, sign]);
++
++  const results = useMemo(() => {
++    if (!data) return [];
++    const bySlug = new Map(temples.map((t) => [t.slug, t]));
++    return data.recommendations
++      .map((r) => ({ temple: bySlug.get(r.slug), reason: r.reason }))
++      .filter((r): r is { temple: (typeof temples)[number]; reason: Reason } => !!r.temple);
++  }, [data]);
++
++  return (
++    <main>
++      <section className="page-hero">
++        <div className="eyebrow" style={{ color: "#ffc05a" }}>✦ Astrology-guided discovery</div>
++        <h1>Find Your Temple by Horoscope</h1>
++        <p>
++          Enter your birth date and we'll point you to temples traditionally associated with
++          your sun sign's ruling planet — a fun, well-known thread in Indian temple culture.
++        </p>
++      </section>
++
++      <section className="section section-light">
++        <div className="recommend-grid">
++          <div className="panel">
++            <h3>When were you born?</h3>
++            <p style={{ fontSize: 13, color: "#9b6958", marginTop: 4, marginBottom: 14, lineHeight: 1.5 }}>
++              This uses your sun sign (Western zodiac) worked out purely from the date — not a
++              full Vedic birth chart, which would need your birth time and place too.
++            </p>
++            <input
++              type="date"
++              value={birthDate}
++              onChange={(e) => setBirthDate(e.target.value)}
++              max={new Date().toISOString().split("T")[0]}
++              style={{
++                width: "100%",
++                padding: "12px 14px",
++                borderRadius: 8,
++                border: "1px solid rgba(165,45,21,0.25)",
++                fontSize: 15,
++              }}
++            />
++
++            {sign && guidance && (
++              <div
++                style={{
++                  marginTop: 20,
++                  padding: 16,
++                  borderRadius: 12,
++                  background: "rgba(165,45,21,0.06)",
++                  border: "1px solid rgba(165,45,21,0.15)",
++                }}
++              >
++                <div style={{ fontSize: 28, lineHeight: 1 }}>{sign.symbol}</div>
++                <h4 style={{ marginTop: 8, marginBottom: 2 }}>{sign.name}</h4>
++                <p style={{ fontSize: 12, color: "#9b6958", marginBottom: 10 }}>
++                  {sign.dateRange} · {sign.element} sign · ruled by {sign.rulingPlanet}
++                </p>
++                <p style={{ fontSize: 13.5, color: "#7a4a3a", lineHeight: 1.55 }}>{guidance.blurb}</p>
++              </div>
++            )}
++
++            {birthDate && !sign && (
++              <p style={{ marginTop: 16, fontSize: 13, color: "#b3261e" }}>
++                Couldn't read that date — try picking it again from the calendar.
++              </p>
++            )}
++
++            <p style={{ marginTop: 20, fontSize: 13, color: "#9b6958", lineHeight: 1.5 }}>
++              Looking for something more specific? Try the{" "}
++              <Link href="/recommender" style={{ color: "#a52d15", fontWeight: 600 }}>
++                interest-based recommender
++              </Link>{" "}
++              instead.
++            </p>
++          </div>
++
++          <div className="panel">
++            <h3>{sign ? `Temples suited to ${sign.name}` : "Your recommendations"}</h3>
++
++            {!birthDate && (
++              <p style={{ color: "#9b6958", fontSize: 14, padding: "20px 0" }}>
++                Add your birth date to see temples matched to your sign.
++              </p>
++            )}
++
++            {loading && (
++              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#9b6958", padding: "20px 0" }}>
++                <Loader2 size={18} className="spin" /> Reading the stars...
++              </div>
++            )}
++
++            {error && <p style={{ color: "#b3261e" }}>{error}</p>}
++
++            {!loading &&
++              !error &&
++              results.map(({ temple, reason }) => (
++                <Link href={`/temples/${temple.slug}`} className="result-card" key={temple.slug}>
++                  <img src={temple.image} alt={temple.name} />
++                  <div style={{ flex: 1 }}>
++                    <h4>{temple.name}</h4>
++                    <p>📍 {temple.city}, {temple.state}</p>
++                    <p style={{ marginTop: 6 }}>{temple.shortDescription}</p>
++                    <div style={{ marginTop: 8 }}>
++                      <ReasonBadge reason={reason} />
++                    </div>
++                  </div>
++                  <ArrowRight size={18} color="#a52d15" />
++                </Link>
++              ))}
++          </div>
++        </div>
++      </section>
++    </main>
++  );
++}
+diff --git a/app/recommender/page.tsx b/app/recommender/page.tsx
+index 82fef79..2a72cfb 100644
+--- a/app/recommender/page.tsx
++++ b/app/recommender/page.tsx
+@@ -1,7 +1,7 @@
+  "use client";
+ 
+ import { useEffect, useMemo, useState } from "react";
+-import { ArrowRight, Sparkles, Loader2, Heart, Star, TrendingUp } from "lucide-react";
++import { ArrowRight, Sparkles, Loader2, Heart, Star, TrendingUp, Moon } from "lucide-react";
+ import { temples } from "@/data/temples";
+ import Link from "next/link";
+ 
+@@ -9,6 +9,7 @@ const options = ["Lord Shiva", "Lord Vishnu / Krishna", "Goddess", "Architecture
+ 
+ type Reason =
+   | { type: "saved_by_similar_users"; count: number }
++  | { type: "matches_horoscope"; sign: string }
+   | { type: "matches_interests" }
+   | { type: "popular" };
+ 
+@@ -25,6 +26,13 @@ function ReasonBadge({ reason }: { reason: Reason }) {
+       </span>
+     );
+   }
++  if (reason.type === "matches_horoscope") {
++    return (
++      <span className="reason-badge">
++        <Moon size={13} /> Suited to {reason.sign}
++      </span>
++    );
++  }
+   if (reason.type === "matches_interests") {
+     return (
+       <span className="reason-badge">
+@@ -109,6 +117,17 @@ export default function RecommenderPage() {
+                 </label>
+               ))}
+             </div>
++            <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid rgba(165,45,21,0.15)" }}>
++              <p style={{ fontSize: 13, color: "#9b6958", lineHeight: 1.5 }}>
++                <Moon size={13} style={{ verticalAlign: "-2px" }} /> Want a pick based on your
++                birth date instead?{" "}
++                <Link href="/horoscope" style={{ color: "#a52d15", fontWeight: 600 }}>
++                  Try the horoscope finder
++                </Link>
++                .
++              </p>
++            </div>
++
+             <button
+               className="btn-primary"
+               style={{ background: "#a52d15", color: "white", border: 0, width: "100%", marginTop: 20 }}
+diff --git a/components/NavbarClient.tsx b/components/NavbarClient.tsx
+index f084ff2..48df62a 100644
+--- a/components/NavbarClient.tsx
++++ b/components/NavbarClient.tsx
+@@ -17,6 +17,7 @@ const links = [
+ const serviceLinks = [
+   { href: "/planner", label: "AI Planner", blurb: "Build a pilgrimage itinerary" },
+   { href: "/recommender", label: "Recommender", blurb: "Find temples matched to you" },
++  { href: "/horoscope", label: "Horoscope Finder", blurb: "Find temples by your sun sign" },
+   { href: "/darshan", label: "Darshan", blurb: "Check timings and crowd info" },
+   { href: "/my-yatras", label: "My Yatras", blurb: "Saved temples and trip plans" },
+ ];
+diff --git a/lib/recommend.test.ts b/lib/recommend.test.ts
+index c4c80f4..e41fe63 100644
+--- a/lib/recommend.test.ts
++++ b/lib/recommend.test.ts
+@@ -112,6 +112,34 @@ describe("recommendTemples", () => {
+     expect(results[0].reason.type).toBe("popular");
+   });
+ 
++  it("surfaces matches_horoscope when a birth date is given and no collaborative signal exists", () => {
++    // 1999-08-15 -> Leo -> Sun -> Surya. None of the test temples' deities
++    // include "Surya", so use the Shiva-ruled case (Cancer/Moon, Mars, or
++    // Saturn) which the catalog does have via temple "a" and "d".
++    const results = recommendTemples({
++      temples: catalog,
++      selectedPreferences: [],
++      savedSlugs: [],
++      allSaved: [],
++      ratings: [],
++      birthDate: "2000-07-10", // Cancer -> Moon -> Shiva
++    });
++    expect(results[0].reason.type).toBe("matches_horoscope");
++    expect(results[0].temple.deity).toContain("Shiva");
++  });
++
++  it("ignores an unparseable birth date rather than throwing", () => {
++    const results = recommendTemples({
++      temples: catalog,
++      selectedPreferences: [],
++      savedSlugs: [],
++      allSaved: [],
++      ratings: [],
++      birthDate: "not-a-date",
++    });
++    expect(results.every((r) => r.reason.type !== "matches_horoscope")).toBe(true);
++  });
++
+   it("respects the limit", () => {
+     const results = recommendTemples({
+       temples: catalog,
+diff --git a/lib/recommend.ts b/lib/recommend.ts
+index f195172..1fd00c7 100644
+--- a/lib/recommend.ts
++++ b/lib/recommend.ts
+@@ -1,4 +1,5 @@
+ import type { Temple } from "@/data/temples";
++import { getZodiacSign, getHoroscopeGuidance, type ZodiacSign } from "@/lib/zodiac";
+ 
+ // Real recommender logic — replaces the old version that only ever scored
+ // against the checkbox preferences. Blends three signals:
+@@ -23,6 +24,7 @@ export type RatingRow = { temple_slug: string; average_rating: number; review_co
+ 
+ export type RecommendationReason =
+   | { type: "saved_by_similar_users"; count: number }
++  | { type: "matches_horoscope"; sign: string }
+   | { type: "matches_interests" }
+   | { type: "popular" };
+ 
+@@ -35,6 +37,16 @@ export type ScoredRecommendation = {
+ const PREFERENCE_WEIGHT = 1;
+ const COLLABORATIVE_WEIGHT = 2.5; // strongest signal when it's available — real behavior beats stated preference
+ const POPULARITY_WEIGHT = 0.6;
++const HOROSCOPE_WEIGHT = 1.8; // stated on purpose (birth date, not a checkbox) — weighted above plain preference, below real behavior
++
++function horoscopeScore(temple: Temple, sign: ZodiacSign | null): number {
++  if (!sign) return 0;
++  const guidance = getHoroscopeGuidance(sign);
++  let s = 0;
++  if (guidance.deityFocus.some((d) => temple.deity.includes(d))) s += 5;
++  if (guidance.typeFocus?.some((t) => temple.type === t)) s += 2;
++  return s;
++}
+ 
+ function preferenceScore(temple: Temple, selected: string[]): number {
+   let s = 0;
+@@ -95,6 +107,7 @@ export function recommendTemples({
+   savedSlugs,
+   allSaved,
+   ratings,
++  birthDate,
+   limit = 4,
+ }: {
+   temples: Temple[];
+@@ -102,15 +115,18 @@ export function recommendTemples({
+   savedSlugs: string[]; // current user's own saved temples
+   allSaved: SavedRow[]; // every user's saved rows, for co-occurrence
+   ratings: RatingRow[];
++  birthDate?: string | null; // "YYYY-MM-DD", optional — powers the horoscope signal
+   limit?: number;
+ }): ScoredRecommendation[] {
+   const savedSet = new Set(savedSlugs);
+   const ratingBySlug = new Map(ratings.map((r) => [r.temple_slug, r]));
+   const coOccurrence = coOccurrenceCounts(savedSet, allSaved);
++  const sign = birthDate ? getZodiacSign(birthDate) : null;
+ 
+   const maxCoOccurrence = Math.max(1, ...coOccurrence.values());
+   const maxPopularity = Math.max(1, ...temples.map((t) => popularityScore(ratingBySlug.get(t.slug))));
+   const maxPreference = Math.max(1, ...temples.map((t) => preferenceScore(t, selectedPreferences)));
++  const maxHoroscope = Math.max(1, ...temples.map((t) => horoscopeScore(t, sign)));
+ 
+   const candidates = temples.filter((t) => !savedSet.has(t.slug));
+ 
+@@ -119,16 +135,24 @@ export function recommendTemples({
+     const collab = coCount / maxCoOccurrence;
+     const pref = preferenceScore(temple, selectedPreferences) / maxPreference;
+     const pop = popularityScore(ratingBySlug.get(temple.slug)) / maxPopularity;
++    const horoscope = horoscopeScore(temple, sign) / maxHoroscope;
+ 
+-    const score = collab * COLLABORATIVE_WEIGHT + pref * PREFERENCE_WEIGHT + pop * POPULARITY_WEIGHT;
++    const score =
++      collab * COLLABORATIVE_WEIGHT +
++      pref * PREFERENCE_WEIGHT +
++      pop * POPULARITY_WEIGHT +
++      horoscope * HOROSCOPE_WEIGHT;
+ 
+     // Attribute the recommendation to whichever signal actually drove it,
+     // so the UI can say why — collaborative first (it's the strongest and
+-    // most specific signal when present), then preference match, then
+-    // fall back to "popular" as the honest default.
++    // most specific signal when present), then horoscope (deliberate,
++    // explicit input), then preference match, then fall back to
++    // "popular" as the honest default.
+     let reason: RecommendationReason;
+     if (coCount > 0) {
+       reason = { type: "saved_by_similar_users", count: coCount };
++    } else if (sign && horoscopeScore(temple, sign) > 0) {
++      reason = { type: "matches_horoscope", sign: sign.name };
+     } else if (preferenceScore(temple, selectedPreferences) > 0) {
+       reason = { type: "matches_interests" };
+     } else {
+diff --git a/lib/zodiac.test.ts b/lib/zodiac.test.ts
+new file mode 100644
+index 0000000..4cb051a
+--- /dev/null
++++ b/lib/zodiac.test.ts
+@@ -0,0 +1,52 @@
++import { describe, it, expect } from "vitest";
++import { getZodiacSign, getHoroscopeGuidance } from "./zodiac";
++
++describe("getZodiacSign", () => {
++  it("returns the correct sign for a date in the middle of a range", () => {
++    expect(getZodiacSign("1999-08-15")?.name).toBe("Leo");
++    expect(getZodiacSign("2000-02-29")?.name).toBe("Pisces");
++  });
++
++  it("handles Capricorn's wrap across the new year", () => {
++    expect(getZodiacSign("2000-01-01")?.name).toBe("Capricorn");
++    expect(getZodiacSign("2000-12-25")?.name).toBe("Capricorn");
++  });
++
++  it("resolves boundary dates to the correct side", () => {
++    expect(getZodiacSign("2000-01-19")?.name).toBe("Capricorn");
++    expect(getZodiacSign("2000-01-20")?.name).toBe("Aquarius");
++    expect(getZodiacSign("2000-07-22")?.name).toBe("Cancer");
++    expect(getZodiacSign("2000-07-23")?.name).toBe("Leo");
++  });
++
++  it("returns null for malformed input", () => {
++    expect(getZodiacSign("")).toBeNull();
++    expect(getZodiacSign("not-a-date")).toBeNull();
++    expect(getZodiacSign("2000-13-40")).toBeNull();
++  });
++
++  it("covers all 12 signs across a full year", () => {
++    const names = new Set<string>();
++    for (let month = 1; month <= 12; month++) {
++      const day = 10;
++      const date = `2001-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
++      const sign = getZodiacSign(date);
++      expect(sign).not.toBeNull();
++      if (sign) names.add(sign.name);
++    }
++    expect(names.size).toBe(12);
++  });
++});
++
++describe("getHoroscopeGuidance", () => {
++  it("maps every sign's ruling planet to a non-empty deity focus", () => {
++    for (let month = 1; month <= 12; month++) {
++      const sign = getZodiacSign(`2001-${String(month).padStart(2, "0")}-10`);
++      expect(sign).not.toBeNull();
++      if (!sign) continue;
++      const guidance = getHoroscopeGuidance(sign);
++      expect(guidance.deityFocus.length).toBeGreaterThan(0);
++      expect(guidance.blurb.length).toBeGreaterThan(0);
++    }
++  });
++});
+diff --git a/lib/zodiac.ts b/lib/zodiac.ts
+new file mode 100644
+index 0000000..99d5b9a
+--- /dev/null
++++ b/lib/zodiac.ts
+@@ -0,0 +1,104 @@
++// Sun-sign (Western tropical zodiac) lookup, purely from a birth date —
++// no birth time/place needed, unlike a true Vedic Moon-sign (Rashi) which
++// requires an ephemeris. This keeps the feature honest about what it is:
++// a fun, traditional "which deity suits your sign" pointer, not a formal
++// astrological chart.
++
++export type ZodiacSign = {
++  name: string;
++  symbol: string;
++  dateRange: string;
++  element: "Fire" | "Earth" | "Air" | "Water";
++  rulingPlanet: string;
++};
++
++// Ordered by the date range's start month/day so getZodiacSign can walk
++// through and find the first match.
++const ZODIAC_SIGNS: (ZodiacSign & { start: [number, number]; end: [number, number] })[] = [
++  { name: "Capricorn", symbol: "♑", dateRange: "Dec 22 – Jan 19", element: "Earth", rulingPlanet: "Saturn", start: [12, 22], end: [1, 19] },
++  { name: "Aquarius", symbol: "♒", dateRange: "Jan 20 – Feb 18", element: "Air", rulingPlanet: "Saturn", start: [1, 20], end: [2, 18] },
++  { name: "Pisces", symbol: "♓", dateRange: "Feb 19 – Mar 20", element: "Water", rulingPlanet: "Jupiter", start: [2, 19], end: [3, 20] },
++  { name: "Aries", symbol: "♈", dateRange: "Mar 21 – Apr 19", element: "Fire", rulingPlanet: "Mars", start: [3, 21], end: [4, 19] },
++  { name: "Taurus", symbol: "♉", dateRange: "Apr 20 – May 20", element: "Earth", rulingPlanet: "Venus", start: [4, 20], end: [5, 20] },
++  { name: "Gemini", symbol: "♊", dateRange: "May 21 – Jun 20", element: "Air", rulingPlanet: "Mercury", start: [5, 21], end: [6, 20] },
++  { name: "Cancer", symbol: "♋", dateRange: "Jun 21 – Jul 22", element: "Water", rulingPlanet: "Moon", start: [6, 21], end: [7, 22] },
++  { name: "Leo", symbol: "♌", dateRange: "Jul 23 – Aug 22", element: "Fire", rulingPlanet: "Sun", start: [7, 23], end: [8, 22] },
++  { name: "Virgo", symbol: "♍", dateRange: "Aug 23 – Sep 22", element: "Earth", rulingPlanet: "Mercury", start: [8, 23], end: [9, 22] },
++  { name: "Libra", symbol: "♎", dateRange: "Sep 23 – Oct 22", element: "Air", rulingPlanet: "Venus", start: [9, 23], end: [10, 22] },
++  { name: "Scorpio", symbol: "♏", dateRange: "Oct 23 – Nov 21", element: "Water", rulingPlanet: "Mars", start: [10, 23], end: [11, 21] },
++  { name: "Sagittarius", symbol: "♐", dateRange: "Nov 22 – Dec 21", element: "Fire", rulingPlanet: "Jupiter", start: [11, 22], end: [12, 21] },
++];
++
++export function getZodiacSign(birthDate: string): ZodiacSign | null {
++  // Expect "YYYY-MM-DD" from an <input type="date">.
++  const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(birthDate);
++  if (!match) return null;
++
++  const month = Number(match[1]);
++  const day = Number(match[2]);
++  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
++
++  for (const sign of ZODIAC_SIGNS) {
++    const [startMonth, startDay] = sign.start;
++    const [endMonth, endDay] = sign.end;
++
++    const afterStart = month > startMonth || (month === startMonth && day >= startDay);
++    const beforeEnd = month < endMonth || (month === endMonth && day <= endDay);
++
++    // Capricorn wraps across the new year (Dec 22 – Jan 19).
++    const inRange = startMonth > endMonth ? afterStart || beforeEnd : afterStart && beforeEnd;
++
++    if (inRange) {
++      const { start: _s, end: _e, ...publicFields } = sign;
++      return publicFields;
++    }
++  }
++  return null;
++}
++
++// Traditional planet -> deity association used in Indian folk astrology
++// (Navagraha worship) for pointing each sign toward a form of the divine
++// associated with its ruling planet. Mapped here to the deity families
++// actually present in this app's temple dataset, plus a short "why" line
++// for the UI.
++export type HoroscopeGuidance = {
++  deityFocus: string[]; // matches against Temple.deity substrings
++  typeFocus?: string[]; // matches against Temple.type, as a bonus
++  blurb: string;
++};
++
++const PLANET_GUIDANCE: Record<string, HoroscopeGuidance> = {
++  Sun: {
++    deityFocus: ["Surya"],
++    blurb: "Leo is ruled by the Sun (Surya) — temples devoted to the Sun God are considered especially auspicious for you.",
++  },
++  Moon: {
++    deityFocus: ["Shiva"],
++    blurb: "Cancer is ruled by the Moon (Chandra), who rests on Shiva's head in classical iconography — Shiva temples are traditionally favoured for this sign.",
++  },
++  Mars: {
++    deityFocus: ["Shiva"],
++    blurb: "Mars (Mangal) is closely linked with Shiva's family in Vedic tradition — Shiva temples, especially the Jyotirlingas, are a strong match.",
++  },
++  Mercury: {
++    deityFocus: ["Krishna", "Vishnu", "Venkateswara", "Jagannath"],
++    blurb: "Mercury (Budha) governs intellect and communication — Vishnu/Krishna temples are traditionally recommended to sharpen these qualities.",
++  },
++  Jupiter: {
++    deityFocus: ["Vishnu", "Krishna", "Venkateswara", "Jagannath"],
++    blurb: "Jupiter (Guru/Brihaspati) is considered Vishnu's own planet — Vishnu temples are held to bring Jupiter's blessings of wisdom and fortune.",
++  },
++  Venus: {
++    deityFocus: ["Goddess", "Meenakshi"],
++    blurb: "Venus (Shukra) governs beauty, grace and abundance — temples of the Goddess are the traditional match for this sign.",
++  },
++  Saturn: {
++    deityFocus: ["Shiva"],
++    typeFocus: ["Jyotirlinga"],
++    blurb: "Saturn (Shani) is worshipped alongside Shiva for relief from hardship — the Jyotirlinga temples are especially significant for this sign.",
++  },
++};
++
++export function getHoroscopeGuidance(sign: ZodiacSign): HoroscopeGuidance {
++  return PLANET_GUIDANCE[sign.rulingPlanet];
++}

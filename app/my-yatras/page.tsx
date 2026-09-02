@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { MapPin, Calendar, Compass, ChevronRight } from 'lucide-react'
 import UnsaveTempleButton from '@/components/UnsaveTempleButton'
 import DeleteYatraButton from '@/components/DeleteYatraButton'
+import MarkYatraCompleteButton from '@/components/MarkYatraCompleteButton'
+import YatraStatsBlock from '@/components/YatraStatsBlock'
+import { computeYatraStats } from '@/lib/yatra-stats'
 
 export default async function MyYatrasPage() {
   const supabase = await createClient()
@@ -18,13 +21,17 @@ export default async function MyYatrasPage() {
 
   const { data: yatraRows } = await supabase
     .from('yatra_plans')
-    .select('id, title, itinerary, created_at')
+    .select('id, title, itinerary, created_at, completed_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   const savedTemples = (savedRows || [])
     .map(r => temples.find(t => t.slug === r.temple_slug))
     .filter(Boolean)
+
+  const stats = computeYatraStats(
+    (yatraRows || []).map(y => ({ id: y.id, itinerary: y.itinerary, completed_at: y.completed_at }))
+  )
 
   return (
     <main>
@@ -36,6 +43,8 @@ export default async function MyYatrasPage() {
 
       <section className="section section-light">
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+
+          <YatraStatsBlock stats={stats} />
 
           <div style={{ marginBottom: 48 }}>
             <h2 style={{ fontSize: 24, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
@@ -161,9 +170,15 @@ export default async function MyYatrasPage() {
                           color: "#a52d15",
                           display: "flex",
                           alignItems: "center",
-                          gap: 12
+                          gap: 12,
+                          flexWrap: "wrap"
                         }}
                       >
+                        <MarkYatraCompleteButton
+                          yatraId={y.id}
+                          initialCompleted={!!y.completed_at}
+                          onEvent
+                        />
                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                           View itinerary <ChevronRight size={16} />
                         </span>

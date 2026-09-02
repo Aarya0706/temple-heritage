@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, MapPin } from 'lucide-react'
 import DownloadItineraryButton from '@/components/DownloadItineraryButton'
 import ShareYatraButton from '@/components/ShareYatraButton'
+import MarkYatraCompleteButton from '@/components/MarkYatraCompleteButton'
 import YatraRouteMapLoader, { YatraRouteDay } from '@/components/YatraRouteMapLoader'
 import { resolveTemples } from '@/lib/yatra-route'
 
@@ -22,7 +23,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
 
   const { data: yatra, error } = await supabase
     .from('yatra_plans')
-    .select('id, title, itinerary, created_at, is_public')
+    .select('id, title, itinerary, created_at, is_public, completed_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .single();
@@ -127,6 +128,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
               days={days}
             />
             <ShareYatraButton yatraId={yatra.id} initialIsPublic={!!yatra.is_public} />
+            <MarkYatraCompleteButton yatraId={yatra.id} initialCompleted={!!yatra.completed_at} />
             <Link href="/planner" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}>
               Plan another Yatra
             </Link>

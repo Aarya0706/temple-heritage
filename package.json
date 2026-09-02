@@ -29,6 +29,6 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "typescript": "latest",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.11"
   }
 }
