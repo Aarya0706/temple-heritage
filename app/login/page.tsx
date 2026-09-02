@@ -22,6 +22,11 @@ export default function LoginPage() {
       setError(error.message)
       return
     }
+    try {
+      sessionStorage.setItem('th_show_welcome_modal', '1')
+    } catch {
+      // ignore if sessionStorage is unavailable
+    }
     const next = searchParams.get('next')
     router.push(next && next.startsWith('/') ? next : '/')
     router.refresh()

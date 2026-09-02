@@ -3,6 +3,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FloatingChat } from "@/components/FloatingChat";
+import { WelcomeLoginModal } from "@/components/WelcomeLoginModal";
 
 // Needed so OG image tags (built from the colocated opengraph-image.tsx
 // files) resolve to an absolute URL. Falls back to Vercel's
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <FloatingChat />
           <Footer />
         </div>
+        <WelcomeLoginModal />
       </body>
     </html>
   );
