@@ -1,7 +1,7 @@
  "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Sparkles, Loader2, Heart, Star, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2, Heart, Star, TrendingUp, Moon } from "lucide-react";
 import { temples } from "@/data/temples";
 import Link from "next/link";
 
@@ -9,6 +9,7 @@ const options = ["Lord Shiva", "Lord Vishnu / Krishna", "Goddess", "Architecture
 
 type Reason =
   | { type: "saved_by_similar_users"; count: number }
+  | { type: "matches_horoscope"; sign: string }
   | { type: "matches_interests" }
   | { type: "popular" };
 
@@ -22,6 +23,13 @@ function ReasonBadge({ reason }: { reason: Reason }) {
     return (
       <span className="reason-badge">
         <Heart size={13} /> Saved by {reason.count} visitor{reason.count === 1 ? "" : "s"} with similar taste
+      </span>
+    );
+  }
+  if (reason.type === "matches_horoscope") {
+    return (
+      <span className="reason-badge">
+        <Moon size={13} /> Suited to {reason.sign}
       </span>
     );
   }
@@ -109,6 +117,17 @@ export default function RecommenderPage() {
                 </label>
               ))}
             </div>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid rgba(165,45,21,0.15)" }}>
+              <p style={{ fontSize: 13, color: "#9b6958", lineHeight: 1.5 }}>
+                <Moon size={13} style={{ verticalAlign: "-2px" }} /> Want a pick based on your
+                birth date instead?{" "}
+                <Link href="/horoscope" style={{ color: "#a52d15", fontWeight: 600 }}>
+                  Try the horoscope finder
+                </Link>
+                .
+              </p>
+            </div>
+
             <button
               className="btn-primary"
               style={{ background: "#a52d15", color: "white", border: 0, width: "100%", marginTop: 20 }}

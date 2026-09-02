@@ -17,6 +17,7 @@ const links = [
 const serviceLinks = [
   { href: "/planner", label: "AI Planner", blurb: "Build a pilgrimage itinerary" },
   { href: "/recommender", label: "Recommender", blurb: "Find temples matched to you" },
+  { href: "/horoscope", label: "Horoscope Finder", blurb: "Find temples by your sun sign" },
   { href: "/darshan", label: "Darshan", blurb: "Check timings and crowd info" },
   { href: "/my-yatras", label: "My Yatras", blurb: "Saved temples and trip plans" },
 ];

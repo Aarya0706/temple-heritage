@@ -1,4 +1,5 @@
 import type { Temple } from "@/data/temples";
+import { getZodiacSign, getHoroscopeGuidance, type ZodiacSign } from "@/lib/zodiac";
 
 // Real recommender logic — replaces the old version that only ever scored
 // against the checkbox preferences. Blends three signals:
@@ -23,6 +24,7 @@ export type RatingRow = { temple_slug: string; average_rating: number; review_co
 
 export type RecommendationReason =
   | { type: "saved_by_similar_users"; count: number }
+  | { type: "matches_horoscope"; sign: string }
   | { type: "matches_interests" }
   | { type: "popular" };
 
@@ -35,6 +37,16 @@ export type ScoredRecommendation = {
 const PREFERENCE_WEIGHT = 1;
 const COLLABORATIVE_WEIGHT = 2.5; // strongest signal when it's available — real behavior beats stated preference
 const POPULARITY_WEIGHT = 0.6;
+const HOROSCOPE_WEIGHT = 1.8; // stated on purpose (birth date, not a checkbox) — weighted above plain preference, below real behavior
+
+function horoscopeScore(temple: Temple, sign: ZodiacSign | null): number {
+  if (!sign) return 0;
+  const guidance = getHoroscopeGuidance(sign);
+  let s = 0;
+  if (guidance.deityFocus.some((d) => temple.deity.includes(d))) s += 5;
+  if (guidance.typeFocus?.some((t) => temple.type === t)) s += 2;
+  return s;
+}
 
 function preferenceScore(temple: Temple, selected: string[]): number {
   let s = 0;
@@ -95,6 +107,7 @@ export function recommendTemples({
   savedSlugs,
   allSaved,
   ratings,
+  birthDate,
   limit = 4,
 }: {
   temples: Temple[];
@@ -102,15 +115,18 @@ export function recommendTemples({
   savedSlugs: string[]; // current user's own saved temples
   allSaved: SavedRow[]; // every user's saved rows, for co-occurrence
   ratings: RatingRow[];
+  birthDate?: string | null; // "YYYY-MM-DD", optional — powers the horoscope signal
   limit?: number;
 }): ScoredRecommendation[] {
   const savedSet = new Set(savedSlugs);
   const ratingBySlug = new Map(ratings.map((r) => [r.temple_slug, r]));
   const coOccurrence = coOccurrenceCounts(savedSet, allSaved);
+  const sign = birthDate ? getZodiacSign(birthDate) : null;
 
   const maxCoOccurrence = Math.max(1, ...coOccurrence.values());
   const maxPopularity = Math.max(1, ...temples.map((t) => popularityScore(ratingBySlug.get(t.slug))));
   const maxPreference = Math.max(1, ...temples.map((t) => preferenceScore(t, selectedPreferences)));
+  const maxHoroscope = Math.max(1, ...temples.map((t) => horoscopeScore(t, sign)));
 
   const candidates = temples.filter((t) => !savedSet.has(t.slug));
 
@@ -119,16 +135,24 @@ export function recommendTemples({
     const collab = coCount / maxCoOccurrence;
     const pref = preferenceScore(temple, selectedPreferences) / maxPreference;
     const pop = popularityScore(ratingBySlug.get(temple.slug)) / maxPopularity;
+    const horoscope = horoscopeScore(temple, sign) / maxHoroscope;
 
-    const score = collab * COLLABORATIVE_WEIGHT + pref * PREFERENCE_WEIGHT + pop * POPULARITY_WEIGHT;
+    const score =
+      collab * COLLABORATIVE_WEIGHT +
+      pref * PREFERENCE_WEIGHT +
+      pop * POPULARITY_WEIGHT +
+      horoscope * HOROSCOPE_WEIGHT;
 
     // Attribute the recommendation to whichever signal actually drove it,
     // so the UI can say why — collaborative first (it's the strongest and
-    // most specific signal when present), then preference match, then
-    // fall back to "popular" as the honest default.
+    // most specific signal when present), then horoscope (deliberate,
+    // explicit input), then preference match, then fall back to
+    // "popular" as the honest default.
     let reason: RecommendationReason;
     if (coCount > 0) {
       reason = { type: "saved_by_similar_users", count: coCount };
+    } else if (sign && horoscopeScore(temple, sign) > 0) {
+      reason = { type: "matches_horoscope", sign: sign.name };
     } else if (preferenceScore(temple, selectedPreferences) > 0) {
       reason = { type: "matches_interests" };
     } else {

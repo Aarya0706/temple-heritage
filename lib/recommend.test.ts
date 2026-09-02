@@ -112,6 +112,34 @@ describe("recommendTemples", () => {
     expect(results[0].reason.type).toBe("popular");
   });
 
+  it("surfaces matches_horoscope when a birth date is given and no collaborative signal exists", () => {
+    // 1999-08-15 -> Leo -> Sun -> Surya. None of the test temples' deities
+    // include "Surya", so use the Shiva-ruled case (Cancer/Moon, Mars, or
+    // Saturn) which the catalog does have via temple "a" and "d".
+    const results = recommendTemples({
+      temples: catalog,
+      selectedPreferences: [],
+      savedSlugs: [],
+      allSaved: [],
+      ratings: [],
+      birthDate: "2000-07-10", // Cancer -> Moon -> Shiva
+    });
+    expect(results[0].reason.type).toBe("matches_horoscope");
+    expect(results[0].temple.deity).toContain("Shiva");
+  });
+
+  it("ignores an unparseable birth date rather than throwing", () => {
+    const results = recommendTemples({
+      temples: catalog,
+      selectedPreferences: [],
+      savedSlugs: [],
+      allSaved: [],
+      ratings: [],
+      birthDate: "not-a-date",
+    });
+    expect(results.every((r) => r.reason.type !== "matches_horoscope")).toBe(true);
+  });
+
   it("respects the limit", () => {
     const results = recommendTemples({
       temples: catalog,

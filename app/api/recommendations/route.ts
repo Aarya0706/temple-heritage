@@ -5,11 +5,14 @@ import { recommendTemples } from "@/lib/recommend";
 
 export const runtime = "nodejs";
 
-// GET /api/recommendations?preferences=Architecture,History
+// GET /api/recommendations?preferences=Architecture,History&birthdate=1999-08-15
 //
 // Auth-optional. Logged-out visitors still get preference + popularity
 // based recommendations; logged-in visitors with saved temples also get
-// the collaborative "saved by similar users" signal.
+// the collaborative "saved by similar users" signal. `birthdate`
+// ("YYYY-MM-DD") is optional too — when present it's converted to a Sun
+// sign and adds the "matches_horoscope" signal. Never persisted; it's
+// used for this one request and discarded.
 //
 // IMPORTANT — depends on a migration: the collaborative signal needs to
 // read every user's saved_temples rows (not just the current user's), so
@@ -25,6 +28,7 @@ export async function GET(req: NextRequest) {
     .split(",")
     .map((p) => p.trim())
     .filter(Boolean);
+  const birthDate = req.nextUrl.searchParams.get("birthdate");
 
   const supabase = await createClient();
 
@@ -46,6 +50,7 @@ export async function GET(req: NextRequest) {
     savedSlugs: (ownSaved ?? []).map((r) => r.temple_slug),
     allSaved: allSaved ?? [],
     ratings: ratings ?? [],
+    birthDate,
     limit: 4,
   });
 
