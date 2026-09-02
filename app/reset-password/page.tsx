@@ -15,24 +15,22 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient()
 
-    const init = async () => {
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (error) {
-          setError('This reset link is invalid or has expired. Request a new one.')
-        }
-      }
-      setReady(true)
-    }
-
-    init()
-
+    // Implicit flow: the Supabase client auto-detects the access_token in
+    // the URL hash on load (detectSessionInUrl defaults to true) and fires
+    // this event once the recovery session is set. No manual token
+    // exchange needed here -- that's the whole point of implicit flow
+    // over PKCE for a cross-device email link. See lib/supabase/client.ts.
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setReady(true)
       }
+    })
+
+    // If a session already exists by the time this mounts (hash was
+    // processed before the listener attached), don't leave the user
+    // stuck on "Verifying...".
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true)
     })
 
     return () => {
