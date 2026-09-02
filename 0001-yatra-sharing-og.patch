@@ -1,0 +1,728 @@
+From 0747b29ebd90676aaf5c70e1c153f50a99095742 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Tue, 25 Aug 2026 13:13:24 +0000
+Subject: [PATCH] Add public shareable Yatra links and dynamic OG images
+
+- yatra_plans.is_public column + RLS policies (0007_yatra_sharing.sql)
+- PATCH /api/yatra-plans toggles is_public, owner-scoped
+- ShareYatraButton: share/copy-link/unshare UI on the owner's Yatra page
+- /yatra/[id]: public, auth-free, view-only itinerary page
+- opengraph-image.tsx for /temples/[slug] and /yatra/[id] (next/og)
+- generateMetadata on /temples/[slug] so OG title/description are per-temple
+- metadataBase in root layout so OG image URLs resolve correctly
+---
+ .env.example                               |   6 +
+ app/api/yatra-plans/route.ts               |  25 ++++
+ app/layout.tsx                             |   9 ++
+ app/my-yatras/[id]/page.tsx                |   6 +-
+ app/temples/[slug]/opengraph-image.tsx     |  98 +++++++++++++
+ app/temples/[slug]/page.tsx                |  28 ++++
+ app/yatra/[id]/opengraph-image.tsx         |  78 ++++++++++
+ app/yatra/[id]/page.tsx                    | 157 +++++++++++++++++++++
+ components/ShareYatraButton.tsx            | 142 +++++++++++++++++++
+ supabase/migrations/0007_yatra_sharing.sql |  24 ++++
+ supabase/migrations/README.md              |   1 +
+ 11 files changed, 572 insertions(+), 2 deletions(-)
+ create mode 100644 app/temples/[slug]/opengraph-image.tsx
+ create mode 100644 app/yatra/[id]/opengraph-image.tsx
+ create mode 100644 app/yatra/[id]/page.tsx
+ create mode 100644 components/ShareYatraButton.tsx
+ create mode 100644 supabase/migrations/0007_yatra_sharing.sql
+
+diff --git a/.env.example b/.env.example
+index 511d70e..02ff3d7 100644
+--- a/.env.example
++++ b/.env.example
+@@ -6,3 +6,9 @@ GROQ_API_KEY=
+ # Find these in your Supabase project: Settings → API
+ NEXT_PUBLIC_SUPABASE_URL=
+ NEXT_PUBLIC_SUPABASE_ANON_KEY=
++
++# Optional — your deployed domain (e.g. https://temple-heritage.vercel.app).
++# Used to build correct absolute URLs for shared OG image tags. Falls back
++# to Vercel's auto-injected URL on Vercel, or localhost in dev, so this is
++# only needed once you're on a custom domain.
++NEXT_PUBLIC_SITE_URL=
+diff --git a/app/api/yatra-plans/route.ts b/app/api/yatra-plans/route.ts
+index 8953f61..c75554b 100644
+--- a/app/api/yatra-plans/route.ts
++++ b/app/api/yatra-plans/route.ts
+@@ -17,6 +17,31 @@ export async function POST(request: Request) {
+   return NextResponse.json({ success: true })
+ }
+ 
++export async function PATCH(request: Request) {
++  const supabase = await createClient()
++  const { data: { user } } = await supabase.auth.getUser()
++  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
++
++  const { id, isPublic } = await request.json()
++  if (!id || typeof isPublic !== 'boolean') {
++    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
++  }
++
++  // Scoped to this user's own row (also enforced by the
++  // yatra_plans_update_own RLS policy) — id alone can't flip someone
++  // else's plan public.
++  const { data, error } = await supabase
++    .from('yatra_plans')
++    .update({ is_public: isPublic })
++    .eq('id', id)
++    .eq('user_id', user.id)
++    .select('id, is_public')
++    .single()
++
++  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  return NextResponse.json({ success: true, isPublic: data.is_public })
++}
++
+ export async function DELETE(request: Request) {
+   const supabase = await createClient()
+   const { data: { user } } = await supabase.auth.getUser()
+diff --git a/app/layout.tsx b/app/layout.tsx
+index 4c4e694..831b4aa 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -4,7 +4,16 @@ import { Navbar } from "@/components/Navbar";
+ import { Footer } from "@/components/Footer";
+ import { FloatingChat } from "@/components/FloatingChat";
+ 
++// Needed so OG image tags (built from the colocated opengraph-image.tsx
++// files) resolve to an absolute URL. Falls back to Vercel's
++// auto-injected URL, then localhost for local dev — set
++// NEXT_PUBLIC_SITE_URL once a custom domain is attached.
++const siteUrl =
++  process.env.NEXT_PUBLIC_SITE_URL ||
++  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
++
+ export const metadata: Metadata = {
++  metadataBase: new URL(siteUrl),
+   title: "Temple Heritage | India's Sacred Heritage",
+   description: "Discover India's temples, festivals and personalized pilgrimage journeys."
+ };
+diff --git a/app/my-yatras/[id]/page.tsx b/app/my-yatras/[id]/page.tsx
+index bd9e3f3..c4a5e19 100644
+--- a/app/my-yatras/[id]/page.tsx
++++ b/app/my-yatras/[id]/page.tsx
+@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
+ import Link from 'next/link'
+ import { ArrowLeft, Calendar, MapPin } from 'lucide-react'
+ import DownloadItineraryButton from '@/components/DownloadItineraryButton'
++import ShareYatraButton from '@/components/ShareYatraButton'
+ import YatraRouteMapLoader, { YatraRouteDay } from '@/components/YatraRouteMapLoader'
+ import { resolveTemples } from '@/lib/yatra-route'
+ 
+@@ -21,7 +22,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
+ 
+   const { data: yatra, error } = await supabase
+     .from('yatra_plans')
+-    .select('id, title, itinerary, created_at')
++    .select('id, title, itinerary, created_at, is_public')
+     .eq('id', id)
+     .eq('user_id', user.id)
+     .single();
+@@ -116,7 +117,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
+ 
+           <YatraRouteMapLoader days={routeDays} />
+ 
+-          <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
++          <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+             <DownloadItineraryButton
+               title={yatra.title}
+               summary={summary}
+@@ -125,6 +126,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
+               createdAt={yatra.created_at}
+               days={days}
+             />
++            <ShareYatraButton yatraId={yatra.id} initialIsPublic={!!yatra.is_public} />
+             <Link href="/planner" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}>
+               Plan another Yatra
+             </Link>
+diff --git a/app/temples/[slug]/opengraph-image.tsx b/app/temples/[slug]/opengraph-image.tsx
+new file mode 100644
+index 0000000..7c4bacf
+--- /dev/null
++++ b/app/temples/[slug]/opengraph-image.tsx
+@@ -0,0 +1,98 @@
++import { ImageResponse } from 'next/og'
++import { temples } from '@/data/temples'
++
++export const size = { width: 1200, height: 630 }
++export const contentType = 'image/png'
++
++export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
++  const { slug } = await params
++  const temple = temples.find((t) => t.slug === slug)
++
++  const name = temple?.name ?? 'Temple Heritage'
++  const deity = temple?.deity ?? ''
++  const location = temple ? `${temple.city}, ${temple.state}` : "India's Sacred Heritage"
++  const image = temple?.image
++
++  return new ImageResponse(
++    (
++      <div
++        style={{
++          width: '100%',
++          height: '100%',
++          display: 'flex',
++          position: 'relative',
++          background: '#3a1a10',
++          fontFamily: 'sans-serif',
++        }}
++      >
++        {image && (
++          // eslint-disable-next-line @next/next/no-img-element
++          <img
++            src={image}
++            alt=""
++            width={1200}
++            height={630}
++            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
++          />
++        )}
++        <div
++          style={{
++            position: 'absolute',
++            inset: 0,
++            display: 'flex',
++            background:
++              'linear-gradient(0deg, rgba(30,12,7,0.92) 0%, rgba(30,12,7,0.55) 45%, rgba(30,12,7,0.25) 100%)',
++          }}
++        />
++        <div
++          style={{
++            position: 'relative',
++            display: 'flex',
++            flexDirection: 'column',
++            justifyContent: 'flex-end',
++            width: '100%',
++            height: '100%',
++            padding: '56px 64px',
++          }}
++        >
++          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
++            <span style={{ fontSize: 26 }}>🛕</span>
++            <span style={{ fontSize: 22, color: '#ffc05a', fontWeight: 700, letterSpacing: 1 }}>
++              TEMPLE HERITAGE
++            </span>
++          </div>
++          {deity && (
++            <span
++              style={{
++                display: 'flex',
++                color: '#ffc05a',
++                fontSize: 24,
++                fontWeight: 600,
++                marginBottom: 14,
++              }}
++            >
++              {deity}
++            </span>
++          )}
++          <span
++            style={{
++              display: 'flex',
++              color: 'white',
++              fontSize: 64,
++              fontWeight: 800,
++              lineHeight: 1.05,
++              marginBottom: 20,
++              maxWidth: 1000,
++            }}
++          >
++            {name}
++          </span>
++          <span style={{ display: 'flex', color: '#f0ddc8', fontSize: 28 }}>
++            {location}
++          </span>
++        </div>
++      </div>
++    ),
++    { ...size }
++  )
++}
+diff --git a/app/temples/[slug]/page.tsx b/app/temples/[slug]/page.tsx
+index 712c382..37a9bb6 100644
+--- a/app/temples/[slug]/page.tsx
++++ b/app/temples/[slug]/page.tsx
+@@ -1,4 +1,5 @@
+ import { notFound } from "next/navigation";
++import type { Metadata } from "next";
+ import Link from "next/link";
+ import {
+   ArrowLeft,
+@@ -21,6 +22,33 @@ export function generateStaticParams() {
+   }));
+ }
+ 
++export async function generateMetadata({
++  params,
++}: {
++  params: Promise<{ slug: string }>;
++}): Promise<Metadata> {
++  const { slug } = await params;
++  const temple = temples.find((item) => item.slug === slug);
++  if (!temple) return { title: "Temple not found | Temple Heritage" };
++
++  const description = temple.shortDescription || temple.description;
++
++  return {
++    title: `${temple.name} | Temple Heritage`,
++    description,
++    openGraph: {
++      title: temple.name,
++      description,
++      type: "website",
++    },
++    twitter: {
++      card: "summary_large_image",
++      title: temple.name,
++      description,
++    },
++  };
++}
++
+ export default async function TempleDetail({
+   params,
+ }: {
+diff --git a/app/yatra/[id]/opengraph-image.tsx b/app/yatra/[id]/opengraph-image.tsx
+new file mode 100644
+index 0000000..dc7f609
+--- /dev/null
++++ b/app/yatra/[id]/opengraph-image.tsx
+@@ -0,0 +1,78 @@
++import { ImageResponse } from 'next/og'
++import { createClient } from '@/lib/supabase/server'
++
++export const size = { width: 1200, height: 630 }
++export const contentType = 'image/png'
++
++export default async function Image({ params }: { params: Promise<{ id: string }> }) {
++  const { id } = await params
++  const supabase = await createClient()
++  const { data: yatra } = await supabase
++    .from('yatra_plans')
++    .select('title, itinerary')
++    .eq('id', id)
++    .eq('is_public', true)
++    .maybeSingle()
++
++  const title = yatra?.title ?? 'A Yatra on Temple Heritage'
++  const days = yatra?.itinerary?.days ?? []
++  const dayCount = days.length
++  const from: string = yatra?.itinerary?.from ?? ''
++  const region: string = yatra?.itinerary?.displayRegion ?? yatra?.itinerary?.region ?? ''
++  const stops: string[] = Array.from(
++    new Set(days.map((d: { title?: string }) => d?.title).filter(Boolean))
++  ).slice(0, 3) as string[]
++
++  return new ImageResponse(
++    (
++      <div
++        style={{
++          width: '100%',
++          height: '100%',
++          display: 'flex',
++          flexDirection: 'column',
++          justifyContent: 'space-between',
++          background: 'linear-gradient(135deg, #3a1a10 0%, #6b2314 55%, #a52d15 100%)',
++          fontFamily: 'sans-serif',
++          padding: '64px 68px',
++        }}
++      >
++        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
++          <span style={{ fontSize: 28 }}>🪷</span>
++          <span style={{ fontSize: 22, color: '#ffc05a', fontWeight: 700, letterSpacing: 1 }}>
++            TEMPLE HERITAGE · AI YATRA PLANNER
++          </span>
++        </div>
++
++        <div style={{ display: 'flex', flexDirection: 'column' }}>
++          <span
++            style={{
++              display: 'flex',
++              color: 'white',
++              fontSize: 58,
++              fontWeight: 800,
++              lineHeight: 1.1,
++              marginBottom: 22,
++              maxWidth: 1000,
++            }}
++          >
++            {title}
++          </span>
++
++          <div style={{ display: 'flex', gap: 22, fontSize: 24, color: '#ffe3c2', marginBottom: stops.length ? 18 : 0 }}>
++            {dayCount > 0 && <span style={{ display: 'flex' }}>{dayCount}-day itinerary</span>}
++            {from && <span style={{ display: 'flex' }}>From {from}</span>}
++            {region && <span style={{ display: 'flex' }}>{region}</span>}
++          </div>
++
++          {stops.length > 0 && (
++            <span style={{ display: 'flex', color: '#f0ddc8', fontSize: 22 }}>
++              {stops.join('  ·  ')}
++            </span>
++          )}
++        </div>
++      </div>
++    ),
++    { ...size }
++  )
++}
+diff --git a/app/yatra/[id]/page.tsx b/app/yatra/[id]/page.tsx
+new file mode 100644
+index 0000000..271b54b
+--- /dev/null
++++ b/app/yatra/[id]/page.tsx
+@@ -0,0 +1,157 @@
++import { createClient } from '@/lib/supabase/server'
++import { notFound } from 'next/navigation'
++import Link from 'next/link'
++import type { Metadata } from 'next'
++import { Calendar, MapPin, Sparkles, Globe } from 'lucide-react'
++import YatraRouteMapLoader, { YatraRouteDay } from '@/components/YatraRouteMapLoader'
++import { resolveTemples } from '@/lib/yatra-route'
++
++type ItineraryDay = {
++  day: string;
++  title: string;
++  description: string;
++  templeSlugs?: string[];
++};
++
++async function getPublicYatra(id: string) {
++  const supabase = await createClient();
++  // No user_id filter here on purpose — this route is unauthenticated.
++  // The "yatra_plans_select_public" RLS policy (is_public = true) is what
++  // actually scopes this: a private plan's id simply won't return a row.
++  const { data: yatra } = await supabase
++    .from('yatra_plans')
++    .select('id, title, itinerary, created_at, is_public')
++    .eq('id', id)
++    .eq('is_public', true)
++    .maybeSingle();
++  return yatra;
++}
++
++export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
++  const { id } = await params;
++  const yatra = await getPublicYatra(id);
++  if (!yatra) return { title: 'Yatra not found | Temple Heritage' };
++
++  const dayCount = yatra.itinerary?.days?.length || 0;
++  const summary: string = yatra.itinerary?.summary || `A ${dayCount}-day pilgrimage itinerary planned on Temple Heritage.`;
++
++  return {
++    title: `${yatra.title} | Temple Heritage`,
++    description: summary,
++    openGraph: {
++      title: yatra.title,
++      description: summary,
++      type: 'website',
++    },
++    twitter: {
++      card: 'summary_large_image',
++      title: yatra.title,
++      description: summary,
++    },
++  };
++}
++
++export default async function PublicYatraPage({ params }: { params: Promise<{ id: string }> }) {
++  const { id } = await params;
++  const yatra = await getPublicYatra(id);
++  if (!yatra) notFound();
++
++  const days: ItineraryDay[] = yatra.itinerary?.days || [];
++  const summary: string = yatra.itinerary?.summary || "";
++  const from: string = yatra.itinerary?.from || "";
++  const region: string = yatra.itinerary?.displayRegion || yatra.itinerary?.region || "";
++
++  const routeDays: YatraRouteDay[] = days.map((d) => ({
++    label: d.day,
++    stops: resolveTemples(d.templeSlugs),
++  }));
++
++  return (
++    <main>
++      <section className="page-hero">
++        <div
++          className="eyebrow"
++          style={{ color: "#ffc05a", display: "flex", alignItems: "center", gap: 6 }}
++        >
++          <Globe size={13} /> Shared Yatra
++        </div>
++        <h1>{yatra.title}</h1>
++        <p style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
++          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
++            <Calendar size={15} />
++            Planned {new Date(yatra.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
++          </span>
++          {from && (
++            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
++              <MapPin size={15} /> From {from}
++            </span>
++          )}
++          {region && <span>{region}</span>}
++        </p>
++      </section>
++
++      <section className="section section-light">
++        <div style={{ maxWidth: 800, margin: "0 auto" }}>
++          {summary && (
++            <p style={{ marginBottom: 28, color: "#6b4a3d", fontSize: 16, lineHeight: 1.6 }}>
++              {summary}
++            </p>
++          )}
++
++          {days.length === 0 ? (
++            <div style={{
++              border: "1px dashed #d9b48f",
++              borderRadius: 14,
++              padding: "32px 24px",
++              textAlign: "center",
++              color: "#8c6a54",
++              background: "#fff8f0"
++            }}>
++              <p>This itinerary doesn't have any day-by-day details saved.</p>
++            </div>
++          ) : (
++            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
++              {days.map((d, i) => (
++                <div
++                  key={i}
++                  style={{
++                    background: "white",
++                    border: "1px solid #f0ddc8",
++                    borderRadius: 14,
++                    padding: "20px 24px",
++                    boxShadow: "0 1px 4px rgba(139, 69, 19, 0.08)"
++                  }}
++                >
++                  <div style={{ fontWeight: 700, color: "#3a1a10", marginBottom: 8, fontSize: 16 }}>
++                    {d.day} · {d.title}
++                  </div>
++                  <p style={{ color: "#6b4a3d", lineHeight: 1.6, margin: 0 }}>{d.description}</p>
++                </div>
++              ))}
++            </div>
++          )}
++
++          <YatraRouteMapLoader days={routeDays} />
++
++          <div style={{
++            marginTop: 32,
++            display: "flex",
++            gap: 12,
++            flexWrap: "wrap",
++            alignItems: "center",
++            justifyContent: "space-between",
++            borderTop: "1px solid #f0ddc8",
++            paddingTop: 24
++          }}>
++            <p style={{ color: "#8c6a54", fontSize: 14, margin: 0 }}>
++              Made with Temple Heritage's AI Yatra Planner.
++            </p>
++            <Link href="/planner" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
++              <Sparkles size={16} /> Plan Your Own Yatra
++            </Link>
++          </div>
++        </div>
++      </section>
++    </main>
++  );
++}
+diff --git a/components/ShareYatraButton.tsx b/components/ShareYatraButton.tsx
+new file mode 100644
+index 0000000..17ff4c7
+--- /dev/null
++++ b/components/ShareYatraButton.tsx
+@@ -0,0 +1,142 @@
++'use client'
++import { useState } from 'react'
++import { useRouter } from 'next/navigation'
++import { Share2, Copy, Check, Loader2, Globe, Lock } from 'lucide-react'
++
++export default function ShareYatraButton({
++  yatraId,
++  initialIsPublic,
++}: {
++  yatraId: string
++  initialIsPublic: boolean
++}) {
++  const router = useRouter()
++  const [isPublic, setIsPublic] = useState(initialIsPublic)
++  const [loading, setLoading] = useState(false)
++  const [copied, setCopied] = useState(false)
++
++  const shareUrl = typeof window !== 'undefined'
++    ? `${window.location.origin}/yatra/${yatraId}`
++    : `/yatra/${yatraId}`
++
++  const togglePublic = async (next: boolean) => {
++    if (loading) return
++    setLoading(true)
++    const res = await fetch('/api/yatra-plans', {
++      method: 'PATCH',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ id: yatraId, isPublic: next }),
++    })
++    if (res.ok) {
++      setIsPublic(next)
++      router.refresh()
++    }
++    setLoading(false)
++  }
++
++  const copyLink = async () => {
++    try {
++      await navigator.clipboard.writeText(shareUrl)
++      setCopied(true)
++      setTimeout(() => setCopied(false), 2000)
++    } catch {
++      // Clipboard API can fail (permissions, non-secure context) — the
++      // link is still selectable/visible in the input below.
++    }
++  }
++
++  if (!isPublic) {
++    return (
++      <button
++        onClick={() => togglePublic(true)}
++        disabled={loading}
++        className="btn-secondary"
++        style={{
++          color: '#8c2416',
++          borderColor: '#b95a40',
++          display: 'inline-flex',
++          alignItems: 'center',
++          gap: 8,
++          cursor: loading ? 'default' : 'pointer',
++        }}
++      >
++        {loading ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
++        Share Yatra
++      </button>
++    )
++  }
++
++  return (
++    <div
++      style={{
++        display: 'flex',
++        alignItems: 'center',
++        gap: 8,
++        flexWrap: 'wrap',
++        background: '#fff8f0',
++        border: '1px solid #f0ddc8',
++        borderRadius: 10,
++        padding: '8px 10px',
++      }}
++    >
++      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6b4a3d' }}>
++        <Globe size={14} color="#2f8a4a" /> Public link
++      </span>
++      <input
++        readOnly
++        value={shareUrl}
++        onFocus={(e) => e.target.select()}
++        style={{
++          flex: '1 1 220px',
++          minWidth: 0,
++          border: '1px solid #f0ddc8',
++          borderRadius: 6,
++          padding: '6px 8px',
++          fontSize: 13,
++          color: '#3a1a10',
++          background: 'white',
++        }}
++      />
++      <button
++        onClick={copyLink}
++        title="Copy link"
++        style={{
++          display: 'flex',
++          alignItems: 'center',
++          gap: 6,
++          border: '1px solid #b95a40',
++          background: copied ? '#e9f7ee' : 'white',
++          color: copied ? '#2f8a4a' : '#8c2416',
++          borderRadius: 6,
++          padding: '6px 10px',
++          fontSize: 13,
++          fontWeight: 600,
++          cursor: 'pointer',
++        }}
++      >
++        {copied ? <Check size={14} /> : <Copy size={14} />}
++        {copied ? 'Copied' : 'Copy'}
++      </button>
++      <button
++        onClick={() => togglePublic(false)}
++        disabled={loading}
++        title="Make private again"
++        style={{
++          display: 'flex',
++          alignItems: 'center',
++          gap: 6,
++          border: '1px solid #e0c9b0',
++          background: 'white',
++          color: '#8c6a54',
++          borderRadius: 6,
++          padding: '6px 10px',
++          fontSize: 13,
++          cursor: loading ? 'default' : 'pointer',
++        }}
++      >
++        {loading ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
++        Unshare
++      </button>
++    </div>
++  )
++}
+diff --git a/supabase/migrations/0007_yatra_sharing.sql b/supabase/migrations/0007_yatra_sharing.sql
+new file mode 100644
+index 0000000..7d1e5e8
+--- /dev/null
++++ b/supabase/migrations/0007_yatra_sharing.sql
+@@ -0,0 +1,24 @@
++-- Adds view-only public sharing to saved Yatra itineraries.
++-- A plan's own `id` (already an unguessable UUID) doubles as its share
++-- token, so no separate slug column is needed — toggling `is_public` is
++-- all that's required to mint/revoke a working /yatra/[id] link.
++
++alter table public.yatra_plans
++  add column if not exists is_public boolean not null default false;
++
++-- Anyone (including anon/unauthenticated requests) can read a plan once
++-- its owner has marked it public. This is intentionally separate from
++-- "yatra_plans_select_own" — a plan is visible if EITHER policy matches.
++create policy "yatra_plans_select_public"
++  on public.yatra_plans for select
++  using (is_public = true);
++
++-- Owners can flip the flag on their own plans. No general "update own"
++-- policy exists yet, so this is scoped narrowly to what the share
++-- feature needs rather than opening up arbitrary field edits.
++create policy "yatra_plans_update_own"
++  on public.yatra_plans for update
++  using (auth.uid() = user_id)
++  with check (auth.uid() = user_id);
++
++create index if not exists idx_yatra_plans_public on public.yatra_plans (id) where is_public = true;
+diff --git a/supabase/migrations/README.md b/supabase/migrations/README.md
+index f99b4ca..417ded2 100644
+--- a/supabase/migrations/README.md
++++ b/supabase/migrations/README.md
+@@ -44,6 +44,7 @@ can reference it).
+ | `0004_yatra_plans.sql` | `yatra_plans` table + RLS |
+ | `0005_temple_reviews.sql` | `temple_reviews`, `temple_review_photos`, `temple_rating_summary` view, 3-photo trigger, RLS |
+ | `0006_storage_review_photos.sql` | `review-photos` storage bucket + object policies |
++| `0007_yatra_sharing.sql` | `yatra_plans.is_public` + public-read/owner-update RLS for shareable links |
+ 
+ ## Going forward
+ 
+-- 
+2.43.0
+
