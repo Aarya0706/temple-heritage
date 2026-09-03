@@ -29,16 +29,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const temple = temples.find((item) => item.slug === slug);
-  if (!temple) return { title: "Temple not found | Temple Heritage" };
+  if (!temple) return { title: "Temple not found" };
 
   const description = temple.shortDescription || temple.description;
 
   return {
-    title: `${temple.name} | Temple Heritage`,
+    title: temple.name,
     description,
     openGraph: {
       title: temple.name,
       description,
+      siteName: "Temple Heritage",
       type: "website",
     },
     twitter: {

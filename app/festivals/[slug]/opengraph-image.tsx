@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
-import { temples } from '@/data/temples'
+import { festivals } from '@/data/festivals'
+import { slugify } from '@/lib/slug'
 import { resolveImageUrl } from '@/lib/site-url'
 
 export const size = { width: 1200, height: 630 }
@@ -7,14 +8,14 @@ export const contentType = 'image/png'
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const temple = temples.find((t) => t.slug === slug)
+  const festival = festivals.find((f) => slugify(f.name) === slug)
 
-  const name = temple?.name ?? 'Temple Heritage'
-  const deity = temple?.deity ?? ''
-  const location = temple ? `${temple.city}, ${temple.state}` : "India's Sacred Heritage"
-  // temple.image is sometimes a relative /images/... path — ImageResponse
-  // fetches this over the network, so it has to be absolute.
-  const image = resolveImageUrl(temple?.image)
+  const name = festival?.name ?? 'Temple Heritage'
+  const place = festival?.place ?? "India's Sacred Heritage"
+  const month = festival?.month ?? ''
+  // festival.imageUrl is sometimes a relative /festivals/... path —
+  // ImageResponse fetches this over the network, so it has to be absolute.
+  const image = resolveImageUrl(festival?.imageUrl)
 
   return new ImageResponse(
     (
@@ -58,12 +59,12 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-            <span style={{ fontSize: 26 }}>🛕</span>
+            <span style={{ fontSize: 26 }}>🪔</span>
             <span style={{ fontSize: 22, color: '#ffc05a', fontWeight: 700, letterSpacing: 1 }}>
-              TEMPLE HERITAGE
+              TEMPLE HERITAGE · FESTIVAL
             </span>
           </div>
-          {deity && (
+          {month && (
             <span
               style={{
                 display: 'flex',
@@ -73,7 +74,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                 marginBottom: 14,
               }}
             >
-              {deity}
+              {month}
             </span>
           )}
           <span
@@ -90,7 +91,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
             {name}
           </span>
           <span style={{ display: 'flex', color: '#f0ddc8', fontSize: 28 }}>
-            {location}
+            {place}
           </span>
         </div>
       </div>

@@ -1,7 +1,21 @@
+import type { Metadata } from "next";
 import { SectionHeading } from "@/components/SectionHeading";
 import { TempleExplorer } from "@/components/TempleExplorer";
 import AllTemplesMapLoader from "@/components/AllTemplesMapLoader";
 import { temples } from "@/data/temples";
+
+export const metadata: Metadata = {
+  title: "Browse Temples",
+  description:
+    "Search India's temples by name, deity, city, state or region and open a detailed heritage profile for each.",
+  openGraph: {
+    title: "Browse Temples",
+    description:
+      "Search India's temples by name, deity, city, state or region and open a detailed heritage profile for each.",
+    siteName: "Temple Heritage",
+    type: "website",
+  },
+};
 
 export default function TemplesPage() {
   return (

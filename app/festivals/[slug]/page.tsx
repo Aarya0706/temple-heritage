@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { festivals } from "@/data/festivals";
 import { slugify } from "@/lib/slug";
@@ -7,6 +8,34 @@ import FestivalCountdown from "@/components/FestivalCountdown";
 
 export function generateStaticParams() {
   return festivals.map((festival) => ({ slug: slugify(festival.name) }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const festival = festivals.find((item) => slugify(item.name) === slug);
+  if (!festival) return { title: "Festival not found" };
+
+  const description = festival.note || festival.description;
+
+  return {
+    title: festival.name,
+    description,
+    openGraph: {
+      title: festival.name,
+      description,
+      siteName: "Temple Heritage",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: festival.name,
+      description,
+    },
+  };
 }
 
 export default async function FestivalDetail({ params }: { params: Promise<{ slug: string }> }) {

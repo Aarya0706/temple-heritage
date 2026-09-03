@@ -4,19 +4,35 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FloatingChat } from "@/components/FloatingChat";
 import { WelcomeLoginModal } from "@/components/WelcomeLoginModal";
+import { getSiteUrl } from "@/lib/site-url";
 
-// Needed so OG image tags (built from the colocated opengraph-image.tsx
-// files) resolve to an absolute URL. Falls back to Vercel's
-// auto-injected URL, then localhost for local dev — set
-// NEXT_PUBLIC_SITE_URL once a custom domain is attached.
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+const title = "Temple Heritage | India's Sacred Heritage";
+const description =
+  "Discover India's temples, festivals and personalized pilgrimage journeys.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: "Temple Heritage | India's Sacred Heritage",
-  description: "Discover India's temples, festivals and personalized pilgrimage journeys."
+  // Needed so OG image tags (built from the colocated opengraph-image.tsx
+  // files) resolve to an absolute URL.
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: title,
+    template: "%s | Temple Heritage",
+  },
+  description,
+  openGraph: {
+    title,
+    description,
+    siteName: "Temple Heritage",
+    type: "website",
+    locale: "en_IN",
+    // Routes without their own opengraph-image.tsx (e.g. /, /about,
+    // /planner) fall back to this root-level image.
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

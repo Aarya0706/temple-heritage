@@ -30,17 +30,18 @@ async function getPublicYatra(id: string) {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const yatra = await getPublicYatra(id);
-  if (!yatra) return { title: 'Yatra not found | Temple Heritage' };
+  if (!yatra) return { title: 'Yatra not found' };
 
   const dayCount = yatra.itinerary?.days?.length || 0;
   const summary: string = yatra.itinerary?.summary || `A ${dayCount}-day pilgrimage itinerary planned on Temple Heritage.`;
 
   return {
-    title: `${yatra.title} | Temple Heritage`,
+    title: yatra.title,
     description: summary,
     openGraph: {
       title: yatra.title,
       description: summary,
+      siteName: 'Temple Heritage',
       type: 'website',
     },
     twitter: {
