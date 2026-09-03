@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -8,7 +8,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -28,8 +27,11 @@ export default function LoginPage() {
       // ignore if sessionStorage is unavailable
     }
     const next = searchParams.get('next')
-    router.push(next && next.startsWith('/') ? next : '/')
-    router.refresh()
+    // Force a full page load (not a client-side router.push) so the root
+    // layout actually remounts and the welcome popup's mount-time check
+    // reliably picks up the flag — this mirrors how /logout already does
+    // a full page load and is why the popup was only ever showing there.
+    window.location.assign(next && next.startsWith('/') ? next : '/')
   }
 
   return (
