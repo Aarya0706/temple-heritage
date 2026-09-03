@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const FLAG_KEY = "th_show_welcome_modal";
 
 export function WelcomeLoginModal() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -16,7 +18,7 @@ export function WelcomeLoginModal() {
     } catch {
       // sessionStorage unavailable (e.g. private mode edge cases) — just skip the popup
     }
-  }, []);
+  }, [pathname]);
 
   if (!open) return null;
 
