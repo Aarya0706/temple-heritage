@@ -1,24 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const FLAG_KEY = "th_show_welcome_modal";
 
 export function WelcomeLoginModal() {
-  const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-
-  useEffect(() => {
+  const [open, setOpen] = useState(() => {
+    // Runs once during initial render — safe place to read/clear the flag
+    // without triggering the react-hooks/set-state-in-effect lint rule.
     try {
-      if (sessionStorage.getItem(FLAG_KEY) === "1") {
+      if (typeof window !== "undefined" && sessionStorage.getItem(FLAG_KEY) === "1") {
         sessionStorage.removeItem(FLAG_KEY);
-        setOpen(true);
+        return true;
       }
     } catch {
       // sessionStorage unavailable (e.g. private mode edge cases) — just skip the popup
     }
-  }, [pathname]);
+    return false;
+  });
 
   if (!open) return null;
 
