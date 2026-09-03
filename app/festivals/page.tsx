@@ -1,9 +1,23 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { festivals } from "@/data/festivals";
 import { slugify } from "@/lib/slug";
 import { getFestivalCountdown } from "@/lib/festival-countdown";
 import NextFestivalBanner from "@/components/NextFestivalBanner";
+
+export const metadata: Metadata = {
+  title: "Festival Explorer",
+  description:
+    "Discover India's major festivals, their cultural significance, celebration places and ideal pilgrimage seasons.",
+  openGraph: {
+    title: "Festival Explorer",
+    description:
+      "Discover India's major festivals, their cultural significance, celebration places and ideal pilgrimage seasons.",
+    siteName: "Temple Heritage",
+    type: "website",
+  },
+};
 
 export default function FestivalsPage() {
   return (
