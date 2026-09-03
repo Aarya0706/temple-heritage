@@ -14,6 +14,9 @@ export function WelcomeLoginModal() {
   // about, so it's fine to keep even with that rule enabled.
   const [open, setOpen] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time
+  // sync with a browser-only API (sessionStorage) on mount, not the
+  // synchronization-loop pattern this rule warns about.
   useEffect(() => {
     try {
       if (sessionStorage.getItem(FLAG_KEY) === "1") {
