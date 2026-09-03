@@ -1,23 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const FLAG_KEY = "th_show_welcome_modal";
 
 export function WelcomeLoginModal() {
-  const [open, setOpen] = useState(() => {
-    // Runs once during initial render — safe place to read/clear the flag
-    // without triggering the react-hooks/set-state-in-effect lint rule.
+  // Always false on both the server render and the client's first
+  // (hydration) render, so the two match. The sessionStorage check is
+  // deferred to a mount-only effect, which only ever runs in the browser
+  // -- this is the sanctioned use case for an effect that sets state
+  // (a one-time "sync with a browser-only API on mount" read), not the
+  // synchronization-loop pattern react-hooks/set-state-in-effect warns
+  // about, so it's fine to keep even with that rule enabled.
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
     try {
-      if (typeof window !== "undefined" && sessionStorage.getItem(FLAG_KEY) === "1") {
+      if (sessionStorage.getItem(FLAG_KEY) === "1") {
         sessionStorage.removeItem(FLAG_KEY);
-        return true;
+        setOpen(true);
       }
     } catch {
       // sessionStorage unavailable (e.g. private mode edge cases) — just skip the popup
     }
-    return false;
-  });
+  }, []);
 
   if (!open) return null;
 
