@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { temples } from "@/data/temples";
 import StarRating from "@/components/StarRating";
 import AdminReviewActions from "@/components/AdminReviewActions";
+import { TopTemplesChart, PlannerRegionsChart, SignupGrowthChart } from "@/components/admin/AdminCharts";
+import { topViewedTemples, plannerRegionCounts, bucketSignupsByDay } from "@/lib/admin-stats";
+import type { YatraItinerary } from "@/lib/yatra-stats";
 
 type ReviewRow = {
   id: string;
@@ -75,6 +78,24 @@ export default async function AdminReviewsPage({
     { label: "Yatras completed", value: completedYatraCount ?? 0 },
   ];
 
+  // Raw data for the three analytics charts. Each query relies on the
+  // same admin-select RLS policies as the stats bar above (0009_admin_stats
+  // for profiles/yatra_plans; temple_views is admin-only from the start --
+  // see 0010_temple_views.sql). The actual chart math lives in
+  // lib/admin-stats.ts so it stays unit-testable outside a server component.
+  const [{ data: viewRows }, { data: planRows }, { data: profileRows }] = await Promise.all([
+    supabase.from("temple_views").select("temple_slug, view_count"),
+    supabase.from("yatra_plans").select("itinerary"),
+    supabase.from("profiles").select("created_at"),
+  ]);
+
+  const templeNames = new Map(temples.map((t) => [t.slug, t.name]));
+  const topTemples = topViewedTemples(viewRows ?? [], templeNames);
+  const regionCounts = plannerRegionCounts(
+    (planRows ?? []).map((r) => r.itinerary as YatraItinerary)
+  );
+  const signupSeries = bucketSignupsByDay((profileRows ?? []).map((r) => r.created_at as string));
+
   let query = supabase
     .from("temple_reviews")
     .select(
@@ -134,6 +155,21 @@ export default async function AdminReviewsPage({
                 <div style={{ color: "#9b6958", fontSize: 13, marginTop: 4 }}>{stat.label}</div>
               </div>
             ))}
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+              marginBottom: 40,
+            }}
+          >
+            <TopTemplesChart data={topTemples} />
+            <PlannerRegionsChart data={regionCounts} />
+            <div style={{ gridColumn: "1 / -1" }}>
+              <SignupGrowthChart data={signupSeries} />
+            </div>
           </div>
 
           <h3 style={{ color: "#3a1a10", marginBottom: 14 }}>Review Moderation</h3>

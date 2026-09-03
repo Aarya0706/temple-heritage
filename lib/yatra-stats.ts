@@ -17,7 +17,7 @@ type ItineraryDay = {
   templeSlugs?: string[];
 };
 
-type YatraItinerary = {
+export type YatraItinerary = {
   days?: ItineraryDay[];
 } | null | undefined;
 

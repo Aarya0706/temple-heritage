@@ -72,6 +72,17 @@ export default async function TempleDetail({
     .eq("temple_slug", temple.slug)
     .maybeSingle();
 
+  // Best-effort view counter for the admin dashboard's "most viewed
+  // temples" chart. Awaited (rather than left unawaited) so it isn't at
+  // risk of being cut off mid-request on a serverless runtime, but errors
+  // are swallowed -- a failed count bump should never break the page for
+  // a visitor.
+  try {
+    await supabase.rpc("increment_temple_view", { p_slug: temple.slug });
+  } catch {
+    // no-op
+  }
+
   return (
     <main>
       <section className="detail-hero">
