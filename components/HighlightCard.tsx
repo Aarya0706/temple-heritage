@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 type HighlightCardProps = {
   highlight: string;
@@ -37,9 +38,12 @@ export default function HighlightCard({
         }}
       >
         <div className="highlight-image">
-          <img
+          <Image
             src={image}
             alt={`${highlight} at ${templeName}`}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            style={{ objectFit: "cover" }}
           />
           <div className="highlight-number">{number}</div>
         </div>
@@ -72,11 +76,15 @@ export default function HighlightCard({
             aria-labelledby="highlight-modal-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <img
-              src={image}
-              alt={`${highlight} at ${templeName}`}
-              className="highlight-modal-image"
-            />
+            <div style={{ position: "relative", width: "100%", height: 320, borderRadius: "28px 28px 0 0", overflow: "hidden" }}>
+              <Image
+                src={image}
+                alt={`${highlight} at ${templeName}`}
+                fill
+                sizes="760px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
 
             <div className="highlight-modal-body">
               <div className="eyebrow">✦ {templeName}</div>

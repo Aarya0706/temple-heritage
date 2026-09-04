@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Star } from "lucide-react";
 import { Temple } from "@/data/temples";
 
@@ -13,7 +14,7 @@ export function TempleCard({
     <article className="temple-card">
       <Link href={`/temples/${temple.slug}`}>
         <div className="temple-image">
-          <img src={temple.image} alt={temple.name} />
+          <Image src={temple.image} alt={temple.name} fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: "cover" }} />
           <span className="tag">{temple.deity}</span>
           <div className="temple-overlay">
             <h3>{temple.name}</h3>
