@@ -20,6 +20,7 @@ const serviceLinks = [
   { href: "/horoscope", label: "Horoscope Finder", blurb: "Find temples by your sun sign" },
   { href: "/darshan", label: "Darshan", blurb: "Check timings and crowd info" },
   { href: "/my-yatras", label: "My Yatras", blurb: "Saved temples and trip plans" },
+  { href: "/profile/passport", label: "Pilgrimage Passport", blurb: "Track temples you've visited" },
 ];
 
 type NavbarClientProps = {

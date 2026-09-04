@@ -73,7 +73,7 @@ export default function PassportView({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {passport.stamps.map((stamp) => (
             <div
-              key={stamp.templeId}
+              key={stamp.templeSlug}
               className="flex flex-col items-center border-2 border-dashed border-amber-300 rounded-full aspect-square p-4 text-center"
             >
               <span className="text-xs font-semibold text-amber-900">{stamp.templeName}</span>
