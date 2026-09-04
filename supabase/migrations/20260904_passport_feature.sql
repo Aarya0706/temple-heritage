@@ -33,10 +33,12 @@ create index if not exists check_ins_user_id_idx on public.check_ins (user_id);
 
 alter table public.check_ins enable row level security;
 
+drop policy if exists "Users can view their own check-ins" on public.check_ins;
 create policy "Users can view their own check-ins"
   on public.check_ins for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own check-ins" on public.check_ins;
 create policy "Users can insert their own check-ins"
   on public.check_ins for insert
   with check (auth.uid() = user_id);
