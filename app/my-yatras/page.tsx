@@ -19,11 +19,15 @@ export default async function MyYatrasPage() {
     .select('temple_slug')
     .eq('user_id', user.id)
 
-  const { data: yatraRows } = await supabase
+  const { data: yatraRows, error: yatraError } = await supabase
     .from('yatra_plans')
     .select('id, title, itinerary, created_at, completed_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+
+  // TEMPORARY DEBUG — remove once the missing-itinerary issue is confirmed fixed.
+  console.log('[my-yatras debug] logged-in user.id:', user.id, user.email)
+  console.log('[my-yatras debug] yatraRows count:', yatraRows?.length, 'error:', yatraError)
 
   const savedTemples = (savedRows || [])
     .map(r => temples.find(t => t.slug === r.temple_slug))
