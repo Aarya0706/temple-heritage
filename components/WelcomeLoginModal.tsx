@@ -18,9 +18,9 @@ export function WelcomeLoginModal() {
     try {
       if (sessionStorage.getItem(FLAG_KEY) === "1") {
         sessionStorage.removeItem(FLAG_KEY);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time
-        // sync with a browser-only API (sessionStorage) on mount, not the
-        // synchronization-loop pattern this rule warns about.
+        // One-time sync with a browser-only API (sessionStorage) on mount,
+        // not the synchronization-loop pattern this rule warns about.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setOpen(true);
       }
     } catch {
