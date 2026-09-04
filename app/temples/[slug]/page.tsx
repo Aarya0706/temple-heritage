@@ -15,6 +15,7 @@ import ReviewsSection from "@/components/ReviewsSection";
 import TempleMap from "@/components/TempleMap";
 import { createClient } from "@/lib/supabase/server";
 import TempleAskWidget from "@/components/TempleAskWidget";
+import AuspiciousDatesWidget from "@/components/AuspiciousDatesWidget";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -216,6 +217,8 @@ export default async function TempleDetail({
         <h2>Location</h2>
         <TempleMap name={temple.name} city={temple.city} state={temple.state} />
       </section>
+
+      <AuspiciousDatesWidget temple={temple} />
 
       <section className="section section-dark">
         <div className="section-heading">
