@@ -9,7 +9,7 @@ export type PassportStamp = {
   state: string | null;
   imageUrl: string | null;
   visitedAt: string;
-  method: "manual" | "review" | "qr" | "geo";
+  method: "manual" | "review" | "qr" | "geo" | "itinerary";
 };
 
 export type PassportData = {
@@ -22,7 +22,7 @@ export type PassportData = {
 
 /** Look up display details for a temple by slug from the static data file
  *  (not Supabase) — check_ins/passport_share_view only ever store the slug. */
-function templeBySlug(slug: string) {
+export function templeBySlug(slug: string) {
   return temples.find((t) => t.slug === slug) ?? null;
 }
 
@@ -57,18 +57,34 @@ export async function getOwnPassport(): Promise<PassportData | null> {
 async function getPassportByUserId(userId: string): Promise<PassportData | null> {
   const supabase = await createClient();
 
-  const [{ data: profile }, { data: checkIns }] = await Promise.all([
+  // maybeSingle (not single): a missing row should come back as null data,
+  // not an error we then have to distinguish from "not logged in."
+  let [{ data: profile }, { data: checkIns }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, passport_share_token")
       .eq("id", userId)
-      .single(),
+      .maybeSingle(),
     supabase
       .from("check_ins")
       .select("temple_slug, visited_at, check_in_method")
       .eq("user_id", userId)
       .order("visited_at", { ascending: true }),
   ]);
+
+  // A signed-in user can end up with no profiles row (the signup insert can
+  // silently fail under RLS before email confirmation establishes a
+  // session -- see the 20260904_auto_create_profile.sql migration). That's
+  // a missing-data problem, not a "not logged in" one, so don't bounce them
+  // to /login for it -- create the row on the fly instead.
+  if (!profile) {
+    const { data: created } = await supabase
+      .from("profiles")
+      .insert({ id: userId })
+      .select("id, full_name, passport_share_token")
+      .single();
+    profile = created;
+  }
 
   if (!profile) return null;
 

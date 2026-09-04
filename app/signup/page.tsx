@@ -31,7 +31,19 @@ export default function SignupPage() {
       return
     }
     if (data.user) {
-      await supabase.from('profiles').insert({ id: data.user.id, full_name: fullName })
+      // The auth.users trigger (see 20260904_auto_create_profile.sql) already
+      // creates this row server-side regardless of session/confirmation
+      // timing, so this is just a best-effort client-side sync of full_name
+      // for the case where a session exists immediately (email confirmation
+      // off). Upsert, not insert, so it doesn't error out on the row the
+      // trigger already made -- and any failure here (e.g. no session yet
+      // pending confirmation) is harmless and logged rather than swallowed.
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ id: data.user.id, full_name: fullName }, { onConflict: 'id' })
+      if (profileError) {
+        console.error('Failed to sync profile full_name after signup', profileError)
+      }
     }
     setSuccess(true)
   }

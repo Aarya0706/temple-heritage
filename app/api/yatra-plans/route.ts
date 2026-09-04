@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { templeBySlug } from '@/lib/passport'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -42,10 +43,36 @@ export async function PATCH(request: Request) {
     .update(update)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, is_public, completed_at')
+    .select('id, is_public, completed_at, itinerary')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Completing a Yatra should stamp the passport for every temple actually
+  // in it -- same "on conflict do nothing" behavior as the review trigger,
+  // so an earlier manual/QR/geo stamp's date is never overwritten. Best
+  // effort: a failure here shouldn't fail the completion toggle itself.
+  if (typeof completed === 'boolean' && completed) {
+    const days = Array.isArray(data.itinerary?.days) ? data.itinerary.days : []
+    const slugs = new Set<string>()
+    for (const day of days) {
+      for (const slug of day?.templeSlugs || []) {
+        if (templeBySlug(slug)) slugs.add(slug)
+      }
+    }
+    if (slugs.size > 0) {
+      const { error: stampError } = await supabase.from('check_ins').upsert(
+        Array.from(slugs).map((temple_slug) => ({
+          user_id: user.id,
+          temple_slug,
+          check_in_method: 'itinerary' as const,
+        })),
+        { onConflict: 'user_id,temple_slug', ignoreDuplicates: true }
+      )
+      if (stampError) console.error('Failed to stamp passport for completed yatra', stampError)
+    }
+  }
+
   return NextResponse.json({ success: true, isPublic: data.is_public, completedAt: data.completed_at })
 }
 

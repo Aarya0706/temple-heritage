@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { PassportData } from "@/lib/passport";
+import Image from "next/image";
+import Link from "next/link";
+import type { PassportData, PassportStamp } from "@/lib/passport";
 import { generatePassportPdf } from "@/lib/generatePassportPdf";
+
+const METHOD_LABEL: Record<PassportStamp["method"], string> = {
+  manual: "Marked visited",
+  review: "Via review",
+  qr: "QR check-in",
+  geo: "Geo-tagged",
+  itinerary: "Yatra completed",
+};
 
 export default function PassportView({
   passport,
@@ -16,10 +26,14 @@ export default function PassportView({
     ? Math.round((passport.stamps.length / passport.totalTemples) * 100)
     : 0;
 
-  const shareUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/passport/${passport.shareToken}`
-      : "";
+  // Prefer the deployed site's public URL (same env var used for OG image
+  // tags -- see lib/site-url.ts) over window.location.origin, so the share
+  // link is always the real public domain even when copied from localhost
+  // during local dev.
+  const siteOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+  const shareUrl = siteOrigin ? `${siteOrigin}/passport/${passport.shareToken}` : "";
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(shareUrl);
@@ -27,64 +41,105 @@ export default function PassportView({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Most recently visited first — the passport reads like a travel log, not
+  // an arbitrary list.
+  const stamps = [...passport.stamps].sort(
+    (a, b) => new Date(b.visitedAt).getTime() - new Date(a.visitedAt).getTime()
+  );
+
   return (
-    <div>
-      <header className="flex items-center justify-between mb-6">
+    <div className="passport-page">
+      <header className="passport-header">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="passport-title">
             {isOwner ? "Your Pilgrimage Passport" : `${passport.username ?? "Pilgrim"}'s Passport`}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {passport.stamps.length} of {passport.totalTemples} sacred sites visited ({pct}%)
+          <p className="passport-subtitle">
+            {passport.stamps.length} of {passport.totalTemples} sacred sites visited
           </p>
         </div>
         {isOwner && (
-          <div className="flex gap-2">
+          <div className="passport-actions">
             <button
               onClick={() => generatePassportPdf(passport)}
-              className="px-4 py-2 rounded-md bg-amber-700 text-white text-sm font-medium hover:bg-amber-800"
+              className="passport-btn passport-btn-solid"
             >
               Download PDF
             </button>
-            <button
-              onClick={handleCopy}
-              className="px-4 py-2 rounded-md border border-amber-700 text-amber-700 text-sm font-medium hover:bg-amber-50"
-            >
+            <button onClick={handleCopy} className="passport-btn passport-btn-outline">
               {copied ? "Copied!" : "Copy share link"}
             </button>
           </div>
         )}
       </header>
 
-      <div className="w-full h-2 bg-amber-100 rounded-full mb-8 overflow-hidden">
-        <div
-          className="h-full bg-amber-700 transition-all"
-          style={{ width: `${pct}%` }}
-        />
+      <div className="passport-progress-wrap">
+        <div className="passport-progress-row">
+          <span className="passport-progress-count">
+            {passport.stamps.length} / {passport.totalTemples} stamps
+          </span>
+          <span className="passport-progress-pct">{pct}%</span>
+        </div>
+        <div className="passport-progress-track">
+          <div className="passport-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
       </div>
 
-      {passport.stamps.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {isOwner
-            ? "No stamps yet — visit a temple and leave a review, or mark it visited, to earn your first stamp."
-            : "This pilgrim hasn't collected any stamps yet."}
-        </p>
+      {stamps.length === 0 ? (
+        <div className="passport-empty">
+          <span className="passport-empty-icon">🛕</span>
+          <p className="passport-empty-text">
+            {isOwner
+              ? "No stamps yet. Leave a review or mark a temple as visited from its page to earn your first stamp."
+              : "This pilgrim hasn't collected any stamps yet."}
+          </p>
+          {isOwner && (
+            <Link href="/temples" className="passport-btn passport-btn-solid">
+              Browse temples
+            </Link>
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {passport.stamps.map((stamp) => (
-            <div
+        <div className="passport-grid">
+          {stamps.map((stamp) => (
+            <Link
               key={stamp.templeSlug}
-              className="flex flex-col items-center border-2 border-dashed border-amber-300 rounded-full aspect-square p-4 text-center"
+              href={`/temples/${stamp.templeSlug}`}
+              className="passport-stamp"
             >
-              <span className="text-xs font-semibold text-amber-900">{stamp.templeName}</span>
-              <span className="text-[10px] text-amber-600 mt-1">
-                {new Date(stamp.visitedAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
+              <div className="passport-stamp-image-wrap">
+                {stamp.imageUrl ? (
+                  <Image
+                    src={stamp.imageUrl}
+                    alt={stamp.templeName}
+                    fill
+                    sizes="(max-width: 520px) 50vw, 220px"
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <div className="passport-stamp-image-fallback">🛕</div>
+                )}
+                <div className="passport-stamp-seal">🕉️</div>
+              </div>
+              <div className="passport-stamp-body">
+                <span className="passport-stamp-name">{stamp.templeName}</span>
+                {(stamp.city || stamp.state) && (
+                  <span className="passport-stamp-place">
+                    {[stamp.city, stamp.state].filter(Boolean).join(", ")}
+                  </span>
+                )}
+                <div className="passport-stamp-meta">
+                  <span className="passport-stamp-date">
+                    {new Date(stamp.visitedAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <span className="passport-stamp-method">{METHOD_LABEL[stamp.method]}</span>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
       )}
