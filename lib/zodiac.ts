@@ -102,3 +102,10 @@ const PLANET_GUIDANCE: Record<string, HoroscopeGuidance> = {
 export function getHoroscopeGuidance(sign: ZodiacSign): HoroscopeGuidance {
   return PLANET_GUIDANCE[sign.rulingPlanet];
 }
+
+export function getZodiacSignByName(name: string): ZodiacSign | null {
+  const match = ZODIAC_SIGNS.find((s) => s.name.toLowerCase() === name.toLowerCase());
+  if (!match) return null;
+  const { start: _s, end: _e, ...publicFields } = match;
+  return publicFields;
+}
