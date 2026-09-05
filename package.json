@@ -33,7 +33,7 @@
     "@types/react-dom": "latest",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.4",
-    "typescript": "latest",
+    "typescript": "~5.7.3",
     "vitest": "^4.1.11"
   }
 }
