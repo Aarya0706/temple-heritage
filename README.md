@@ -2,116 +2,79 @@
 
 ### Discover India's Sacred Heritage Through Technology
 
-Temple Heritage is a modern web platform designed to help users explore India's temples, cultural heritage, festivals, and spiritual journeys in one place.
+**Temple Heritage** is a modern web platform for exploring India's temples, festivals, cultural heritage, and pilgrimage experiences. It combines curated temple information with personalized discovery and AI-assisted yatra planning to help users move from **exploring a temple to planning a journey**.
 
-The platform combines a curated temple experience with AI-powered itinerary planning, allowing users to create personalized spiritual journeys based on their starting city, preferred region, travel duration, and interests.
+🔗 **Live Application:** https://temple-heritage-fawn.vercel.app/
 
 ---
 
-## ✨ Features
+## ✨ What You Can Do
 
-### 🏛️ Explore Sacred Temples
-Discover temples and learn about their:
+### 🛕 Explore Temples
 
-- History and cultural significance
-- Architecture
-- Location and region
-- Spiritual importance
-- Associated festivals
+Browse temple profiles with useful information about:
 
-### 🧭 AI-Powered Yatra Planner
+* History and cultural significance
+* Architecture and traditions
+* Deity and spiritual importance
+* Location and region
+* Associated festivals
+* Visitor and darshan information
 
-Create a personalized spiritual itinerary by selecting:
+### 🤖 AI Yatra Planner
 
-- 📍 Starting city
-- 📅 Number of travel days
-- 🗺️ Preferred region
-- ❤️ Personal interests
+Create a personalized pilgrimage itinerary using:
 
-The AI generates a day-wise itinerary with realistic travel plans and temple recommendations.
+* 📍 Starting city
+* 📅 Number of travel days
+* 🗺️ Preferred region
+* ❤️ Personal interests
 
-### 🤖 Intelligent AI Planning
+The planner uses **Groq AI** to generate a structured, day-wise itinerary and turns the result into a downloadable travel plan.
 
-The planner uses Groq AI to generate personalized itineraries.
+### 🧠 Temple Recommender
 
-The system also includes:
+Get personalized temple suggestions based on interests and preferences, making it easier to discover places beyond simple browsing.
 
-- Structured JSON responses
-- JSON validation
-- Response normalization
-- AI fallback itineraries
-- Rate limiting
-- Error handling
-- Protection against invalid AI responses
+### 📅 Festival Calendar
 
-### 📅 Festivals
+Explore temple festivals and cultural celebrations and discover temples associated with them.
 
-Explore important Indian temple festivals and cultural celebrations.
+### 🕉️ Darshan Information
 
-### ❤️ Save Your Favourite Temples
+Access temple-specific darshan and visitor information while planning a visit.
 
-Users can save temples and access them later from their personal collection.
+### ♈ Horoscope Finder
 
-### 👤 Authentication & Profile
+Discover temples through a zodiac-based experience for users who want a more personalized way to explore sacred places.
 
-The application includes:
+### ❤️ Saved Temples & My Yatras
 
-- User signup
-- Login
-- Logout
-- Profile management
+Authenticated users can save temples and revisit their generated pilgrimage journeys from their personal space.
 
-### 📜 My Yatras
+### 📜 Pilgrimage Passport
 
-Users can access previously generated spiritual journeys and revisit their personalized itineraries.
+Keep a personal record of your temple exploration and turn individual visits into an ongoing pilgrimage journey.
 
-### 📄 Downloadable Itinerary
+### 💬 Temple AI Assistant
 
-Generated Yatras can be downloaded as a formatted itinerary report.
+Ask questions about temples and pilgrimage planning through the built-in AI assistant, including voice-input support.
 
 ### ⭐ Reviews & Visitor Photos
 
-Logged-in users can share their experience at a temple:
+Share real experiences through ratings, written reviews, and visitor photos.
 
-- Star rating (1–5) with a short written review
-- Up to 3 photos per review, resized and compressed client-side before upload
-- One review per user per temple, with the ability to delete their own review
-- Aggregate rating shown on Browse Temples cards and the temple detail page
-
----
-
-## 🖥️ Screenshots
-
-### 🏠 Home Page
-
-![Home Page](./public/screenshots/home.png)
-
-### 🧭 AI Yatra Planner
-
-![AI Yatra Planner](./public/screenshots/planner.png)
-
-### 🛕 Generated Itinerary
-
-![Generated Itinerary](./public/screenshots/itinerary.png)
+* 1–5 star ratings
+* Written reviews
+* Up to 3 photos per review
+* Client-side image resizing and compression before upload
+* One review per user per temple
+* Personal review deletion
+* Aggregate ratings on temple listings and detail pages
 
 ---
 
-## 🛠️ Tech Stack
-
-| Technology | Purpose |
-|---|---|
-| Next.js | Full-stack React framework |
-| TypeScript | Type-safe development |
-| React | User interface |
-| CSS | Styling and responsive design |
-| Groq API | AI-powered itinerary generation |
-| Supabase | Auth, Postgres, Storage (Saved Temples, My Yatras, Reviews & Photos) |
-| Node.js | Server-side runtime |
-| Next.js API Routes | Backend API endpoints |
-
----
-
-## 🧠 How the AI Planner Works
+## 🧠 AI Yatra Planning Pipeline
 
 ```text
 User Preferences
@@ -121,41 +84,206 @@ User Preferences
 │ Starting City        │
 │ Number of Days       │
 │ Preferred Region     │
-│ Travel Interests     │
+│ Personal Interests   │
 └──────────┬───────────┘
            │
            ▼
-   Temple Context
+     Temple Context
            │
            ▼
-     Groq AI Model
+        Groq AI
            │
            ▼
-  JSON Validation
+    Structured JSON
+           │
+           ▼
+  Validation & Parsing
            │
            ▼
  Response Normalization
            │
            ▼
- Personalized Yatra
+  Personalized Yatra
            │
            ▼
  Downloadable Itinerary
 ```
 
+The AI flow is designed to handle imperfect model output safely through validation, normalization, fallback handling, rate limiting, and error handling.
+
+---
+
+## 🏗️ Architecture
+
+```text
+┌─────────────────────────────────────┐
+│            Next.js App              │
+│       React UI + App Router         │
+└──────────────────┬──────────────────┘
+                   │
+          ┌────────┴─────────┐
+          │                  │
+          ▼                  ▼
+   Next.js API Routes     Supabase
+          │              Auth + Postgres
+          │               + Storage
+          │                  │
+          ▼                  ▼
+       Groq AI          User Content
+          │
+          ▼
+  Validated AI Response
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology                  | Purpose                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| **Next.js**                 | Full-stack React framework and application routing        |
+| **React**                   | Frontend user interface                                   |
+| **TypeScript**              | Type-safe application development                         |
+| **Supabase**                | Authentication, PostgreSQL database, and storage          |
+| **Groq SDK**                | AI-powered itinerary generation and assistant experiences |
+| **Leaflet / React Leaflet** | Interactive map experiences                               |
+| **jsPDF**                   | Downloadable itinerary generation                         |
+| **Recharts**                | Data visualization and dashboard charts                   |
+| **Lucide React**            | Interface icons                                           |
+| **Vitest**                  | Automated tests                                           |
+
+---
+
+## 📂 Project Structure
+
+```text
+app/                 # Next.js routes, pages and API endpoints
+components/          # Reusable UI components
+data/                # Temple, festival and application data
+lib/                 # Shared utilities and services
+public/              # Static assets
+scripts/             # Utility and development scripts
+supabase/            # Supabase/database-related files
+
+README.md             # Project documentation
+package.json          # Dependencies and scripts
+next.config.ts        # Next.js configuration
+tsconfig.json         # TypeScript configuration
+vitest.config.ts      # Vitest configuration
+```
+
+---
+
+## ⚙️ Run Locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Aarya0706/temple-heritage.git
+cd temple-heritage
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env.local` file using the variables required by the project and your Supabase/Groq setup.
+
+Example:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+GROQ_API_KEY=your_groq_api_key
+```
+
+> Keep API keys and other secrets in environment variables. Never commit secrets to GitHub.
+
+### 4. Start the development server
+
+```bash
+npm run dev
+```
+
+Open **http://localhost:3000** in your browser.
+
+---
+
+## 🧪 Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Create production build
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm test             # Run Vitest tests
+npm run test:watch   # Run tests in watch mode
+```
+
+---
+
+## 🔐 Engineering Highlights
+
+Temple Heritage is built with a focus on practical application behavior, not just UI screens.
+
+Key engineering aspects include:
+
+* Server-side API routes
+* Supabase authentication and persistence
+* AI response validation and normalization
+* Fallback handling for failed AI responses
+* Rate limiting around AI functionality
+* Client-side image optimization before upload
+* Downloadable generated itineraries
+* Automated testing with Vitest
+* Responsive experiences for desktop and mobile
+
+---
+
+## 🌐 Deployment
+
+The application is deployed on **Vercel**.
+
+🔗 **Live:** https://temple-heritage-fawn.vercel.app/
+
+---
+
+## 🗺️ Roadmap
+
+Future improvements can include:
+
+* 🗺️ More advanced pilgrimage route optimization
+* 🚗 Travel-distance and transport-aware planning
+* 🔔 Festival and pilgrimage notifications
+* 📍 Broader temple coverage across India
+* 🌐 Expanded multilingual experiences
+* 📊 More advanced recommendation models
+* 👨‍💼 Expanded administrative and analytics tooling
+
+---
+
 ## 👩‍💻 Author
 
-**Aarya Shirsath**  
-Developer & Creator ✨
+**Aarya Shirsath**
+Developer & Creator of Temple Heritage
 
-## 🌸 A Little Note
+---
 
-Temple Heritage was built with the idea of bringing together **technology, culture, spirituality, and heritage**.
+## 🌸 Vision
 
-What started as a project slowly became something more meaningful — a small digital space where people can explore India's sacred heritage and create journeys of their own.
+Temple Heritage was built around a simple idea:
 
-Every temple has a story.  
-Every journey creates a memory.  
-And sometimes, technology can help us discover both. ✨
+> **Technology can make India's sacred heritage easier to discover while helping people turn that discovery into meaningful journeys.**
 
-Made with ❤️, curiosity, and a little bit of magic.
+Every temple has a story.
+Every journey creates a memory.
+
+**Temple Heritage brings both together.** 🪷
+
+---
+
+⭐ **Explore the live project:** https://temple-heritage-fawn.vercel.app/
