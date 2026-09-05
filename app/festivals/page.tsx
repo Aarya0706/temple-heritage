@@ -1,10 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CalendarDays, MapPin, Sparkles } from "lucide-react";
-import { festivals } from "@/data/festivals";
-import { slugify } from "@/lib/slug";
-import { getFestivalCountdown } from "@/lib/festival-countdown";
+import { Sparkles } from "lucide-react";
 import NextFestivalBanner from "@/components/NextFestivalBanner";
+import { FestivalExplorer } from "@/components/FestivalExplorer";
 
 export const metadata: Metadata = {
   title: "Festival Explorer",
@@ -20,17 +18,6 @@ export const metadata: Metadata = {
 };
 
 export default function FestivalsPage() {
-  // Soonest-first for upcoming festivals; anything already passed this year
-  // sinks to the bottom instead of sitting in raw data-file order.
-  const sortedFestivals = festivals
-    .map((festival) => ({ festival, countdown: getFestivalCountdown(festival) }))
-    .sort((a, b) => {
-      if (a.countdown.hasPassed !== b.countdown.hasPassed) {
-        return a.countdown.hasPassed ? 1 : -1;
-      }
-      return a.countdown.daysUntil - b.countdown.daysUntil;
-    });
-
   return (
     <main>
       <section className="page-hero">
@@ -49,65 +36,7 @@ export default function FestivalsPage() {
       </section>
 
       <section className="section section-light">
-        <div className="festival-grid">
-          {sortedFestivals.map(({ festival, countdown }) => {
-            return (
-              <Link
-                key={festival.name}
-                href={`/festivals/${slugify(festival.name)}`}
-                className={`festival-card-link${countdown.hasPassed ? " festival-card-link-passed" : ""}`}
-              >
-                <article className="festival-card">
-                  <div className="festival-image">
-                    <img src={festival.imageUrl} alt={festival.name} />
-
-                    <span className="festival-month">
-                      {festival.month}
-                    </span>
-
-                    {countdown.hasPassed ? (
-                      <span className="festival-days-badge festival-days-badge-passed">
-                        Passed this year
-                      </span>
-                    ) : (
-                      <span className="festival-days-badge">
-                        {countdown.daysUntil === 0
-                          ? "Today"
-                          : `In ${countdown.daysUntil} day${countdown.daysUntil === 1 ? "" : "s"}`}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="festival-content">
-                    <div className="festival-main-info">
-                      <div className="eyebrow">Festival</div>
-
-                      <h3>{festival.name}</h3>
-
-                      <p className="festival-location">
-                        <MapPin size={15} />
-                        <span>{festival.place}</span>
-                      </p>
-                    </div>
-
-                    <div className="festival-duration">
-                      <div className="festival-duration-title">
-                        <CalendarDays size={16} />
-                        <span>Celebration duration</span>
-                      </div>
-
-                      <p>{festival.duration}</p>
-
-                      <span className="festival-view">
-                        Explore Festival →
-                      </span>
-                    </div>
-                  </div>
-                </article>
-              </Link>
-            );
-          })}
-        </div>
+        <FestivalExplorer />
       </section>
 
       <section className="section section-dark">

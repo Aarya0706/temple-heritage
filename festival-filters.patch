@@ -1,0 +1,290 @@
+--- a/app/festivals/page.tsx
++++ b/app/festivals/page.tsx
+@@ -1,10 +1,8 @@
+ import Link from "next/link";
+ import type { Metadata } from "next";
+-import { CalendarDays, MapPin, Sparkles } from "lucide-react";
+-import { festivals } from "@/data/festivals";
+-import { slugify } from "@/lib/slug";
+-import { getFestivalCountdown } from "@/lib/festival-countdown";
++import { Sparkles } from "lucide-react";
+ import NextFestivalBanner from "@/components/NextFestivalBanner";
++import { FestivalExplorer } from "@/components/FestivalExplorer";
+ 
+ export const metadata: Metadata = {
+   title: "Festival Explorer",
+@@ -20,17 +18,6 @@
+ };
+ 
+ export default function FestivalsPage() {
+-  // Soonest-first for upcoming festivals; anything already passed this year
+-  // sinks to the bottom instead of sitting in raw data-file order.
+-  const sortedFestivals = festivals
+-    .map((festival) => ({ festival, countdown: getFestivalCountdown(festival) }))
+-    .sort((a, b) => {
+-      if (a.countdown.hasPassed !== b.countdown.hasPassed) {
+-        return a.countdown.hasPassed ? 1 : -1;
+-      }
+-      return a.countdown.daysUntil - b.countdown.daysUntil;
+-    });
+-
+   return (
+     <main>
+       <section className="page-hero">
+@@ -49,65 +36,7 @@
+       </section>
+ 
+       <section className="section section-light">
+-        <div className="festival-grid">
+-          {sortedFestivals.map(({ festival, countdown }) => {
+-            return (
+-              <Link
+-                key={festival.name}
+-                href={`/festivals/${slugify(festival.name)}`}
+-                className={`festival-card-link${countdown.hasPassed ? " festival-card-link-passed" : ""}`}
+-              >
+-                <article className="festival-card">
+-                  <div className="festival-image">
+-                    <img src={festival.imageUrl} alt={festival.name} />
+-
+-                    <span className="festival-month">
+-                      {festival.month}
+-                    </span>
+-
+-                    {countdown.hasPassed ? (
+-                      <span className="festival-days-badge festival-days-badge-passed">
+-                        Passed this year
+-                      </span>
+-                    ) : (
+-                      <span className="festival-days-badge">
+-                        {countdown.daysUntil === 0
+-                          ? "Today"
+-                          : `In ${countdown.daysUntil} day${countdown.daysUntil === 1 ? "" : "s"}`}
+-                      </span>
+-                    )}
+-                  </div>
+-
+-                  <div className="festival-content">
+-                    <div className="festival-main-info">
+-                      <div className="eyebrow">Festival</div>
+-
+-                      <h3>{festival.name}</h3>
+-
+-                      <p className="festival-location">
+-                        <MapPin size={15} />
+-                        <span>{festival.place}</span>
+-                      </p>
+-                    </div>
+-
+-                    <div className="festival-duration">
+-                      <div className="festival-duration-title">
+-                        <CalendarDays size={16} />
+-                        <span>Celebration duration</span>
+-                      </div>
+-
+-                      <p>{festival.duration}</p>
+-
+-                      <span className="festival-view">
+-                        Explore Festival →
+-                      </span>
+-                    </div>
+-                  </div>
+-                </article>
+-              </Link>
+-            );
+-          })}
+-        </div>
++        <FestivalExplorer />
+       </section>
+ 
+       <section className="section section-dark">
+@@ -132,4 +61,4 @@
+       </section>
+     </main>
+   );
+-}
+\ No newline at end of file
++}
+
+--- /dev/null
++++ b/components/FestivalExplorer.tsx
+@@ -0,0 +1,179 @@
++"use client";
++
++import Link from "next/link";
++import { Search, CalendarDays, MapPin } from "lucide-react";
++import { useMemo, useState } from "react";
++import { festivals, type Festival } from "@/data/festivals";
++import { temples, regions } from "@/data/temples";
++import { slugify } from "@/lib/slug";
++import { getFestivalCountdown, type FestivalCountdownInfo } from "@/lib/festival-countdown";
++
++const MONTH_ORDER = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
++
++type Entry = {
++  festival: Festival;
++  countdown: FestivalCountdownInfo;
++  regions: string[];
++};
++
++// Regions a festival "belongs to" are derived from the temples it's
++// celebrated at (relatedTempleSlugs -> temple.region), same link used by
++// the auspicious-dates widget in the other direction. Festivals with no
++// mapped temples yield no regions and only show up under "All".
++function festivalRegions(festival: Festival): string[] {
++  const set = new Set<string>();
++  for (const templeSlug of festival.relatedTempleSlugs) {
++    const temple = temples.find((t) => t.slug === templeSlug);
++    if (temple) set.add(temple.region);
++  }
++  return [...set];
++}
++
++function matchesQuery(festival: Festival, query: string): boolean {
++  if (!query.trim()) return true;
++  const haystack = [festival.name, festival.place, festival.note, festival.description]
++    .join(" ")
++    .toLowerCase();
++  return haystack.includes(query.trim().toLowerCase());
++}
++
++export function FestivalExplorer() {
++  const [query, setQuery] = useState("");
++  const [region, setRegion] = useState("All");
++  const [month, setMonth] = useState("All");
++
++  // Soonest-first for upcoming festivals; anything already passed this year
++  // sinks to the bottom instead of sitting in raw data-file order.
++  const sorted = useMemo<Entry[]>(() => {
++    return festivals
++      .map((festival) => ({
++        festival,
++        countdown: getFestivalCountdown(festival),
++        regions: festivalRegions(festival),
++      }))
++      .sort((a, b) => {
++        if (a.countdown.hasPassed !== b.countdown.hasPassed) {
++          return a.countdown.hasPassed ? 1 : -1;
++        }
++        return a.countdown.daysUntil - b.countdown.daysUntil;
++      });
++  }, []);
++
++  const presentMonths = useMemo(() => {
++    const set = new Set(festivals.map((f) => f.month));
++    return MONTH_ORDER.filter((m) => set.has(m));
++  }, []);
++
++  const filtered = useMemo(() => {
++    return sorted.filter(({ festival, regions: festRegions }) => {
++      if (region !== "All" && !festRegions.includes(region)) return false;
++      if (month !== "All" && festival.month !== month) return false;
++      if (!matchesQuery(festival, query)) return false;
++      return true;
++    });
++  }, [sorted, region, month, query]);
++
++  return (
++    <>
++      <div className="toolbar">
++        <div className="search-box">
++          <Search size={18} />
++          <input
++            value={query}
++            onChange={(e) => setQuery(e.target.value)}
++            placeholder="Search festival, place or tradition..."
++          />
++        </div>
++        <div className="filters">
++          {regions.map((item) => (
++            <button
++              key={item}
++              className={`filter-btn ${region === item ? "active" : ""}`}
++              onClick={() => setRegion(item)}
++            >
++              {item}
++            </button>
++          ))}
++        </div>
++      </div>
++
++      <div className="toolbar" style={{ marginTop: -20 }}>
++        <div className="filters">
++          <button
++            className={`filter-btn ${month === "All" ? "active" : ""}`}
++            onClick={() => setMonth("All")}
++          >
++            All months
++          </button>
++          {presentMonths.map((item) => (
++            <button
++              key={item}
++              className={`filter-btn ${month === item ? "active" : ""}`}
++              onClick={() => setMonth(item)}
++            >
++              {item}
++            </button>
++          ))}
++        </div>
++      </div>
++
++      {filtered.length ? (
++        <div className="festival-grid">
++          {filtered.map(({ festival, countdown }) => (
++            <Link
++              key={festival.name}
++              href={`/festivals/${slugify(festival.name)}`}
++              className={`festival-card-link${countdown.hasPassed ? " festival-card-link-passed" : ""}`}
++            >
++              <article className="festival-card">
++                <div className="festival-image">
++                  <img src={festival.imageUrl} alt={festival.name} />
++
++                  <span className="festival-month">{festival.month}</span>
++
++                  {countdown.hasPassed ? (
++                    <span className="festival-days-badge festival-days-badge-passed">
++                      Passed this year
++                    </span>
++                  ) : (
++                    <span className="festival-days-badge">
++                      {countdown.daysUntil === 0
++                        ? "Today"
++                        : `In ${countdown.daysUntil} day${countdown.daysUntil === 1 ? "" : "s"}`}
++                    </span>
++                  )}
++                </div>
++
++                <div className="festival-content">
++                  <div className="festival-main-info">
++                    <div className="eyebrow">Festival</div>
++
++                    <h3>{festival.name}</h3>
++
++                    <p className="festival-location">
++                      <MapPin size={15} />
++                      <span>{festival.place}</span>
++                    </p>
++                  </div>
++
++                  <div className="festival-duration">
++                    <div className="festival-duration-title">
++                      <CalendarDays size={16} />
++                      <span>Celebration duration</span>
++                    </div>
++
++                    <p>{festival.duration}</p>
++
++                    <span className="festival-view">Explore Festival →</span>
++                  </div>
++                </div>
++              </article>
++            </Link>
++          ))}
++        </div>
++      ) : (
++        <div className="empty">No festivals found. Try another search or filter.</div>
++      )}
++    </>
++  );
++}
