@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Heart, Loader2, Moon, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, CalendarHeart, Heart, Loader2, Moon, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { temples } from "@/data/temples";
 import { getZodiacSign, getHoroscopeGuidance } from "@/lib/zodiac";
+import { getUpcomingFestivalForSign } from "@/lib/horoscope-festivals";
+import { formatFestivalDate } from "@/lib/festival-countdown";
+import { slugify } from "@/lib/slug";
 
 type Reason =
   | { type: "saved_by_similar_users"; count: number }
@@ -54,6 +57,7 @@ export default function HoroscopePage() {
 
   const sign = useMemo(() => (birthDate ? getZodiacSign(birthDate) : null), [birthDate]);
   const guidance = useMemo(() => (sign ? getHoroscopeGuidance(sign) : null), [sign]);
+  const linkedFestival = useMemo(() => (sign ? getUpcomingFestivalForSign(sign) : null), [sign]);
 
   useEffect(() => {
     if (!birthDate || !sign) {
@@ -148,6 +152,31 @@ export default function HoroscopePage() {
                   {sign.dateRange} · {sign.element} sign · ruled by {sign.rulingPlanet}
                 </p>
                 <p style={{ fontSize: 13.5, color: "#7a4a3a", lineHeight: 1.55 }}>{guidance.blurb}</p>
+
+                {linkedFestival && (
+                  <Link
+                    href={`/festivals/${slugify(linkedFestival.festival.name)}`}
+                    style={{
+                      marginTop: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      background: "rgba(165,45,21,0.09)",
+                      border: "1px solid rgba(165,45,21,0.18)",
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <CalendarHeart size={18} color="#a52d15" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: "#7a4a3a", lineHeight: 1.4 }}>
+                      <strong style={{ color: "#a52d15" }}>{linkedFestival.festival.name}</strong> on{" "}
+                      {formatFestivalDate(linkedFestival.date)} is tied to your sign&apos;s deity —
+                      worth timing a visit around.
+                    </span>
+                  </Link>
+                )}
               </div>
             )}
 

@@ -28,7 +28,7 @@ export const festivals: Festival[] = [
   {
     slug: "maha-shivaratri",
     date2026: "2026-02-15",
-    month: "MAR",
+    month: "FEB",
     name: "Maha Shivaratri",
     place: "Shiva temples nationwide",
     note: "Night-long worship and special temple ceremonies dedicated to Shiva.",
@@ -52,7 +52,7 @@ export const festivals: Festival[] = [
   {
     slug: "rama-navami",
     date2026: "2026-03-26",
-    month: "APR",
+    month: "MAR",
     name: "Rama Navami",
     place: "Ayodhya & across India",
     note: "Celebration of the birth of Lord Rama.",
@@ -148,7 +148,7 @@ export const festivals: Festival[] = [
   {
     slug: "diwali",
     date2026: "2026-11-08",
-    month: "OCT",
+    month: "NOV",
     name: "Diwali",
     place: "Across India",
     note: "Festival of lights with temple rituals and family traditions.",
