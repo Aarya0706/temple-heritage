@@ -65,13 +65,26 @@ export default function HoroscopePage() {
   const [data, setData] = useState<RecommendationResponse | null>(null);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(BIRTH_DATE_STORAGE_KEY);
-      if (stored) setBirthDate(stored);
-    } catch {
-      // Storage can be unavailable (private browsing, disabled cookies) —
-      // fail quietly and just leave the field blank.
-    }
+    let cancelled = false;
+
+    // Defer the state update out of the effect body itself, same as the
+    // fetch effect below and FestivalCountdown's mount effect — a
+    // synchronous setState call directly in an effect trips
+    // react-hooks/set-state-in-effect.
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      try {
+        const stored = window.localStorage.getItem(BIRTH_DATE_STORAGE_KEY);
+        if (stored) setBirthDate(stored);
+      } catch {
+        // Storage can be unavailable (private browsing, disabled cookies) —
+        // fail quietly and just leave the field blank.
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
