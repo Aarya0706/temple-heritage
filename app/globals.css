@@ -621,6 +621,22 @@ img { max-width: 100%; }
   letter-spacing: 0.3px;
 }
 
+.calendar-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #5a3226;
+}
+
+.calendar-menu-item:hover {
+  background: rgba(165, 45, 21, 0.06);
+}
+
 .festival-days-badge-passed {
   background: rgba(90, 80, 74, 0.75);
   color: #e7ded6;

@@ -99,3 +99,35 @@ export function buildFestivalIcs(festival: Festival, siteUrl: string, slug: stri
 
   return lines.map(foldLine).join("\r\n") + "\r\n";
 }
+
+/**
+ * Builds a "Add to Google Calendar" link for a festival's verified
+ * `date2026` occurrence. Google's render endpoint takes the same all-day
+ * date range shape as the .ics file above (YYYYMMDD/YYYYMMDD, end
+ * exclusive) via its own query params rather than a file download, which
+ * is what actually opens Google Calendar instead of falling through to
+ * whatever the OS has registered as the default .ics handler (Outlook, in
+ * a lot of Windows setups).
+ */
+export function buildGoogleCalendarUrl(festival: Festival, siteUrl: string, slug: string): string {
+  const start = toIcsDate(festival.date2026);
+  const spanDays = parseDurationDays(festival.duration);
+  const end = addDays(festival.date2026, spanDays);
+  const url = `${siteUrl.replace(/\/$/, "")}/festivals/${slug}`;
+
+  const details = [
+    festival.note,
+    `Celebrated: ${festival.place} · ${festival.duration}.`,
+    `Details: ${url}`,
+  ].join(" ");
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: festival.name,
+    dates: `${start}/${end}`,
+    details,
+    location: festival.place,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
