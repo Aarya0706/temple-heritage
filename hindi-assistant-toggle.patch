@@ -1,0 +1,323 @@
+diff --git a/app/api/assistant/route.ts b/app/api/assistant/route.ts
+index d4a3992..cd2c830 100644
+--- a/app/api/assistant/route.ts
++++ b/app/api/assistant/route.ts
+@@ -1,5 +1,5 @@
+ import { NextRequest, NextResponse } from "next/server";
+-import { groq, AI_MODEL, buildTempleContext } from "@/lib/ai";
++import { groq, AI_MODEL, buildTempleContext, normalizeAssistantLanguage } from "@/lib/ai";
+ import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+ 
+ export const runtime = "nodejs";
+@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
+     );
+   }
+ 
+-  let body: { messages: ChatMessage[] };
++  let body: { messages: ChatMessage[]; language?: string };
+   try {
+     body = await req.json();
+   } catch {
+@@ -46,10 +46,39 @@ export async function POST(req: NextRequest) {
+   }
+ 
+   const { messages } = body;
++  const language = normalizeAssistantLanguage(body.language);
+   if (!messages || !Array.isArray(messages) || messages.length === 0) {
+     return NextResponse.json({ error: "No messages provided." }, { status: 400 });
+   }
+ 
++  // Hindi replies get their own instruction block + a short Hindi-language
++  // few-shot example, rather than just appending "reply in Hindi" to the
++  // English prompt — a bare translation instruction tends to produce
++  // Hindi prose that ignores the heading/bullet formatting rules above it,
++  // because the one worked example the model has to imitate is in English.
++  const languageBlock =
++    language === "hi"
++      ? `
++  LANGUAGE:
++  - Reply ENTIRELY in Hindi, written in Devanagari script.
++  - Keep temple, festival, city, and state names in the commonly used
++    Latin-script/English form (e.g. "Kashi Vishwanath", "Mahashivratri") —
++    do not transliterate proper nouns into Devanagari.
++  - Follow the exact same formatting rules above (bold names, bullets,
++    headings, short paragraphs) — only the language changes.
++
++  Example:
++
++  हमारे डेटा में उपलब्ध शिव मंदिर इस प्रकार हैं:
++
++  - **Kashi Vishwanath** — Varanasi, Uttar Pradesh
++    भगवान शिव को समर्पित। विश्वनाथ मंदिर और गंगा आरती के लिए प्रसिद्ध।
++
++  - **Kedarnath** — Uttarakhand
++    हिमालय में स्थित भगवान शिव का एक प्रमुख तीर्थ स्थल।
++`
++      : "";
++
+   const system = `You are TempleGuide, a warm and knowledgeable AI assistant for the Temple Heritage app.
+ 
+   Your job is to answer questions about temples, festivals, darshan, pilgrimage planning, and the temple data provided below.
+@@ -85,7 +114,7 @@ export async function POST(req: NextRequest) {
+     A major Himalayan pilgrimage temple dedicated to Lord Shiva.
+ 
+   End with a brief useful suggestion when appropriate.
+-
++  ${languageBlock}
+   ${buildTempleContext()}`;
+ 
+   // Map the app's {role: "ai"|"user"} shape to the API's {role: "assistant"|"user"} shape,
+diff --git a/app/assistant/page.tsx b/app/assistant/page.tsx
+index 5039227..9d52177 100644
+--- a/app/assistant/page.tsx
++++ b/app/assistant/page.tsx
+@@ -9,17 +9,86 @@ type Message = {
+   text: string;
+ };
+ 
++type Language = "en" | "hi";
++
++// Sentinel so the greeting bubble re-renders in the newly selected
++// language even after the toggle is flipped, without needing to reset
++// or rewrite the rest of the conversation history.
++const GREETING_SENTINEL = "__greeting__";
++
++const GREETING: Record<Language, string> = {
++  en: "Namaste! 🪷 I'm TempleGuide. Ask me about temples, festivals, darshan, or planning a pilgrimage.",
++  hi: "नमस्ते! 🪷 मैं TempleGuide हूँ। मुझसे मंदिरों, त्योहारों, दर्शन या तीर्थयात्रा की योजना के बारे में पूछें।",
++};
++
++const SUGGESTIONS: Record<
++  Language,
++  { emoji: string; label: string; prompt: string }[]
++> = {
++  en: [
++    {
++      emoji: "🛕",
++      label: "Best Shiva temples near Mumbai",
++      prompt: "What are the best Shiva temples near Mumbai?",
++    },
++    {
++      emoji: "🗺️",
++      label: "Plan a 2-day pilgrimage to Ujjain",
++      prompt: "Plan a 2-day pilgrimage to Ujjain",
++    },
++    {
++      emoji: "🎉",
++      label: "Famous temple festivals",
++      prompt: "Which Indian temples are famous for their festivals?",
++    },
++    {
++      emoji: "🕉️",
++      label: "Explore Jyotirlingas",
++      prompt: "Tell me about the important Jyotirlinga temples",
++    },
++  ],
++  hi: [
++    {
++      emoji: "🛕",
++      label: "मुंबई के पास सर्वश्रेष्ठ शिव मंदिर",
++      prompt: "मुंबई के पास सबसे अच्छे शिव मंदिर कौन से हैं?",
++    },
++    {
++      emoji: "🗺️",
++      label: "उज्जैन की 2-दिवसीय तीर्थयात्रा",
++      prompt: "उज्जैन के लिए 2 दिन की तीर्थयात्रा की योजना बनाएं",
++    },
++    {
++      emoji: "🎉",
++      label: "प्रसिद्ध मंदिर त्योहार",
++      prompt: "कौन से भारतीय मंदिर अपने त्योहारों के लिए प्रसिद्ध हैं?",
++    },
++    {
++      emoji: "🕉️",
++      label: "ज्योतिर्लिंग के बारे में जानें",
++      prompt: "महत्वपूर्ण ज्योतिर्लिंग मंदिरों के बारे में बताएं",
++    },
++  ],
++};
++
+ export default function AssistantPage() {
+   const [input, setInput] = useState("");
+   const [loading, setLoading] = useState(false);
++  const [language, setLanguage] = useState<Language>("en");
+ 
+   const [messages, setMessages] = useState<Message[]>([
+     {
+       role: "ai",
+-      text: "Namaste! 🪷 I'm TempleGuide. Ask me about temples, festivals, darshan, or planning a pilgrimage.",
++      text: GREETING_SENTINEL,
+     },
+   ]);
+ 
++  function displayText(message: Message): string {
++    return message.text === GREETING_SENTINEL
++      ? GREETING[language]
++      : message.text;
++  }
++
+   async function send(e: FormEvent) {
+     e.preventDefault();
+ 
+@@ -42,7 +111,11 @@ export default function AssistantPage() {
+           "Content-Type": "application/json",
+         },
+         body: JSON.stringify({
+-          messages: nextMessages,
++          messages: nextMessages.map((m) => ({
++            role: m.role,
++            text: displayText(m),
++          })),
++          language,
+         }),
+       });
+ 
+@@ -91,6 +164,42 @@ export default function AssistantPage() {
+           Ask questions in natural language — answers are grounded in
+           our real temple and festival data.
+         </p>
++
++        <div
++          role="group"
++          aria-label="Reply language"
++          style={{
++            display: "inline-flex",
++            marginTop: 16,
++            background: "rgba(255,255,255,0.12)",
++            border: "1px solid rgba(255,255,255,0.25)",
++            borderRadius: 999,
++            padding: 4,
++            gap: 4,
++          }}
++        >
++          {(["en", "hi"] as Language[]).map((lang) => (
++            <button
++              key={lang}
++              type="button"
++              onClick={() => setLanguage(lang)}
++              aria-pressed={language === lang}
++              style={{
++                border: "none",
++                cursor: "pointer",
++                padding: "6px 16px",
++                borderRadius: 999,
++                fontSize: 13.5,
++                fontWeight: 600,
++                background: language === lang ? "#ffc05a" : "transparent",
++                color: language === lang ? "#5a2a10" : "#fff",
++                transition: "background 0.15s ease",
++              }}
++            >
++              {lang === "en" ? "English" : "हिंदी"}
++            </button>
++          ))}
++        </div>
+       </section>
+ 
+       <section
+@@ -144,41 +253,15 @@ export default function AssistantPage() {
+                 </p>
+ 
+                 <div className="suggestion-grid">
+-                  <button
+-                    type="button"
+-                    onClick={() =>
+-                      setInput("What are the best Shiva temples near Mumbai?")
+-                    }
+-                  >
+-                    🛕 Best Shiva temples near Mumbai
+-                  </button>
+-
+-                  <button
+-                    type="button"
+-                    onClick={() =>
+-                      setInput("Plan a 2-day pilgrimage to Ujjain")
+-                    }
+-                  >
+-                    🗺️ Plan a 2-day pilgrimage to Ujjain
+-                  </button>
+-
+-                  <button
+-                    type="button"
+-                    onClick={() =>
+-                      setInput("Which Indian temples are famous for their festivals?")
+-                    }
+-                  >
+-                    🎉 Famous temple festivals
+-                  </button>
+-
+-                  <button
+-                    type="button"
+-                    onClick={() =>
+-                      setInput("Tell me about the important Jyotirlinga temples")
+-                    }
+-                  >
+-                    🕉️ Explore Jyotirlingas
+-                  </button>
++                  {SUGGESTIONS[language].map((s) => (
++                    <button
++                      key={s.prompt}
++                      type="button"
++                      onClick={() => setInput(s.prompt)}
++                    >
++                      {s.emoji} {s.label}
++                    </button>
++                  ))}
+                 </div>
+               </div>
+             )}
+@@ -306,7 +389,7 @@ export default function AssistantPage() {
+                     ),
+                   }}
+                 >
+-                  {message.text}
++                  {displayText(message)}
+                 </ReactMarkdown>
+               </div>
+             ))}
+diff --git a/lib/ai.test.ts b/lib/ai.test.ts
+new file mode 100644
+index 0000000..c8e3f7a
+--- /dev/null
++++ b/lib/ai.test.ts
+@@ -0,0 +1,20 @@
++import { describe, it, expect } from "vitest";
++import { normalizeAssistantLanguage } from "./ai";
++
++describe("normalizeAssistantLanguage", () => {
++  it("passes through 'hi'", () => {
++    expect(normalizeAssistantLanguage("hi")).toBe("hi");
++  });
++
++  it("passes through 'en'", () => {
++    expect(normalizeAssistantLanguage("en")).toBe("en");
++  });
++
++  it("falls back to 'en' for anything else", () => {
++    expect(normalizeAssistantLanguage("fr")).toBe("en");
++    expect(normalizeAssistantLanguage(undefined)).toBe("en");
++    expect(normalizeAssistantLanguage(null)).toBe("en");
++    expect(normalizeAssistantLanguage(42)).toBe("en");
++    expect(normalizeAssistantLanguage("")).toBe("en");
++  });
++});
+diff --git a/lib/ai.ts b/lib/ai.ts
+index 7ceb005..1592cb6 100644
+--- a/lib/ai.ts
++++ b/lib/ai.ts
+@@ -12,6 +12,15 @@ export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "placeholder-
+ // model (e.g. "openai/gpt-oss-120b") if you want to compare quality/speed.
+ export const AI_MODEL = "openai/gpt-oss-120b";
+ 
++// Supported reply languages for the Temple Assistant chat. Kept as a
++// narrow union (not a generic string) so an invalid value from the client
++// falls back to English instead of silently confusing the model.
++export type AssistantLanguage = "en" | "hi";
++
++export function normalizeAssistantLanguage(value: unknown): AssistantLanguage {
++  return value === "hi" ? "hi" : "en";
++}
++
+ // A compact, token-cheap serialization of the site's structured data.
+ // This is what "grounds" the AI in real temples/festivals instead of letting it hallucinate.
+ export function buildTempleContext() {
