@@ -1,9 +1,5 @@
-import Link from "next/link";
+import { AssistantWidget } from "@/components/AssistantWidget";
 
 export function FloatingChat() {
-  return (
-    <Link href="/assistant" className="floating-chat" aria-label="Open Temple AI Assistant">
-      🤖
-    </Link>
-  );
+  return <AssistantWidget />;
 }
