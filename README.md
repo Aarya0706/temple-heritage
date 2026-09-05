@@ -113,6 +113,19 @@ The AI flow is designed to handle imperfect model output safely through validati
 
 ---
 
+## Screenshots
+
+### Home
+![Home](screenshots/home.png)
+
+### Itinerary
+![Itinerary](screenshots/itinerary.png)
+
+### Planner
+![Planner](screenshots/planner.png)
+
+---
+
 ## 🏗️ Architecture
 
 ```text
