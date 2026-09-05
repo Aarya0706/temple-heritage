@@ -1,0 +1,62 @@
+diff --git a/app/horoscope/page.tsx b/app/horoscope/page.tsx
+index 4f07bb1..630a2cf 100644
+--- a/app/horoscope/page.tsx
++++ b/app/horoscope/page.tsx
+@@ -112,6 +112,25 @@ export default function HoroscopePage() {
+   const guidance = useMemo(() => (sign ? getHoroscopeGuidance(sign) : null), [sign]);
+   const linkedFestival = useMemo(() => (sign ? getUpcomingFestivalForSign(sign) : null), [sign]);
+ 
++  // "Get a shareable link" should hand the visitor a link to paste/send,
++  // not navigate them away from the page they're on — so this copies to
++  // the clipboard instead of using a plain <Link>.
++  const [copied, setCopied] = useState(false);
++
++  const copyShareLink = async () => {
++    if (!sign) return;
++    const shareUrl = `${window.location.origin}/horoscope/${slugify(sign.name)}`;
++    try {
++      await navigator.clipboard.writeText(shareUrl);
++      setCopied(true);
++      setTimeout(() => setCopied(false), 2000);
++    } catch {
++      // Clipboard API can fail (permissions, non-secure context) — fall
++      // back to just opening the link so it isn't a dead end.
++      window.open(shareUrl, "_blank");
++    }
++  };
++
+   useEffect(() => {
+     if (!birthDate || !sign) {
+       Promise.resolve().then(() => setData(null));
+@@ -254,18 +273,25 @@ export default function HoroscopePage() {
+                   </Link>
+                 )}
+ 
+-                <Link
+-                  href={`/horoscope/${slugify(sign.name)}`}
++                <button
++                  type="button"
++                  onClick={copyShareLink}
+                   style={{
+                     marginTop: 12,
+-                    display: "inline-block",
++                    display: "inline-flex",
++                    alignItems: "center",
++                    gap: 6,
+                     fontSize: 13,
+-                    color: "#a52d15",
++                    color: copied ? "#2f8a4a" : "#a52d15",
+                     fontWeight: 600,
++                    background: "none",
++                    border: "none",
++                    padding: 0,
++                    cursor: "pointer",
+                   }}
+                 >
+-                  Get a shareable link for {sign.name} →
+-                </Link>
++                  {copied ? "Link copied!" : `Copy a shareable link for ${sign.name}`}
++                </button>
+               </div>
+             )}
+ 
