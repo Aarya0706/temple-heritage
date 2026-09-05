@@ -20,6 +20,17 @@ export const metadata: Metadata = {
 };
 
 export default function FestivalsPage() {
+  // Soonest-first for upcoming festivals; anything already passed this year
+  // sinks to the bottom instead of sitting in raw data-file order.
+  const sortedFestivals = festivals
+    .map((festival) => ({ festival, countdown: getFestivalCountdown(festival) }))
+    .sort((a, b) => {
+      if (a.countdown.hasPassed !== b.countdown.hasPassed) {
+        return a.countdown.hasPassed ? 1 : -1;
+      }
+      return a.countdown.daysUntil - b.countdown.daysUntil;
+    });
+
   return (
     <main>
       <section className="page-hero">
@@ -39,14 +50,12 @@ export default function FestivalsPage() {
 
       <section className="section section-light">
         <div className="festival-grid">
-          {festivals.map((festival) => {
-            const countdown = getFestivalCountdown(festival);
-
+          {sortedFestivals.map(({ festival, countdown }) => {
             return (
               <Link
                 key={festival.name}
                 href={`/festivals/${slugify(festival.name)}`}
-                className="festival-card-link"
+                className={`festival-card-link${countdown.hasPassed ? " festival-card-link-passed" : ""}`}
               >
                 <article className="festival-card">
                   <div className="festival-image">
@@ -56,7 +65,11 @@ export default function FestivalsPage() {
                       {festival.month}
                     </span>
 
-                    {!countdown.hasPassed && (
+                    {countdown.hasPassed ? (
+                      <span className="festival-days-badge festival-days-badge-passed">
+                        Passed this year
+                      </span>
+                    ) : (
                       <span className="festival-days-badge">
                         {countdown.daysUntil === 0
                           ? "Today"
