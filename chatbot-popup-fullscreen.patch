@@ -580,10 +580,10 @@ index 99dfd81..4363142 100644
 \ No newline at end of file
 +}
 diff --git a/app/globals.css b/app/globals.css
-index 6f4d240..3546c25 100644
+index 6f4d240..33ba497 100644
 --- a/app/globals.css
 +++ b/app/globals.css
-@@ -413,7 +413,121 @@ button { cursor: pointer; }
+@@ -413,7 +413,127 @@ button { cursor: pointer; }
  
  .empty { padding:60px;text-align:center;color:#876e64; }
  
@@ -594,9 +594,13 @@ index 6f4d240..3546c25 100644
 +  position: fixed;
 +  right: 25px;
 +  bottom: 24px;
-+  z-index: 50;
++  /* Above .navbar's sticky z-index:1000 — otherwise the sticky navbar
++     paints over the widget's own header on shorter viewports. */
++  z-index: 2000;
 +  width: min(400px, calc(100vw - 32px));
-+  height: min(620px, calc(100vh - 48px));
++  /* Reserve ~96px of headroom so the panel never reaches up under the
++     sticky navbar on short viewports, in addition to the z-index fix. */
++  height: min(620px, calc(100vh - 120px));
 +  display: flex;
 +  flex-direction: column;
 +  background: #fffaf4;
@@ -609,7 +613,9 @@ index 6f4d240..3546c25 100644
 +.assistant-widget-fullscreen {
 +  position: fixed;
 +  inset: 0;
-+  z-index: 100;
++  /* Must fully cover the sticky navbar (z-index:1000) since this mode
++     is meant to be a true full-screen takeover. */
++  z-index: 2001;
 +  display: flex;
 +  flex-direction: column;
 +  background: #fffaf4;
