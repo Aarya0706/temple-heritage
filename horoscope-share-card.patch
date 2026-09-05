@@ -1,0 +1,170 @@
+diff --git a/app/horoscope/[sign]/opengraph-image.tsx b/app/horoscope/[sign]/opengraph-image.tsx
+new file mode 100644
+index 0000000..cbee87c
+--- /dev/null
++++ b/app/horoscope/[sign]/opengraph-image.tsx
+@@ -0,0 +1,55 @@
++import { ImageResponse } from "next/og";
++import { temples } from "@/data/temples";
++import { getZodiacSignByName, getHoroscopeGuidance } from "@/lib/zodiac";
++
++export const alt = "Temple Horoscope Match";
++export const size = { width: 1200, height: 630 };
++export const contentType = "image/png";
++
++export default async function Image({ params }: { params: Promise<{ sign: string }> }) {
++  const { sign: signParam } = await params;
++  const sign = getZodiacSignByName(signParam);
++  const guidance = sign ? getHoroscopeGuidance(sign) : null;
++  const topMatch = guidance
++    ? temples.find((t) => guidance.deityFocus.some((d) => t.deity.includes(d)))
++    : undefined;
++
++  return new ImageResponse(
++    (
++      <div
++        style={{
++          width: "100%",
++          height: "100%",
++          display: "flex",
++          flexDirection: "column",
++          justifyContent: "space-between",
++          background: "linear-gradient(135deg, #3a1a10 0%, #6b2314 55%, #a52d15 100%)",
++          fontFamily: "sans-serif",
++          padding: "64px 68px",
++        }}
++      >
++        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
++          <span style={{ fontSize: 28 }}>🪷</span>
++          <span style={{ fontSize: 22, color: "#ffc05a", fontWeight: 700, letterSpacing: 1 }}>
++            TEMPLE HERITAGE · HOROSCOPE MATCH
++          </span>
++        </div>
++
++        <div style={{ display: "flex", flexDirection: "column" }}>
++          <span style={{ fontSize: 110, marginBottom: 8 }}>{sign?.symbol ?? "✦"}</span>
++          <span style={{ display: "flex", color: "white", fontSize: 58, fontWeight: 800, marginBottom: 18 }}>
++            {sign?.name ?? "Your Sign"}&apos;s Temple Match
++          </span>
++          <div style={{ display: "flex", gap: 22, fontSize: 24, color: "#ffe3c2", marginBottom: topMatch ? 18 : 0 }}>
++            {sign && <span style={{ display: "flex" }}>{sign.element} sign</span>}
++            {sign && <span style={{ display: "flex" }}>Ruled by {sign.rulingPlanet}</span>}
++          </div>
++          {topMatch && (
++            <span style={{ display: "flex", color: "#f0ddc8", fontSize: 22 }}>Best match: {topMatch.name}</span>
++          )}
++        </div>
++      </div>
++    ),
++    { ...size }
++  );
++}
+diff --git a/app/horoscope/[sign]/page.tsx b/app/horoscope/[sign]/page.tsx
+new file mode 100644
+index 0000000..239aa24
+--- /dev/null
++++ b/app/horoscope/[sign]/page.tsx
+@@ -0,0 +1,53 @@
++import { notFound } from "next/navigation";
++import Link from "next/link";
++import { temples } from "@/data/temples";
++import { getZodiacSignByName, getHoroscopeGuidance } from "@/lib/zodiac";
++
++export async function generateMetadata({ params }: { params: Promise<{ sign: string }> }) {
++  const { sign: signParam } = await params;
++  const sign = getZodiacSignByName(signParam);
++  if (!sign) return {};
++  return {
++    title: `${sign.name} Temple Match — Temple Heritage`,
++    description: `Temples traditionally suited to ${sign.name}, ruled by ${sign.rulingPlanet}.`,
++  };
++}
++
++export default async function HoroscopeSignPage({ params }: { params: Promise<{ sign: string }> }) {
++  const { sign: signParam } = await params;
++  const sign = getZodiacSignByName(signParam);
++  if (!sign) notFound();
++
++  const guidance = getHoroscopeGuidance(sign);
++  const matches = temples
++    .filter((t) => guidance.deityFocus.some((d) => t.deity.includes(d)))
++    .slice(0, 4);
++
++  return (
++    <main>
++      <section className="page-hero">
++        <div className="eyebrow" style={{ color: "#ffc05a" }}>✦ Astrology-guided discovery</div>
++        <h1>{sign.symbol} {sign.name}&apos;s Temple Match</h1>
++        <p>{guidance.blurb}</p>
++      </section>
++
++      <section className="section section-light">
++        <div className="recommend-grid">
++          {matches.map((temple) => (
++            <Link href={`/temples/${temple.slug}`} className="result-card" key={temple.slug}>
++              <img src={temple.image} alt={temple.name} />
++              <div style={{ flex: 1 }}>
++                <h4>{temple.name}</h4>
++                <p>📍 {temple.city}, {temple.state}</p>
++              </div>
++            </Link>
++          ))}
++        </div>
++        <p style={{ marginTop: 24, fontSize: 13, color: "#9b6958" }}>
++          Find your own match on the{" "}
++          <Link href="/horoscope" style={{ color: "#a52d15", fontWeight: 600 }}>horoscope page</Link>.
++        </p>
++      </section>
++    </main>
++  );
++}
+diff --git a/app/horoscope/page.tsx b/app/horoscope/page.tsx
+index ed34e4c..4f07bb1 100644
+--- a/app/horoscope/page.tsx
++++ b/app/horoscope/page.tsx
+@@ -189,6 +189,10 @@ export default function HoroscopePage() {
+               }}
+             />
+ 
++            <p style={{ fontSize: 11, color: "#9b6958", marginTop: 4 }}>
++              Tip: use the calendar icon rather than typing, to avoid date-format mix-ups.
++            </p>
++
+             {birthDate && (
+               <button
+                 type="button"
+@@ -249,6 +253,19 @@ export default function HoroscopePage() {
+                     </span>
+                   </Link>
+                 )}
++
++                <Link
++                  href={`/horoscope/${slugify(sign.name)}`}
++                  style={{
++                    marginTop: 12,
++                    display: "inline-block",
++                    fontSize: 13,
++                    color: "#a52d15",
++                    fontWeight: 600,
++                  }}
++                >
++                  Get a shareable link for {sign.name} →
++                </Link>
+               </div>
+             )}
+ 
+diff --git a/lib/zodiac.ts b/lib/zodiac.ts
+index 99d5b9a..216d1c7 100644
+--- a/lib/zodiac.ts
++++ b/lib/zodiac.ts
+@@ -102,3 +102,10 @@ const PLANET_GUIDANCE: Record<string, HoroscopeGuidance> = {
+ export function getHoroscopeGuidance(sign: ZodiacSign): HoroscopeGuidance {
+   return PLANET_GUIDANCE[sign.rulingPlanet];
+ }
++
++export function getZodiacSignByName(name: string): ZodiacSign | null {
++  const match = ZODIAC_SIGNS.find((s) => s.name.toLowerCase() === name.toLowerCase());
++  if (!match) return null;
++  const { start: _s, end: _e, ...publicFields } = match;
++  return publicFields;
++}
