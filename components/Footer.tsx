@@ -22,6 +22,11 @@ export function Footer() {
             <Link href="/festivals">Festivals</Link>
             <Link href="/planner">AI Planner</Link>
             <Link href="/recommender">Recommender</Link>
+            <Link href="/horoscope">Horoscope Finder</Link>
+            <Link href="/darshan">Darshan</Link>
+            <Link href="/my-yatras">My Yatras</Link>
+            <Link href="/profile/passport">Pilgrimage Passport</Link>
+            <Link href="/assistant">Temple Assistant</Link>
           </div>
         </div>
 
