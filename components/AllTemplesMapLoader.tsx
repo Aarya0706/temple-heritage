@@ -1,7 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import { Temple } from "@/data/temples";
+import { Festival } from "@/data/festivals";
+import { TempleMapFilters } from "./TempleMapFilters";
 
 const AllTemplesMap = dynamic(() => import("./AllTemplesMap"), {
   ssr: false,
@@ -11,8 +14,26 @@ const AllTemplesMap = dynamic(() => import("./AllTemplesMap"), {
 /**
  * Leaflet touches `window` on import, so the map itself is dynamically
  * imported with ssr:false — mirrors YatraRouteMapLoader's pattern. This
- * wrapper just hands the full temple list down once the map is ready.
+ * wrapper owns the deity/festival filter state and hands the filtered
+ * temple list down to the map once it's ready.
  */
-export default function AllTemplesMapLoader({ temples }: { temples: Temple[] }) {
-  return <AllTemplesMap temples={temples} />;
+export default function AllTemplesMapLoader({
+  temples,
+  festivals,
+}: {
+  temples: Temple[];
+  festivals: Festival[];
+}) {
+  const [filtered, setFiltered] = useState<Temple[]>(temples);
+
+  return (
+    <div className="all-temples-map-wrapper">
+      <TempleMapFilters
+        temples={temples}
+        festivals={festivals}
+        onFilterChange={setFiltered}
+      />
+      <AllTemplesMap temples={filtered} />
+    </div>
+  );
 }

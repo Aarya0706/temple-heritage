@@ -1,13 +1,13 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  CalendarDays,
-  Clock3,
+  Compass,
   Map,
   MessageCircle,
   Sparkles,
   Bot,
-  ClipboardList,
+  MoonStar,
+  Stamp,
 } from "lucide-react";
 import { SectionHeading } from "@/components/SectionHeading";
 import { TempleCard } from "@/components/TempleCard";
@@ -27,41 +27,47 @@ const KEDARNATH = "/images/kedarnath.jpg";
 
 const services = [
   {
-    icon: <Clock3 />,
-    title: "Darshan Timings",
-    text: "Explore temple opening hours, darshan windows and visitor guidance.",
-    href: "/temples",
-  },
-  {
-    icon: <CalendarDays />,
-    title: "Festival Calendar",
-    text: "Keep track of major festivals, celebrations and pilgrimage seasons.",
-    href: "/festivals",
-    featured: true,
-  },
-  {
-    icon: <Map />,
+    icon: <Compass />,
     title: "AI Yatra Planner",
     text: "Build a personalized day-by-day pilgrimage itinerary.",
     href: "/planner",
-  },
-  {
-    icon: <Bot />,
-    title: "Temple Recommender",
-    text: "Find temples based on your interests, deity and travel style.",
-    href: "/recommender",
+    featured: true,
+    accent: "saffron",
   },
   {
     icon: <MessageCircle />,
     title: "Temple AI Assistant",
     text: "Ask questions about temples, travel and pilgrimage planning.",
     href: "/assistant",
+    accent: "teal",
   },
   {
-    icon: <ClipboardList />,
-    title: "Visitor Information",
-    text: "Discover travel tips, local highlights and practical information.",
+    icon: <Map />,
+    title: "Interactive Temple Map",
+    text: "Explore all 12 temples clustered by state, filterable by deity and festival.",
     href: "/temples",
+    accent: "indigo",
+  },
+  {
+    icon: <MoonStar />,
+    title: "Horoscope Finder",
+    text: "Find temples matched to your sun sign and ruling planet.",
+    href: "/horoscope",
+    accent: "violet",
+  },
+  {
+    icon: <Stamp />,
+    title: "Pilgrimage Passport",
+    text: "Track the sacred sites you've visited and watch your stamps add up.",
+    href: "/profile/passport",
+    accent: "emerald",
+  },
+  {
+    icon: <Bot />,
+    title: "Temple Recommender",
+    text: "Find temples based on your interests, deity and travel style.",
+    href: "/recommender",
+    accent: "rose",
   },
 ];
 
@@ -235,7 +241,9 @@ export default function Home() {
                 service.featured ? "featured" : ""
               }`}
             >
-              <div className="service-icon">{service.icon}</div>
+              <div className={`service-icon accent-${service.accent}`}>
+                {service.icon}
+              </div>
               <h3>{service.title}</h3>
               <p>{service.text}</p>
               <span className="service-link">Explore →</span>

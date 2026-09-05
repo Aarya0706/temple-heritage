@@ -212,7 +212,19 @@ button { cursor: pointer; }
 .service-card { padding:29px; min-height:245px; border:1px solid rgba(255,184,68,.2); border-radius:22px; background:rgba(255,255,255,.06); transition:.25s; }
 .service-card:hover { transform:translateY(-6px); background:linear-gradient(135deg,#a32c15,#8a1b12); }
 .service-card.featured { background:linear-gradient(135deg,#a52c15,#c43e0d); }
-.service-icon { width:64px;height:64px;border-radius:16px;background:rgba(255,165,61,.13);display:grid;place-items:center;font-size:31px;margin-bottom:22px; }
+.service-icon { width:64px;height:64px;border-radius:16px;background:rgba(255,165,61,.13);color:#ffb64d;display:grid;place-items:center;font-size:31px;margin-bottom:22px; }
+
+/* Accent variants — evoke the multicolour palette of temple gopurams
+   (saffron, teal, indigo, violet, emerald, rose) so the tile icons read
+   distinctly against the maroon section background instead of the
+   single uniform orange tone. */
+.service-icon.accent-saffron { background:rgba(255,178,61,.18); color:#ffb63d; }
+.service-icon.accent-teal { background:rgba(45,162,146,.2); color:#5fd6c0; }
+.service-icon.accent-indigo { background:rgba(90,110,220,.2); color:#8fa3f5; }
+.service-icon.accent-violet { background:rgba(155,92,214,.2); color:#c39cf0; }
+.service-icon.accent-emerald { background:rgba(46,158,103,.2); color:#6fdb9e; }
+.service-icon.accent-rose { background:rgba(222,84,120,.2); color:#f393ab; }
+
 .service-card h3 { font:700 22px "Playfair Display",serif; margin:0 0 12px; }
 .service-card p { color:#f6cfae; line-height:1.65; margin:0 0 18px; }
 .service-link { color:#ffb326; font-weight:700; }
@@ -1062,12 +1074,15 @@ img { max-width: 100%; }
    ALL TEMPLES MAP
 ================================= */
 
+.all-temples-map-wrapper {
+  margin-bottom: 32px;
+}
+
 .all-temples-map {
   border: 1px solid #f0ddc8;
   border-radius: 16px;
   overflow: hidden;
   background: white;
-  margin-bottom: 32px;
 }
 
 .all-temples-map-loading {
@@ -1081,6 +1096,20 @@ img { max-width: 100%; }
   border: 1px solid #f0ddc8;
   border-radius: 16px;
   margin-bottom: 32px;
+}
+
+.all-temples-map-empty {
+  height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9b7a6c;
+  font-size: 14px;
+  background: #fff8f0;
+  border: 1px solid #f0ddc8;
+  border-radius: 16px;
+  text-align: center;
+  padding: 24px;
 }
 
 .all-temples-map .leaflet-container {
@@ -1102,6 +1131,76 @@ img { max-width: 100%; }
 
 .all-temples-marker span.active {
   transform: scale(1.25);
+}
+
+/* Cluster bubble — overrides the plugin's default blue styling to match
+   the site's terracotta/gold palette. */
+.temple-cluster-icon span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #a52d15;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  border: 3px solid rgba(255, 192, 90, 0.55);
+  box-shadow: 0 6px 16px rgba(78, 24, 13, 0.35);
+}
+
+.temple-map-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  background: #fff8f0;
+  border: 1px solid #f0ddc8;
+  border-radius: 14px;
+}
+
+.temple-map-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.temple-map-filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c2416;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.temple-map-filter-group select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #f0ddc8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4d1710;
+  font-size: 14px;
+  min-width: 180px;
+}
+
+.temple-map-filter-clear {
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid rgba(112, 38, 22, 0.16);
+  border-radius: 999px;
+  background: transparent;
+  color: #a52d15;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.temple-map-filter-clear:hover {
+  background: rgba(165, 45, 21, 0.06);
 }
 
 /* =================================
