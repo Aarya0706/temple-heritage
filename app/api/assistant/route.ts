@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { groq, AI_MODEL, buildTempleContext } from "@/lib/ai";
+import { groq, AI_MODEL, buildTempleContext, normalizeAssistantLanguage } from "@/lib/ai";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { messages: ChatMessage[] };
+  let body: { messages: ChatMessage[]; language?: string };
   try {
     body = await req.json();
   } catch {
@@ -46,9 +46,38 @@ export async function POST(req: NextRequest) {
   }
 
   const { messages } = body;
+  const language = normalizeAssistantLanguage(body.language);
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "No messages provided." }, { status: 400 });
   }
+
+  // Hindi replies get their own instruction block + a short Hindi-language
+  // few-shot example, rather than just appending "reply in Hindi" to the
+  // English prompt — a bare translation instruction tends to produce
+  // Hindi prose that ignores the heading/bullet formatting rules above it,
+  // because the one worked example the model has to imitate is in English.
+  const languageBlock =
+    language === "hi"
+      ? `
+  LANGUAGE:
+  - Reply ENTIRELY in Hindi, written in Devanagari script.
+  - Keep temple, festival, city, and state names in the commonly used
+    Latin-script/English form (e.g. "Kashi Vishwanath", "Mahashivratri") —
+    do not transliterate proper nouns into Devanagari.
+  - Follow the exact same formatting rules above (bold names, bullets,
+    headings, short paragraphs) — only the language changes.
+
+  Example:
+
+  हमारे डेटा में उपलब्ध शिव मंदिर इस प्रकार हैं:
+
+  - **Kashi Vishwanath** — Varanasi, Uttar Pradesh
+    भगवान शिव को समर्पित। विश्वनाथ मंदिर और गंगा आरती के लिए प्रसिद्ध।
+
+  - **Kedarnath** — Uttarakhand
+    हिमालय में स्थित भगवान शिव का एक प्रमुख तीर्थ स्थल।
+`
+      : "";
 
   const system = `You are TempleGuide, a warm and knowledgeable AI assistant for the Temple Heritage app.
 
@@ -85,7 +114,7 @@ export async function POST(req: NextRequest) {
     A major Himalayan pilgrimage temple dedicated to Lord Shiva.
 
   End with a brief useful suggestion when appropriate.
-
+  ${languageBlock}
   ${buildTempleContext()}`;
 
   // Map the app's {role: "ai"|"user"} shape to the API's {role: "assistant"|"user"} shape,

@@ -12,6 +12,15 @@ export const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "placeholder-
 // model (e.g. "openai/gpt-oss-120b") if you want to compare quality/speed.
 export const AI_MODEL = "openai/gpt-oss-120b";
 
+// Supported reply languages for the Temple Assistant chat. Kept as a
+// narrow union (not a generic string) so an invalid value from the client
+// falls back to English instead of silently confusing the model.
+export type AssistantLanguage = "en" | "hi";
+
+export function normalizeAssistantLanguage(value: unknown): AssistantLanguage {
+  return value === "hi" ? "hi" : "en";
+}
+
 // A compact, token-cheap serialization of the site's structured data.
 // This is what "grounds" the AI in real temples/festivals instead of letting it hallucinate.
 export function buildTempleContext() {
