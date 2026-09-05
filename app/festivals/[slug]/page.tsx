@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import { festivals } from "@/data/festivals";
+import { temples } from "@/data/temples";
 import { slugify } from "@/lib/slug";
 import FestivalCountdown from "@/components/FestivalCountdown";
 
@@ -43,6 +44,10 @@ export default async function FestivalDetail({ params }: { params: Promise<{ slu
   const festival = festivals.find((item) => slugify(item.name) === slug);
   if (!festival) notFound();
 
+  const relatedTemples = festival.relatedTempleSlugs
+    .map((templeSlug) => temples.find((temple) => temple.slug === templeSlug))
+    .filter((temple): temple is (typeof temples)[number] => Boolean(temple));
+
   return (
     <main>
       <section className="detail-hero">
@@ -63,6 +68,36 @@ export default async function FestivalDetail({ params }: { params: Promise<{ slu
           </div>
         </div>
       </section>
+
+      {relatedTemples.length > 0 && (
+        <section className="section section-light">
+          <div className="section-heading">
+            <div className="eyebrow">✦ Where it&apos;s celebrated</div>
+            <h2>Celebrated at these temples</h2>
+          </div>
+
+          <div className="festival-temples-grid">
+            {relatedTemples.map((temple) => (
+              <Link
+                key={temple.slug}
+                href={`/temples/${temple.slug}`}
+                className="festival-temple-card"
+              >
+                <div className="festival-temple-image">
+                  <img src={temple.image} alt={temple.name} />
+                </div>
+                <div className="festival-temple-info">
+                  <h4>{temple.name}</h4>
+                  <p>
+                    <MapPin size={14} style={{ verticalAlign: "middle" }} />{" "}
+                    {temple.city}, {temple.state}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section section-dark">
         <div className="section-heading">
