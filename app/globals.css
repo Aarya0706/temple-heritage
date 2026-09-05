@@ -463,6 +463,12 @@ img { max-width: 100%; }
   to { transform: rotate(360deg); }
 }
 
+/* Voice input mic button pulse (Assistant) */
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(165, 45, 21, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(165, 45, 21, 0); }
+}
+
 .festival-grid {
   max-width: 1250px;
   margin: 30px auto 0;

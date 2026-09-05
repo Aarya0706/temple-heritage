@@ -1,0 +1,209 @@
+diff --git a/app/assistant/page.tsx b/app/assistant/page.tsx
+index 9d52177..99dfd81 100644
+--- a/app/assistant/page.tsx
++++ b/app/assistant/page.tsx
+@@ -1,8 +1,52 @@
+ "use client";
+ 
+-import { FormEvent, useState } from "react";
+-import { Send, Sparkles, Loader2 } from "lucide-react";
++import { FormEvent, useEffect, useRef, useState } from "react";
++import { Send, Sparkles, Loader2, Mic, Square } from "lucide-react";
+ import ReactMarkdown from "react-markdown";
++import { speechRecognitionLang } from "@/lib/speech";
++
++// The Web Speech API's SpeechRecognition is a long-standing browser
++// feature (Chrome/Edge/Safari via the webkit-prefixed constructor) but
++// still isn't part of TypeScript's DOM lib, so the shapes below are
++// declared locally rather than pulled from an @types package.
++interface SpeechRecognitionAlternative {
++  transcript: string;
++}
++interface SpeechRecognitionResultLike {
++  0: SpeechRecognitionAlternative;
++  isFinal: boolean;
++}
++interface SpeechRecognitionResultListLike {
++  length: number;
++  [index: number]: SpeechRecognitionResultLike;
++}
++interface SpeechRecognitionEventLike extends Event {
++  resultIndex: number;
++  results: SpeechRecognitionResultListLike;
++}
++interface SpeechRecognitionErrorEventLike extends Event {
++  error: string;
++}
++interface SpeechRecognitionInstance extends EventTarget {
++  lang: string;
++  continuous: boolean;
++  interimResults: boolean;
++  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
++  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
++  onend: (() => void) | null;
++  start: () => void;
++  stop: () => void;
++}
++type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
++
++function getSpeechRecognitionCtor(): SpeechRecognitionConstructor | undefined {
++  if (typeof window === "undefined") return undefined;
++  const w = window as unknown as {
++    SpeechRecognition?: SpeechRecognitionConstructor;
++    webkitSpeechRecognition?: SpeechRecognitionConstructor;
++  };
++  return w.SpeechRecognition || w.webkitSpeechRecognition;
++}
+ 
+ type Message = {
+   role: "user" | "ai";
+@@ -75,6 +119,48 @@ export default function AssistantPage() {
+   const [input, setInput] = useState("");
+   const [loading, setLoading] = useState(false);
+   const [language, setLanguage] = useState<Language>("en");
++  const [listening, setListening] = useState(false);
++  const [speechSupported, setSpeechSupported] = useState(false);
++  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
++
++  useEffect(() => {
++    setSpeechSupported(!!getSpeechRecognitionCtor());
++    // Stop any in-flight recognition if the user navigates away mid-listen.
++    return () => {
++      recognitionRef.current?.stop();
++    };
++  }, []);
++
++  function toggleListening() {
++    if (listening) {
++      recognitionRef.current?.stop();
++      setListening(false);
++      return;
++    }
++
++    const Ctor = getSpeechRecognitionCtor();
++    if (!Ctor) return;
++
++    const recognition = new Ctor();
++    recognition.lang = speechRecognitionLang(language);
++    recognition.continuous = false;
++    recognition.interimResults = true;
++
++    recognition.onresult = (event) => {
++      let transcript = "";
++      for (let i = event.resultIndex; i < event.results.length; i++) {
++        transcript += event.results[i][0].transcript;
++      }
++      setInput(transcript);
++    };
++
++    recognition.onerror = () => setListening(false);
++    recognition.onend = () => setListening(false);
++
++    recognitionRef.current = recognition;
++    recognition.start();
++    setListening(true);
++  }
+ 
+   const [messages, setMessages] = useState<Message[]>([
+     {
+@@ -436,7 +522,11 @@ export default function AssistantPage() {
+             <input
+               value={input}
+               onChange={(e) => setInput(e.target.value)}
+-              placeholder="Ask: best Shiva temples near Mumbai..."
++              placeholder={
++                listening
++                  ? "Listening..."
++                  : "Ask: best Shiva temples near Mumbai..."
++              }
+               disabled={loading}
+               style={{
+                 flex: 1,
+@@ -453,6 +543,36 @@ export default function AssistantPage() {
+               }}
+             />
+ 
++            {speechSupported && (
++              <button
++                type="button"
++                onClick={toggleListening}
++                disabled={loading}
++                aria-label={listening ? "Stop voice input" : "Ask by voice"}
++                aria-pressed={listening}
++                title={listening ? "Stop voice input" : "Ask by voice"}
++                style={{
++                  width: "46px",
++                  height: "46px",
++                  flex: "0 0 46px",
++                  border: listening
++                    ? "none"
++                    : "1px solid rgba(112, 38, 22, 0.16)",
++                  borderRadius: "50%",
++                  background: listening ? "#a52d15" : "#fffaf4",
++                  color: listening ? "#ffffff" : "#a52d15",
++                  display: "grid",
++                  placeItems: "center",
++                  cursor: loading ? "default" : "pointer",
++                  animation: listening
++                    ? "mic-pulse 1.4s ease-in-out infinite"
++                    : "none",
++                }}
++              >
++                {listening ? <Square size={16} /> : <Mic size={18} />}
++              </button>
++            )}
++
+             <button
+               type="submit"
+               aria-label="Send"
+diff --git a/app/globals.css b/app/globals.css
+index 39ce316..c1c019e 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -463,6 +463,12 @@ img { max-width: 100%; }
+   to { transform: rotate(360deg); }
+ }
+ 
++/* Voice input mic button pulse (Assistant) */
++@keyframes mic-pulse {
++  0%, 100% { box-shadow: 0 0 0 0 rgba(165, 45, 21, 0.45); }
++  50% { box-shadow: 0 0 0 8px rgba(165, 45, 21, 0); }
++}
++
+ .festival-grid {
+   max-width: 1250px;
+   margin: 30px auto 0;
+diff --git a/lib/speech.test.ts b/lib/speech.test.ts
+new file mode 100644
+index 0000000..97f8426
+--- /dev/null
++++ b/lib/speech.test.ts
+@@ -0,0 +1,12 @@
++import { describe, it, expect } from "vitest";
++import { speechRecognitionLang } from "./speech";
++
++describe("speechRecognitionLang", () => {
++  it("maps 'hi' to Hindi (India) locale", () => {
++    expect(speechRecognitionLang("hi")).toBe("hi-IN");
++  });
++
++  it("maps 'en' to English (India) locale", () => {
++    expect(speechRecognitionLang("en")).toBe("en-IN");
++  });
++});
+diff --git a/lib/speech.ts b/lib/speech.ts
+new file mode 100644
+index 0000000..c6a954e
+--- /dev/null
++++ b/lib/speech.ts
+@@ -0,0 +1,10 @@
++// Maps the assistant's reply-language toggle to a BCP-47 locale for the
++// Web Speech API's SpeechRecognition.lang. Kept separate from
++// lib/ai.ts's AssistantLanguage so this stays a plain client-safe module
++// with no server-only imports (groq-sdk, env reads) pulled into the
++// browser bundle.
++export type SpeechLanguage = "en" | "hi";
++
++export function speechRecognitionLang(language: SpeechLanguage): string {
++  return language === "hi" ? "hi-IN" : "en-IN";
++}

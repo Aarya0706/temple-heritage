@@ -1,8 +1,52 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { Send, Sparkles, Loader2, Mic, Square } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { speechRecognitionLang } from "@/lib/speech";
+
+// The Web Speech API's SpeechRecognition is a long-standing browser
+// feature (Chrome/Edge/Safari via the webkit-prefixed constructor) but
+// still isn't part of TypeScript's DOM lib, so the shapes below are
+// declared locally rather than pulled from an @types package.
+interface SpeechRecognitionAlternative {
+  transcript: string;
+}
+interface SpeechRecognitionResultLike {
+  0: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+interface SpeechRecognitionResultListLike {
+  length: number;
+  [index: number]: SpeechRecognitionResultLike;
+}
+interface SpeechRecognitionEventLike extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultListLike;
+}
+interface SpeechRecognitionErrorEventLike extends Event {
+  error: string;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+function getSpeechRecognitionCtor(): SpeechRecognitionConstructor | undefined {
+  if (typeof window === "undefined") return undefined;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  };
+  return w.SpeechRecognition || w.webkitSpeechRecognition;
+}
 
 type Message = {
   role: "user" | "ai";
@@ -75,6 +119,48 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+
+  useEffect(() => {
+    setSpeechSupported(!!getSpeechRecognitionCtor());
+    // Stop any in-flight recognition if the user navigates away mid-listen.
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) return;
+
+    const recognition = new Ctor();
+    recognition.lang = speechRecognitionLang(language);
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput(transcript);
+    };
+
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  }
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -436,7 +522,11 @@ export default function AssistantPage() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask: best Shiva temples near Mumbai..."
+              placeholder={
+                listening
+                  ? "Listening..."
+                  : "Ask: best Shiva temples near Mumbai..."
+              }
               disabled={loading}
               style={{
                 flex: 1,
@@ -452,6 +542,36 @@ export default function AssistantPage() {
                 color: "#674b41",
               }}
             />
+
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={toggleListening}
+                disabled={loading}
+                aria-label={listening ? "Stop voice input" : "Ask by voice"}
+                aria-pressed={listening}
+                title={listening ? "Stop voice input" : "Ask by voice"}
+                style={{
+                  width: "46px",
+                  height: "46px",
+                  flex: "0 0 46px",
+                  border: listening
+                    ? "none"
+                    : "1px solid rgba(112, 38, 22, 0.16)",
+                  borderRadius: "50%",
+                  background: listening ? "#a52d15" : "#fffaf4",
+                  color: listening ? "#ffffff" : "#a52d15",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: loading ? "default" : "pointer",
+                  animation: listening
+                    ? "mic-pulse 1.4s ease-in-out infinite"
+                    : "none",
+                }}
+              >
+                {listening ? <Square size={16} /> : <Mic size={18} />}
+              </button>
+            )}
 
             <button
               type="submit"
