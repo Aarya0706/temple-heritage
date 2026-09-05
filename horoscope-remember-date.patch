@@ -1,0 +1,74 @@
+diff --git a/app/horoscope/page.tsx b/app/horoscope/page.tsx
+index 0a7be00..7e26807 100644
+--- a/app/horoscope/page.tsx
++++ b/app/horoscope/page.tsx
+@@ -49,12 +49,43 @@ function ReasonBadge({ reason }: { reason: Reason }) {
+   );
+ }
+ 
++// Returning visitors shouldn't have to retype their birth date every time.
++// Scoped to this page only — not shared with any other stored preference.
++const BIRTH_DATE_STORAGE_KEY = "temple-heritage:horoscope-birthdate";
++
+ export default function HoroscopePage() {
++  // Start empty on both server and the client's first render pass — same
++  // hydration-mismatch reasoning as FestivalCountdown's `mounted` flag.
++  // Reading localStorage during the initial render would make the very
++  // first client render disagree with the server-rendered markup, so the
++  // stored value is applied a beat later, in an effect after mount.
+   const [birthDate, setBirthDate] = useState("");
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState<string | null>(null);
+   const [data, setData] = useState<RecommendationResponse | null>(null);
+ 
++  useEffect(() => {
++    try {
++      const stored = window.localStorage.getItem(BIRTH_DATE_STORAGE_KEY);
++      if (stored) setBirthDate(stored);
++    } catch {
++      // Storage can be unavailable (private browsing, disabled cookies) —
++      // fail quietly and just leave the field blank.
++    }
++  }, []);
++
++  useEffect(() => {
++    try {
++      if (birthDate) {
++        window.localStorage.setItem(BIRTH_DATE_STORAGE_KEY, birthDate);
++      } else {
++        window.localStorage.removeItem(BIRTH_DATE_STORAGE_KEY);
++      }
++    } catch {
++      // Same as above — not being able to persist shouldn't break the page.
++    }
++  }, [birthDate]);
++
+   const sign = useMemo(() => (birthDate ? getZodiacSign(birthDate) : null), [birthDate]);
+   const guidance = useMemo(() => (sign ? getHoroscopeGuidance(sign) : null), [sign]);
+   const linkedFestival = useMemo(() => (sign ? getUpcomingFestivalForSign(sign) : null), [sign]);
+@@ -136,6 +167,25 @@ export default function HoroscopePage() {
+               }}
+             />
+ 
++            {birthDate && (
++              <button
++                type="button"
++                onClick={() => setBirthDate("")}
++                style={{
++                  marginTop: 8,
++                  background: "none",
++                  border: "none",
++                  padding: 0,
++                  fontSize: 12,
++                  color: "#9b6958",
++                  textDecoration: "underline",
++                  cursor: "pointer",
++                }}
++              >
++                Not your date? Clear it
++              </button>
++            )}
++
+             {sign && guidance && (
+               <div
+                 style={{

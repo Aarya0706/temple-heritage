@@ -189,6 +189,10 @@ export default function HoroscopePage() {
               }}
             />
 
+            <p style={{ fontSize: 11, color: "#9b6958", marginTop: 4 }}>
+              Tip: use the calendar icon rather than typing, to avoid date-format mix-ups.
+            </p>
+
             {birthDate && (
               <button
                 type="button"
@@ -249,6 +253,19 @@ export default function HoroscopePage() {
                     </span>
                   </Link>
                 )}
+
+                <Link
+                  href={`/horoscope/${slugify(sign.name)}`}
+                  style={{
+                    marginTop: 12,
+                    display: "inline-block",
+                    fontSize: 13,
+                    color: "#a52d15",
+                    fontWeight: 600,
+                  }}
+                >
+                  Get a shareable link for {sign.name} →
+                </Link>
               </div>
             )}
 
