@@ -6,6 +6,7 @@ import { festivals } from "@/data/festivals";
 import { temples } from "@/data/temples";
 import { slugify } from "@/lib/slug";
 import FestivalCountdown from "@/components/FestivalCountdown";
+import AddToCalendarButton from "@/components/AddToCalendarButton";
 
 export function generateStaticParams() {
   return festivals.map((festival) => ({ slug: slugify(festival.name) }));
@@ -63,6 +64,7 @@ export default async function FestivalDetail({ params }: { params: Promise<{ slu
             <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} />
             <div className="hero-actions">
               <Link href="/planner" className="btn-primary" style={{ background: "#a52d15", color: "white" }}><Sparkles size={17} /> Plan a Visit</Link>
+              <AddToCalendarButton festival={festival} slug={slug} />
               <Link href="/festivals" className="btn-secondary" style={{ color: "#8c2416", borderColor: "#b95a40" }}><ArrowLeft size={17} /> All Festivals</Link>
             </div>
           </div>
