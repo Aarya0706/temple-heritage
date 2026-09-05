@@ -9,16 +9,85 @@ type Message = {
   text: string;
 };
 
+type Language = "en" | "hi";
+
+// Sentinel so the greeting bubble re-renders in the newly selected
+// language even after the toggle is flipped, without needing to reset
+// or rewrite the rest of the conversation history.
+const GREETING_SENTINEL = "__greeting__";
+
+const GREETING: Record<Language, string> = {
+  en: "Namaste! 🪷 I'm TempleGuide. Ask me about temples, festivals, darshan, or planning a pilgrimage.",
+  hi: "नमस्ते! 🪷 मैं TempleGuide हूँ। मुझसे मंदिरों, त्योहारों, दर्शन या तीर्थयात्रा की योजना के बारे में पूछें।",
+};
+
+const SUGGESTIONS: Record<
+  Language,
+  { emoji: string; label: string; prompt: string }[]
+> = {
+  en: [
+    {
+      emoji: "🛕",
+      label: "Best Shiva temples near Mumbai",
+      prompt: "What are the best Shiva temples near Mumbai?",
+    },
+    {
+      emoji: "🗺️",
+      label: "Plan a 2-day pilgrimage to Ujjain",
+      prompt: "Plan a 2-day pilgrimage to Ujjain",
+    },
+    {
+      emoji: "🎉",
+      label: "Famous temple festivals",
+      prompt: "Which Indian temples are famous for their festivals?",
+    },
+    {
+      emoji: "🕉️",
+      label: "Explore Jyotirlingas",
+      prompt: "Tell me about the important Jyotirlinga temples",
+    },
+  ],
+  hi: [
+    {
+      emoji: "🛕",
+      label: "मुंबई के पास सर्वश्रेष्ठ शिव मंदिर",
+      prompt: "मुंबई के पास सबसे अच्छे शिव मंदिर कौन से हैं?",
+    },
+    {
+      emoji: "🗺️",
+      label: "उज्जैन की 2-दिवसीय तीर्थयात्रा",
+      prompt: "उज्जैन के लिए 2 दिन की तीर्थयात्रा की योजना बनाएं",
+    },
+    {
+      emoji: "🎉",
+      label: "प्रसिद्ध मंदिर त्योहार",
+      prompt: "कौन से भारतीय मंदिर अपने त्योहारों के लिए प्रसिद्ध हैं?",
+    },
+    {
+      emoji: "🕉️",
+      label: "ज्योतिर्लिंग के बारे में जानें",
+      prompt: "महत्वपूर्ण ज्योतिर्लिंग मंदिरों के बारे में बताएं",
+    },
+  ],
+};
+
 export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [language, setLanguage] = useState<Language>("en");
 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      text: "Namaste! 🪷 I'm TempleGuide. Ask me about temples, festivals, darshan, or planning a pilgrimage.",
+      text: GREETING_SENTINEL,
     },
   ]);
+
+  function displayText(message: Message): string {
+    return message.text === GREETING_SENTINEL
+      ? GREETING[language]
+      : message.text;
+  }
 
   async function send(e: FormEvent) {
     e.preventDefault();
@@ -42,7 +111,11 @@ export default function AssistantPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: nextMessages,
+          messages: nextMessages.map((m) => ({
+            role: m.role,
+            text: displayText(m),
+          })),
+          language,
         }),
       });
 
@@ -91,6 +164,42 @@ export default function AssistantPage() {
           Ask questions in natural language — answers are grounded in
           our real temple and festival data.
         </p>
+
+        <div
+          role="group"
+          aria-label="Reply language"
+          style={{
+            display: "inline-flex",
+            marginTop: 16,
+            background: "rgba(255,255,255,0.12)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            borderRadius: 999,
+            padding: 4,
+            gap: 4,
+          }}
+        >
+          {(["en", "hi"] as Language[]).map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => setLanguage(lang)}
+              aria-pressed={language === lang}
+              style={{
+                border: "none",
+                cursor: "pointer",
+                padding: "6px 16px",
+                borderRadius: 999,
+                fontSize: 13.5,
+                fontWeight: 600,
+                background: language === lang ? "#ffc05a" : "transparent",
+                color: language === lang ? "#5a2a10" : "#fff",
+                transition: "background 0.15s ease",
+              }}
+            >
+              {lang === "en" ? "English" : "हिंदी"}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section
@@ -144,41 +253,15 @@ export default function AssistantPage() {
                 </p>
 
                 <div className="suggestion-grid">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setInput("What are the best Shiva temples near Mumbai?")
-                    }
-                  >
-                    🛕 Best Shiva temples near Mumbai
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setInput("Plan a 2-day pilgrimage to Ujjain")
-                    }
-                  >
-                    🗺️ Plan a 2-day pilgrimage to Ujjain
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setInput("Which Indian temples are famous for their festivals?")
-                    }
-                  >
-                    🎉 Famous temple festivals
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setInput("Tell me about the important Jyotirlinga temples")
-                    }
-                  >
-                    🕉️ Explore Jyotirlingas
-                  </button>
+                  {SUGGESTIONS[language].map((s) => (
+                    <button
+                      key={s.prompt}
+                      type="button"
+                      onClick={() => setInput(s.prompt)}
+                    >
+                      {s.emoji} {s.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -306,7 +389,7 @@ export default function AssistantPage() {
                     ),
                   }}
                 >
-                  {message.text}
+                  {displayText(message)}
                 </ReactMarkdown>
               </div>
             ))}
