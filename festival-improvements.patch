@@ -1,0 +1,187 @@
+--- a/app/festivals/page.tsx
++++ b/app/festivals/page.tsx
+@@ -20,6 +20,17 @@
+ };
+ 
+ export default function FestivalsPage() {
++  // Soonest-first for upcoming festivals; anything already passed this year
++  // sinks to the bottom instead of sitting in raw data-file order.
++  const sortedFestivals = festivals
++    .map((festival) => ({ festival, countdown: getFestivalCountdown(festival) }))
++    .sort((a, b) => {
++      if (a.countdown.hasPassed !== b.countdown.hasPassed) {
++        return a.countdown.hasPassed ? 1 : -1;
++      }
++      return a.countdown.daysUntil - b.countdown.daysUntil;
++    });
++
+   return (
+     <main>
+       <section className="page-hero">
+@@ -39,14 +50,12 @@
+ 
+       <section className="section section-light">
+         <div className="festival-grid">
+-          {festivals.map((festival) => {
+-            const countdown = getFestivalCountdown(festival);
+-
++          {sortedFestivals.map(({ festival, countdown }) => {
+             return (
+               <Link
+                 key={festival.name}
+                 href={`/festivals/${slugify(festival.name)}`}
+-                className="festival-card-link"
++                className={`festival-card-link${countdown.hasPassed ? " festival-card-link-passed" : ""}`}
+               >
+                 <article className="festival-card">
+                   <div className="festival-image">
+@@ -56,7 +65,11 @@
+                       {festival.month}
+                     </span>
+ 
+-                    {!countdown.hasPassed && (
++                    {countdown.hasPassed ? (
++                      <span className="festival-days-badge festival-days-badge-passed">
++                        Passed this year
++                      </span>
++                    ) : (
+                       <span className="festival-days-badge">
+                         {countdown.daysUntil === 0
+                           ? "Today"
+--- a/app/festivals/[slug]/page.tsx
++++ b/app/festivals/[slug]/page.tsx
+@@ -3,6 +3,7 @@
+ import type { Metadata } from "next";
+ import { ArrowLeft, CalendarDays, MapPin, Sparkles } from "lucide-react";
+ import { festivals } from "@/data/festivals";
++import { temples } from "@/data/temples";
+ import { slugify } from "@/lib/slug";
+ import FestivalCountdown from "@/components/FestivalCountdown";
+ 
+@@ -43,6 +44,10 @@
+   const festival = festivals.find((item) => slugify(item.name) === slug);
+   if (!festival) notFound();
+ 
++  const relatedTemples = festival.relatedTempleSlugs
++    .map((templeSlug) => temples.find((temple) => temple.slug === templeSlug))
++    .filter((temple): temple is (typeof temples)[number] => Boolean(temple));
++
+   return (
+     <main>
+       <section className="detail-hero">
+@@ -64,6 +69,36 @@
+         </div>
+       </section>
+ 
++      {relatedTemples.length > 0 && (
++        <section className="section section-light">
++          <div className="section-heading">
++            <div className="eyebrow">✦ Where it&apos;s celebrated</div>
++            <h2>Celebrated at these temples</h2>
++          </div>
++
++          <div className="festival-temples-grid">
++            {relatedTemples.map((temple) => (
++              <Link
++                key={temple.slug}
++                href={`/temples/${temple.slug}`}
++                className="festival-temple-card"
++              >
++                <div className="festival-temple-image">
++                  <img src={temple.image} alt={temple.name} />
++                </div>
++                <div className="festival-temple-info">
++                  <h4>{temple.name}</h4>
++                  <p>
++                    <MapPin size={14} style={{ verticalAlign: "middle" }} />{" "}
++                    {temple.city}, {temple.state}
++                  </p>
++                </div>
++              </Link>
++            ))}
++          </div>
++        </section>
++      )}
++
+       <section className="section section-dark">
+         <div className="section-heading">
+           <div className="eyebrow">✦ Plan around the festival</div>
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -621,6 +621,76 @@
+   letter-spacing: 0.3px;
+ }
+ 
++.festival-days-badge-passed {
++  background: rgba(90, 80, 74, 0.75);
++  color: #e7ded6;
++}
++
++.festival-card-link-passed .festival-card {
++  opacity: 0.55;
++  filter: grayscale(35%);
++}
++
++.festival-card-link-passed .festival-card:hover {
++  opacity: 0.85;
++}
++
++.festival-temples-grid {
++  max-width: 1250px;
++  margin: 30px auto 0;
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
++  gap: 20px;
++}
++
++.festival-temple-card {
++  display: block;
++  overflow: hidden;
++  border-radius: 18px;
++  background: #fffdf9;
++  border: 1px solid var(--border);
++  box-shadow: 0 10px 24px rgba(88, 32, 15, 0.10);
++  transition: transform 0.25s ease, box-shadow 0.25s ease;
++  color: inherit;
++  text-decoration: none;
++}
++
++.festival-temple-card:hover {
++  transform: translateY(-5px);
++  box-shadow: 0 16px 32px rgba(88, 32, 15, 0.16);
++}
++
++.festival-temple-image {
++  height: 140px;
++  overflow: hidden;
++}
++
++.festival-temple-image img {
++  width: 100%;
++  height: 100%;
++  object-fit: cover;
++  display: block;
++}
++
++.festival-temple-info {
++  padding: 14px 16px;
++}
++
++.festival-temple-info h4 {
++  margin: 0 0 6px;
++  font: 700 17px "Playfair Display", serif;
++  color: #542019;
++}
++
++.festival-temple-info p {
++  margin: 0;
++  font-size: 13px;
++  color: #80665d;
++  display: flex;
++  align-items: center;
++  gap: 5px;
++}
++
+ .festival-countdown {
+   margin: 22px 0;
+ }
