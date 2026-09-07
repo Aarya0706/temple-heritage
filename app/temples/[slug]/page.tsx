@@ -17,7 +17,11 @@ import { createClient } from "@/lib/supabase/server";
 import TempleAskWidget from "@/components/TempleAskWidget";
 import AuspiciousDatesWidget from "@/components/AuspiciousDatesWidget";
 import VisitorInfoSection from "@/components/VisitorInfoSection";
-import DetailSectionNav from "@/components/DetailSectionNav";
+import TempleTabs, { type TempleTab } from "@/components/TempleTabs";
+import {
+  getAuspiciousWeekday,
+  getUpcomingFestivalsForTemple,
+} from "@/lib/auspicious-dates";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -108,16 +112,13 @@ export default async function TempleDetail({
                 {temple.city}, {temple.state}
               </span>
 
-              <a
-                href="#reviews"
+              <span
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 5,
                   color: "#9b6958",
                   fontWeight: 600,
-                  textDecoration: "none",
-                  borderBottom: "1px dashed #c9a58f",
                 }}
               >
                 {ratingSummary && ratingSummary.review_count > 0 ? (
@@ -129,7 +130,7 @@ export default async function TempleDetail({
                 ) : (
                   "No reviews yet — be the first"
                 )}
-              </a>
+              </span>
             </div>
 
             <p>{temple.description}</p>
@@ -176,53 +177,91 @@ export default async function TempleDetail({
         </div>
       </section>
 
-      <DetailSectionNav
-        sections={[
-          { id: "highlights", label: "Highlights" },
-          { id: "location", label: "Location" },
-          ...(temple.visitorInfo
-            ? [{ id: "visitor-info", label: "Visitor Info" }]
-            : []),
-          { id: "ask-ai", label: "Ask AI" },
-          { id: "reviews", label: "Reviews" },
-        ]}
-      />
+      {(() => {
+        const hasTimings =
+          getAuspiciousWeekday(temple) !== null ||
+          getUpcomingFestivalsForTemple(temple.slug).length > 0;
 
-      <section className="detail-section" id="highlights">
-        <div className="eyebrow">✦ Highlights</div>
-        <h2>What to explore</h2>
+        const tabs: TempleTab[] = [
+          {
+            id: "highlights",
+            label: "Highlights",
+            content: (
+              <section className="detail-section">
+                <div className="eyebrow">✦ Highlights</div>
+                <h2>What to explore</h2>
 
-        <div className="highlight-grid">
-          {temple.highlights.map((highlight, index) => (
-            <HighlightCard
-              key={highlight}
-              highlight={highlight}
-              description={
-                temple.highlightDescriptions?.[index] ??
-                `A memorable part of the ${temple.name} pilgrimage experience.`
-              }
-              detail={
-                temple.highlightDetails?.[index] ??
-                temple.highlightDescriptions?.[index] ??
-                `Learn more about ${highlight} as part of the ${temple.name} visit.`
-              }
-              image={temple.highlightImages?.[index] || temple.image}
-              number={String(index + 1).padStart(2, "0")}
-              templeName={temple.name}
-            />
-          ))}
-        </div>
-      </section>
+                <div className="highlight-grid">
+                  {temple.highlights.map((highlight, index) => (
+                    <HighlightCard
+                      key={highlight}
+                      highlight={highlight}
+                      description={
+                        temple.highlightDescriptions?.[index] ??
+                        `A memorable part of the ${temple.name} pilgrimage experience.`
+                      }
+                      detail={
+                        temple.highlightDetails?.[index] ??
+                        temple.highlightDescriptions?.[index] ??
+                        `Learn more about ${highlight} as part of the ${temple.name} visit.`
+                      }
+                      image={temple.highlightImages?.[index] || temple.image}
+                      number={String(index + 1).padStart(2, "0")}
+                      templeName={temple.name}
+                    />
+                  ))}
+                </div>
+              </section>
+            ),
+          },
+          {
+            id: "location",
+            label: "Location",
+            content: (
+              <section className="detail-section">
+                <div className="eyebrow">✦ Getting There</div>
+                <h2>Location</h2>
+                <TempleMap name={temple.name} city={temple.city} state={temple.state} />
+              </section>
+            ),
+          },
+        ];
 
-      <section className="detail-section" id="location">
-        <div className="eyebrow">✦ Getting There</div>
-        <h2>Location</h2>
-        <TempleMap name={temple.name} city={temple.city} state={temple.state} />
-      </section>
+        if (hasTimings) {
+          tabs.push({
+            id: "timings",
+            label: "Timings",
+            content: <AuspiciousDatesWidget temple={temple} />,
+          });
+        }
 
-      <VisitorInfoSection temple={temple} />
+        if (temple.visitorInfo) {
+          tabs.push({
+            id: "visitor-info",
+            label: "Visitor Info",
+            content: <VisitorInfoSection temple={temple} />,
+          });
+        }
 
-      <AuspiciousDatesWidget temple={temple} />
+        tabs.push(
+          {
+            id: "ask-ai",
+            label: "Ask AI",
+            content: (
+              <TempleAskWidget templeSlug={temple.slug} templeName={temple.name} />
+            ),
+          },
+          {
+            id: "reviews",
+            label: "Reviews",
+            content: (
+              <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
+            ),
+          }
+        );
+
+        return <TempleTabs tabs={tabs} />;
+      })()}
 
       <section className="section section-dark">
         <div className="section-heading">
@@ -245,9 +284,6 @@ export default async function TempleDetail({
           </Link>
         </div>
       </section>
-
-      <TempleAskWidget templeSlug={temple.slug} templeName={temple.name} />
-      <ReviewsSection templeSlug={temple.slug} templeName={temple.name} />
     </main>
   );
 }

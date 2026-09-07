@@ -11,14 +11,16 @@ export default function VisitorInfoSection({ temple }: VisitorInfoSectionProps) 
   if (!visitorInfo) return null;
 
   return (
-    <section className="detail-section" id="visitor-info">
+    <section className="detail-section">
       <div className="eyebrow">✦ Before You Go</div>
       <h2>Visitor Info</h2>
 
       <div className="visitor-info-grid">
         <div className="visitor-info-card">
           <div className="visitor-info-card-head">
-            <Shirt size={18} />
+            <span className="visitor-info-card-icon">
+              <Shirt size={17} />
+            </span>
             <h3>Dress Code</h3>
           </div>
           <p>{visitorInfo.dressCode}</p>
@@ -27,7 +29,9 @@ export default function VisitorInfoSection({ temple }: VisitorInfoSectionProps) 
         {visitorInfo.officialWebsite && (
           <div className="visitor-info-card">
             <div className="visitor-info-card-head">
-              <Globe size={18} />
+              <span className="visitor-info-card-icon">
+                <Globe size={17} />
+              </span>
               <h3>Official Website</h3>
             </div>
             <a
@@ -43,7 +47,9 @@ export default function VisitorInfoSection({ temple }: VisitorInfoSectionProps) 
 
         <div className="visitor-info-card visitor-info-card-wide">
           <div className="visitor-info-card-head">
-            <MapPinned size={18} />
+            <span className="visitor-info-card-icon">
+              <MapPinned size={17} />
+            </span>
             <h3>Worth Combining Nearby</h3>
           </div>
           <ul className="visitor-info-places">

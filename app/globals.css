@@ -404,10 +404,6 @@ button { cursor: pointer; }
 .info-box span { display:block;color:#9b6958;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px; }
 .info-box strong { color:#542019; }
 .detail-section { max-width:1200px;margin:0 auto;padding:70px 5.5vw; }
-.detail-section#reviews { scroll-margin-top: 130px; }
-.detail-section#location { scroll-margin-top: 130px; }
-.detail-section#visitor-info { scroll-margin-top: 130px; }
-.detail-section#highlights { scroll-margin-top: 130px; }
 .detail-section h2 { font:700 34px "Playfair Display",serif; }
 .detail-section p { color:#705d55;line-height:1.85; }
 
@@ -2766,11 +2762,12 @@ img { max-width: 100%; }
 }
 
 .visitor-info-card {
-  background: #fff7ec;
-  border: 1px solid rgba(150, 50, 20, 0.14);
+  background: linear-gradient(160deg, #fff1e0 0%, #ffe4c7 100%);
+  border: 1px solid rgba(165, 45, 21, 0.18);
+  border-left: 4px solid #d9631f;
   border-radius: 20px;
   padding: 22px 24px;
-  box-shadow: 0 12px 30px rgba(88, 32, 15, 0.06);
+  box-shadow: 0 12px 30px rgba(88, 32, 15, 0.08);
 }
 
 .visitor-info-card-wide {
@@ -2780,19 +2777,29 @@ img { max-width: 100%; }
 .visitor-info-card-head {
   display: flex;
   align-items: center;
-  gap: 9px;
-  color: #a52d15;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.visitor-info-card-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: #a52d15;
+  color: #fff5e9;
+  flex: none;
 }
 
 .visitor-info-card-head h3 {
-  font: 700 16px "Playfair Display", serif;
-  color: #542019;
+  font: 700 17px "Playfair Display", serif;
+  color: #6b2210;
   margin: 0;
 }
 
 .visitor-info-card p {
-  color: #705c54;
+  color: #6b4a3a;
   line-height: 1.75;
   font-size: 15px;
   margin: 0;
@@ -2802,9 +2809,9 @@ img { max-width: 100%; }
   display: inline-flex;
   align-items: center;
   color: #a52d15;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
-  border-bottom: 1px dashed #c9a58f;
+  border-bottom: 1px dashed #c9752e;
   word-break: break-word;
 }
 
@@ -2818,22 +2825,26 @@ img { max-width: 100%; }
   padding: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .visitor-info-places li {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(165, 45, 21, 0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
 }
 
 .visitor-info-places strong {
-  color: #542019;
+  color: #8c2416;
   font-size: 14.5px;
 }
 
 .visitor-info-places span {
-  color: #705c54;
+  color: #6b4a3a;
   font-size: 13.5px;
   line-height: 1.6;
 }
@@ -2847,7 +2858,7 @@ img { max-width: 100%; }
   }
 }
 
-/* Temple detail page — section quick-nav ("what's on this page") */
+/* Temple detail page — section tabs */
 .detail-subnav {
   background: #fff9f1;
   border-bottom: 1px solid rgba(128, 48, 28, 0.13);
@@ -2873,9 +2884,12 @@ img { max-width: 100%; }
   font-size: 14px;
   font-weight: 600;
   color: #9b6958;
-  text-decoration: none;
-  white-space: nowrap;
+  background: none;
+  border: none;
   border-bottom: 2px solid transparent;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -2886,4 +2900,19 @@ img { max-width: 100%; }
 .detail-subnav-link-active {
   color: #a52d15;
   border-bottom-color: #a52d15;
+}
+
+.temple-tab-panel {
+  animation: temple-tab-fade 0.2s ease;
+}
+
+@keyframes temple-tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
