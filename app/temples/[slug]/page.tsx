@@ -16,6 +16,7 @@ import TempleMap from "@/components/TempleMap";
 import { createClient } from "@/lib/supabase/server";
 import TempleAskWidget from "@/components/TempleAskWidget";
 import AuspiciousDatesWidget from "@/components/AuspiciousDatesWidget";
+import VisitorInfoSection from "@/components/VisitorInfoSection";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -118,6 +119,20 @@ export default async function TempleDetail({
                 View on map
               </a>
 
+              {temple.visitorInfo && (
+                <a
+                  href="#visitor-info"
+                  style={{
+                    color: "#9b6958",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    borderBottom: "1px dashed #c9a58f",
+                  }}
+                >
+                  Visitor info
+                </a>
+              )}
+
               <a
                 href="#reviews"
                 style={{
@@ -217,6 +232,8 @@ export default async function TempleDetail({
         <h2>Location</h2>
         <TempleMap name={temple.name} city={temple.city} state={temple.state} />
       </section>
+
+      <VisitorInfoSection temple={temple} />
 
       <AuspiciousDatesWidget temple={temple} />
 

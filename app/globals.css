@@ -406,6 +406,7 @@ button { cursor: pointer; }
 .detail-section { max-width:1200px;margin:0 auto;padding:70px 5.5vw; }
 .detail-section#reviews { scroll-margin-top: 130px; }
 .detail-section#location { scroll-margin-top: 130px; }
+.detail-section#visitor-info { scroll-margin-top: 130px; }
 .detail-section h2 { font:700 34px "Playfair Display",serif; }
 .detail-section p { color:#705d55;line-height:1.85; }
 
@@ -2751,5 +2752,96 @@ img { max-width: 100%; }
   .passport-btn {
     flex: 1;
     justify-content: center;
+  }
+}
+
+/* Visitor Info section (temple detail page) */
+.visitor-info-grid {
+  max-width: 1200px;
+  margin: 32px auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.visitor-info-card {
+  background: #fff7ec;
+  border: 1px solid rgba(150, 50, 20, 0.14);
+  border-radius: 20px;
+  padding: 22px 24px;
+  box-shadow: 0 12px 30px rgba(88, 32, 15, 0.06);
+}
+
+.visitor-info-card-wide {
+  grid-column: 1 / -1;
+}
+
+.visitor-info-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a52d15;
+  margin-bottom: 10px;
+}
+
+.visitor-info-card-head h3 {
+  font: 700 16px "Playfair Display", serif;
+  color: #542019;
+  margin: 0;
+}
+
+.visitor-info-card p {
+  color: #705c54;
+  line-height: 1.75;
+  font-size: 15px;
+  margin: 0;
+}
+
+.visitor-info-link {
+  display: inline-flex;
+  align-items: center;
+  color: #a52d15;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px dashed #c9a58f;
+  word-break: break-word;
+}
+
+.visitor-info-link:hover {
+  border-bottom-style: solid;
+}
+
+.visitor-info-places {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.visitor-info-places li {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.visitor-info-places strong {
+  color: #542019;
+  font-size: 14.5px;
+}
+
+.visitor-info-places span {
+  color: #705c54;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .visitor-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .visitor-info-places {
+    grid-template-columns: 1fr;
   }
 }

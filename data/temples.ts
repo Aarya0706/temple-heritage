@@ -28,6 +28,15 @@ export type Temple = {
   // Keep this to hard facts (distances, hours, "no road access", nearest
   // transport hub) — not itinerary advice, which belongs in the prompt.
   accessNotes?: string;
+  // Practical visitor logistics shown in the temple detail page's Visitor
+  // Info section: what to wear, an official/trust site if one exists, and
+  // a short list of genuinely nearby sights worth combining with the
+  // visit. Optional since not every temple has a dedicated trust website.
+  visitorInfo?: {
+    officialWebsite?: string;
+    dressCode: string;
+    nearbyPlaces: { name: string; description: string }[];
+  };
 };
 
 export const temples: Temple[] = [
@@ -65,7 +74,15 @@ export const temples: Temple[] = [
     bestTime: "October – March",
     type: "Historic Temple",
     highlights: ["South Tower", "Hall of Thousand Pillars", "Meenakshi Shrine", "Evening ceremonies"],
-    accessNotes: "Nearest airport: Madurai Airport (IXM), about 10-12 km away, with flights from Chennai, Bengaluru and Delhi. Nearest railway station: Madurai Junction, about 2-3 km from the temple, well connected to major Indian cities. Auto-rickshaws and taxis run from both to the temple."
+    accessNotes: "Nearest airport: Madurai Airport (IXM), about 10-12 km away, with flights from Chennai, Bengaluru and Delhi. Nearest railway station: Madurai Junction, about 2-3 km from the temple, well connected to major Indian cities. Auto-rickshaws and taxis run from both to the temple.",
+    visitorInfo: {
+      dressCode: "Traditional Indian attire is expected inside the temple. Men should wear a dhoti/veshti or pants (no shorts); women should wear a saree, salwar kameez or long skirt. Sleeveless tops and shorts aren't allowed past the entrance, and phones/cameras are checked at security.",
+      nearbyPlaces: [
+        { name: "Thirumalai Nayakkar Mahal", description: "A 17th-century Indo-Saracenic palace a short ride away, known for its huge courtyard and stucco work." },
+        { name: "Vandiyur Mariamman Teppakulam", description: "A large temple tank used for Madurai's annual float festival, ringed by mandapas." },
+        { name: "Alagar Kovil", description: "A hillside Vishnu temple around 21 km from the city, tied to the Meenakshi Kalyanam festival story." },
+      ],
+    },
   },
   {
     slug: "dwarkadhish",
@@ -101,7 +118,15 @@ export const temples: Temple[] = [
     bestTime: "November – February",
     type: "Vaishnav Temple",
     highlights: ["Main shrine", "Gomti Ghat", "Dwarka heritage walk", "Sunset by the coast"],
-    accessNotes: "Dwarka has no airport of its own; the nearest is Jamnagar Airport, roughly 130 km away, with flights from Mumbai and Ahmedabad. Dwarka Railway Station is only about 2 km from the temple and is well connected to Ahmedabad, Mumbai, Delhi and other major cities. Auto-rickshaws and taxis cover the short last stretch to the temple."
+    accessNotes: "Dwarka has no airport of its own; the nearest is Jamnagar Airport, roughly 130 km away, with flights from Mumbai and Ahmedabad. Dwarka Railway Station is only about 2 km from the temple and is well connected to Ahmedabad, Mumbai, Delhi and other major cities. Auto-rickshaws and taxis cover the short last stretch to the temple.",
+    visitorInfo: {
+      dressCode: "Modest, traditional clothing is preferred — dhoti/kurta for men, saree or salwar kameez for women. Leather items like belts and wallets are not allowed inside the sanctum, and footwear is left at the entrance.",
+      nearbyPlaces: [
+        { name: "Nageshwar Jyotirlinga", description: "One of the twelve Jyotirlingas, about 15-17 km away, easily combined with Dwarka in a day." },
+        { name: "Bet Dwarka", description: "An island shrine linked to Krishna's residence, reached by a short boat ride from Okha." },
+        { name: "Rukmini Devi Temple", description: "A 12th-century temple dedicated to Krishna's consort, roughly 2 km from the main temple." },
+      ],
+    },
   },
   {
     slug: "jagannath-puri",
@@ -137,7 +162,15 @@ export const temples: Temple[] = [
     bestTime: "October – February",
     type: "Vaishnav Temple",
     highlights: ["Main temple", "Rath Yatra traditions", "Grand Road", "Puri beach"],
-    accessNotes: "Puri has no airport; the nearest is Biju Patnaik International Airport in Bhubaneswar, about 60 km away, with flights from Delhi, Mumbai, Kolkata, Chennai and Bengaluru. Puri Railway Station is only 2-3 km from the temple and has direct trains from Delhi, Kolkata, Chennai and Mumbai. Konark's Sun Temple is about 35 km away and makes an easy same-day add-on by taxi or bus."
+    accessNotes: "Puri has no airport; the nearest is Biju Patnaik International Airport in Bhubaneswar, about 60 km away, with flights from Delhi, Mumbai, Kolkata, Chennai and Bengaluru. Puri Railway Station is only 2-3 km from the temple and has direct trains from Delhi, Kolkata, Chennai and Mumbai. Konark's Sun Temple is about 35 km away and makes an easy same-day add-on by taxi or bus.",
+    visitorInfo: {
+      dressCode: "Traditional dress is strongly preferred and non-Hindus are not permitted inside the main temple. Men typically wear dhoti/kurta, women wear saree or salwar kameez. Leather belts, bags and footwear must be left outside.",
+      nearbyPlaces: [
+        { name: "Puri Beach", description: "The Bay of Bengal coastline right by the temple town, popular for a sunrise or sunset walk." },
+        { name: "Gundicha Temple", description: "The deities' 'garden house', about 3 km away and the destination of the annual Rath Yatra procession." },
+        { name: "Konark Sun Temple", description: "The UNESCO-listed chariot-shaped temple, roughly 35 km up the coast, usually visited as a half-day trip." },
+      ],
+    },
   },
   {
     slug: "kashi-vishwanath",
@@ -159,6 +192,15 @@ export const temples: Temple[] = [
       "the layover - NOT a quick same-evening hop. Do not describe this leg " +
       "as a short direct flight, and do not schedule sightseeing at the " +
       "destination the same evening the flight departs.",
+    visitorInfo: {
+      officialWebsite: "https://www.shrikashivishwanath.org/",
+      dressCode: "Modest clothing is recommended for the crowded sanctum — avoid shorts and sleeveless tops. Leather goods, phones and bags generally have to be deposited at a cloakroom before entering the temple corridor.",
+      nearbyPlaces: [
+        { name: "Dashashwamedh Ghat", description: "Varanasi's main ghat on the Ganga, a short walk away and the site of the nightly Ganga Aarti." },
+        { name: "Manikarnika Ghat", description: "One of the city's oldest and most sacred cremation ghats, close to the temple lanes." },
+        { name: "Sarnath", description: "The site of the Buddha's first sermon, about 10 km from the temple, with the Dhamek Stupa and museum." },
+      ],
+    },
     highlightDetails: [
       "The Vishwanath shrine is dedicated to Lord Shiva and is one of Varanasi's most important pilgrimage sites. Its location in the old city places it within a dense network of lanes, shrines and sacred spaces.",
       "Ganga Aarti is an evening river ritual featuring lamps, chants and coordinated ceremony. It is one of the most atmospheric ways to experience Varanasi's living relationship with the Ganga.",
@@ -201,6 +243,15 @@ export const temples: Temple[] = [
       "by road is ~210 km and takes 7-10 hours on its own. The drive to " +
       "Gaurikund and the trek must NOT be scheduled on the same day - treat " +
       "them as two separate dedicated days at minimum, in each direction.",
+    visitorInfo: {
+      officialWebsite: "https://www.badrinath-kedarnath.gov.in/",
+      dressCode: "Warm, layered clothing is essential given the high-altitude weather, worn over traditional or simple modest clothes for darshan. Waterproof trekking shoes are recommended for the uphill trek from Gaurikund.",
+      nearbyPlaces: [
+        { name: "Vasuki Tal", description: "A glacial lake about 6 km beyond the temple, reached by a steep trek with views of the Chaukhamba peaks." },
+        { name: "Gandhi Sarovar (Chorabari Tal)", description: "A small lake roughly 3-4 km above the temple, source of the 2013 flash flood and a popular short trek." },
+        { name: "Bhairavnath Temple", description: "A small shrine just above Kedarnath dedicated to the temple's guardian deity, Bhairav." },
+      ],
+    },
     highlightDetails: [
       "The Kedarnath shrine is a historic Shiva temple surrounded by high Himalayan peaks. The setting makes the temple experience as much about landscape and pilgrimage as architecture.",
       "The mountain approach is a major part of the Kedarnath journey, with a long route through steep Himalayan terrain. The physical journey is an important part of the pilgrimage experience.",
@@ -260,7 +311,16 @@ export const temples: Temple[] = [
     bestTime: "October – February",
     type: "Jyotirlinga",
     highlights: ["Main shrine", "Sea-facing promenade", "Evening sound-and-light show", "Nearby Prabhas Patan"],
-    accessNotes: "Nearest airport: Diu Airport, about 60-65 km away; Rajkot Airport (around 200 km) is a larger alternative with more connections. Nearest railway station: Somnath Railway Station, right by the temple (Veraval Junction, about 6-7 km away, is the better-connected option), with trains from Ahmedabad, Mumbai and Rajkot. Somnath is also linked by NH51 and other highways to major Gujarat cities."
+    accessNotes: "Nearest airport: Diu Airport, about 60-65 km away; Rajkot Airport (around 200 km) is a larger alternative with more connections. Nearest railway station: Somnath Railway Station, right by the temple (Veraval Junction, about 6-7 km away, is the better-connected option), with trains from Ahmedabad, Mumbai and Rajkot. Somnath is also linked by NH51 and other highways to major Gujarat cities.",
+    visitorInfo: {
+      officialWebsite: "https://somnath.org/",
+      dressCode: "Traditional, modest attire is recommended. Leather belts and bags are not permitted inside, and there's a cloakroom near the entrance for phones and cameras, which aren't allowed past security.",
+      nearbyPlaces: [
+        { name: "Triveni Sangam Ghat", description: "The confluence of three rivers next to the temple, considered sacred for a ritual bath before darshan." },
+        { name: "Bhalka Tirth", description: "The spot a few kilometres away traditionally associated with Krishna's departure from this world." },
+        { name: "Somnath Beach", description: "The Arabian Sea shoreline right behind the temple complex, especially scenic at sunset." },
+      ],
+    },
   },
   {
     slug: "tirupati",
@@ -296,7 +356,16 @@ export const temples: Temple[] = [
     bestTime: "September – February",
     type: "Vaishnav Temple",
     highlights: ["Tirumala hills", "Darshan", "Temple traditions", "Nearby waterfalls"],
-    accessNotes: "Nearest airport: Tirupati International Airport (Renigunta), about 15-16 km from Tirupati town and around 30-40 km from the Tirumala hilltop temple. Nearest railway station: Tirupati Railway Station, well connected to Chennai, Bengaluru, Hyderabad and Mumbai; from there, free APSRTC buses and taxis run up the ghat road to Tirumala. Pilgrims can also trek up via the Alipiri or Srivari Mettu footpaths."
+    accessNotes: "Nearest airport: Tirupati International Airport (Renigunta), about 15-16 km from Tirupati town and around 30-40 km from the Tirumala hilltop temple. Nearest railway station: Tirupati Railway Station, well connected to Chennai, Bengaluru, Hyderabad and Mumbai; from there, free APSRTC buses and taxis run up the ghat road to Tirumala. Pilgrims can also trek up via the Alipiri or Srivari Mettu footpaths.",
+    visitorInfo: {
+      officialWebsite: "https://www.tirumala.org/",
+      dressCode: "Traditional attire is required for VIP/special darshan lines — dhoti or pyjama-kurta for men, saree or salwar kameez for women. Regular queue darshan is more relaxed but shorts and sleeveless clothing are discouraged. Devotees commonly undergo tonsure (head-shaving) here, though this is optional.",
+      nearbyPlaces: [
+        { name: "Sri Padmavathi Ammavari Temple", description: "A temple in nearby Tiruchanur dedicated to Venkateswara's consort; many pilgrims visit it before or after Tirumala." },
+        { name: "Akasa Ganga", description: "A waterfall close to the temple believed to be the source of water used for the deity's rituals." },
+        { name: "Silathoranam", description: "A naturally formed rock arch a short walk from the temple, a rare geological feature." },
+      ],
+    },
   },
   {
     slug: "mahakaleshwar",
@@ -317,6 +386,15 @@ export const temples: Temple[] = [
       "takes 6-10 hours door-to-door including the layover, not a short " +
       "same-day hop. Do not schedule relaxed same-evening activity in Ujjain " +
       "on a day that also includes a Varanasi departure.",
+    visitorInfo: {
+      officialWebsite: "https://shrimahakaleshwar.com/",
+      dressCode: "The pre-dawn Bhasma Aarti requires men to wear a plain dhoti (provided/rented on site) without a stitched upper garment; women should wear a saree. Regular darshan just calls for modest traditional clothing.",
+      nearbyPlaces: [
+        { name: "Ram Ghat", description: "A bathing ghat on the Shipra river, a short walk from the temple and lively during the Kumbh Mela." },
+        { name: "Kal Bhairav Temple", description: "A Tantric Shiva shrine a few kilometres away, known for its unusual liquor offerings to the deity." },
+        { name: "Shri Mahakal Lok corridor", description: "The temple's expanded heritage corridor lined with sculptures depicting stories of Shiva." },
+      ],
+    },
     highlightDetails: [
       "Bhasma Aarti is the best-known early-morning ritual associated with Mahakaleshwar. Because it is a special worship experience, visitors should check the current booking and entry rules before planning around it.",
       "Mahakal Lok is a large public-facing heritage and pilgrimage area designed around the Mahakaleshwar precinct. Its sculpture, pathways and open spaces give visitors more context around the main shrine.",
@@ -361,6 +439,15 @@ export const temples: Temple[] = [
       "never on the same day. Badrinath to/from Kedarnath (via Sonprayag, " +
       "Rudraprayag, Chamoli, Joshimath) is ~215-225 km and takes 7-10 hours " +
       "by road - it is its own dedicated travel day, not a same-day hop.",
+    visitorInfo: {
+      officialWebsite: "https://www.badrinath-kedarnath.gov.in/",
+      dressCode: "Warm layered clothing is necessary for the Himalayan cold, worn over simple traditional attire for darshan. A dip in the Tapt Kund hot spring before entering the temple is a common ritual.",
+      nearbyPlaces: [
+        { name: "Mana Village", description: "India's northernmost village, about 3 km away, near the source of the Saraswati river." },
+        { name: "Tapt Kund", description: "Natural hot sulphur springs right at the temple steps, where pilgrims traditionally bathe before darshan." },
+        { name: "Vasudhara Falls", description: "A waterfall roughly 5-6 km past Mana, reached on foot along the Alaknanda valley." },
+      ],
+    },
     highlightDetails: [
       "The main Badrinath shrine is dedicated to Lord Vishnu and is one of the Char Dham pilgrimage destinations. Its Himalayan location is central to the character of the visit.",
       "Tapt Kund is a natural hot-water spring near the temple and is traditionally associated with pilgrimage bathing. It adds a distinct ritual and geothermal element to the Badrinath experience.",
@@ -420,7 +507,16 @@ export const temples: Temple[] = [
     bestTime: "October – March",
     type: "Modern Temple",
     highlights: ["Main monument", "Musical fountain show", "Exhibition halls", "Yagnapurush Kund"],
-    accessNotes: "Nearest airport: Indira Gandhi International Airport, Delhi, about 20-25 km away. Nearest metro station: Akshardham on the Delhi Metro Blue Line, a short walk from the temple gate — the easiest way in from anywhere in the city. Nearest railway stations: Hazrat Nizamuddin (about 6 km) and New Delhi Railway Station (about 7-11 km), both linked to Akshardham by metro."
+    accessNotes: "Nearest airport: Indira Gandhi International Airport, Delhi, about 20-25 km away. Nearest metro station: Akshardham on the Delhi Metro Blue Line, a short walk from the temple gate — the easiest way in from anywhere in the city. Nearest railway stations: Hazrat Nizamuddin (about 6 km) and New Delhi Railway Station (about 7-11 km), both linked to Akshardham by metro.",
+    visitorInfo: {
+      officialWebsite: "https://akshardham.com/",
+      dressCode: "Smart, modest clothing is fine — no strict dress code, but shorts above the knee and sleeveless tops are best avoided. Bags, phones, cameras and electronics are not allowed inside and must be left at the cloakroom.",
+      nearbyPlaces: [
+        { name: "Yamuna Riverfront", description: "The Akshardham complex sits right along the Yamuna, with landscaped gardens nearby." },
+        { name: "ISKCON Temple Delhi", description: "A Krishna temple a short drive away, known for its multimedia exhibits on the Bhagavad Gita." },
+        { name: "Lotus Temple", description: "The Baháʼí House of Worship, about 8-9 km away, known for its distinctive lotus-shaped architecture." },
+      ],
+    },
   },
   {
     slug: "konark-sun-temple",
@@ -456,7 +552,15 @@ export const temples: Temple[] = [
     bestTime: "October – February",
     type: "Historic Temple",
     highlights: ["Chariot wheels", "Stone carvings", "Nearby Chandrabhaga beach", "Konark Dance Festival"],
-    accessNotes: "Konark has no airport or railway station of its own. Nearest airport: Biju Patnaik International Airport, Bhubaneswar, about 60-65 km away. Nearest railway station: Puri, about 30-35 km away (Bhubaneswar station is a farther alternative at roughly 60-65 km). Both Puri and Bhubaneswar are connected to Konark by regular buses and taxis, about a 1-1.5 hour drive."
+    accessNotes: "Konark has no airport or railway station of its own. Nearest airport: Biju Patnaik International Airport, Bhubaneswar, about 60-65 km away. Nearest railway station: Puri, about 30-35 km away (Bhubaneswar station is a farther alternative at roughly 60-65 km). Both Puri and Bhubaneswar are connected to Konark by regular buses and taxis, about a 1-1.5 hour drive.",
+    visitorInfo: {
+      dressCode: "As an ASI-protected monument rather than an active shrine, there's no strict dress code — comfortable, respectful clothing and closed footwear (for walking the stone grounds) are recommended. Sections of the carvings are explicit temple art; visitor discretion is advised.",
+      nearbyPlaces: [
+        { name: "Chandrabhaga Beach", description: "A quiet beach about 3 km from the temple, less crowded than Puri's." },
+        { name: "Konark Archaeological Museum", description: "An ASI museum near the temple displaying sculptures recovered from the site." },
+        { name: "Puri Jagannath Temple", description: "About 35 km away, commonly paired with Konark on a day trip along the coast." },
+      ],
+    },
   },
   {
     slug: "brihadeeswarar",
@@ -492,7 +596,15 @@ export const temples: Temple[] = [
     bestTime: "October – March",
     type: "Historic Temple",
     highlights: ["Vimana tower", "Nandi statue", "Chola frescoes", "Temple tank"],
-    accessNotes: "Thanjavur has no airport; the nearest is Tiruchirappalli (Trichy) International Airport, about 55-60 km away, with flights from Chennai, Bengaluru and international routes to Singapore and Dubai. Nearest railway station: Thanjavur Junction, about 2-3 km from the temple, connected to Chennai, Madurai and Trichy."
+    accessNotes: "Thanjavur has no airport; the nearest is Tiruchirappalli (Trichy) International Airport, about 55-60 km away, with flights from Chennai, Bengaluru and international routes to Singapore and Dubai. Nearest railway station: Thanjavur Junction, about 2-3 km from the temple, connected to Chennai, Madurai and Trichy.",
+    visitorInfo: {
+      dressCode: "As a functioning temple and UNESCO monument, modest traditional clothing is recommended; footwear must be removed before entering the courtyard. Hats and shoes can be left at a counter near the entrance.",
+      nearbyPlaces: [
+        { name: "Thanjavur Royal Palace", description: "The former Nayak and Maratha palace complex in the city, including the Saraswathi Mahal Library." },
+        { name: "Airavatesvara Temple", description: "Another Chola-era UNESCO temple in nearby Darasuram, known for its intricate stone chariot design." },
+        { name: "Gangaikonda Cholapuram", description: "The third of the 'Great Living Chola Temples', about 35 km away, built by Rajendra Chola I." },
+      ],
+    },
   }
   ,{
     slug: "mallikarjuna",
@@ -537,6 +649,14 @@ export const temples: Temple[] = [
       "Krishna River",
     ],
     accessNotes: "Nearest airport: Rajiv Gandhi International Airport, Hyderabad, about 200-220 km away. Nearest railway station: Markapur Road, about 80-90 km away, from where buses and taxis cover the rest via NH183. Srisailam is most commonly reached by direct bus or taxi from Hyderabad, roughly 5-6 hours by road.",
+    visitorInfo: {
+      dressCode: "Traditional, modest clothing is expected — men in dhoti/kurta, women in saree or salwar kameez are common for darshan. Footwear is left outside and photography inside the sanctum is usually restricted.",
+      nearbyPlaces: [
+        { name: "Srisailam Dam", description: "A large dam on the Krishna river a few kilometres from the temple, with a viewpoint over the reservoir." },
+        { name: "Akka Mahadevi Caves", description: "A cluster of limestone caves associated with the poet-saint, reachable by a short boat and jeep trip." },
+        { name: "Patala Ganga", description: "The ghat where the Krishna river is accessed for a ritual bath, connected to the temple by a ropeway." },
+      ],
+    },
   },
 
   {
@@ -581,6 +701,14 @@ export const temples: Temple[] = [
       "Mamleshwar Temple",
     ],
     accessNotes: "Nearest airport: Devi Ahilyabai Holkar Airport, Indore, about 75-80 km away. Nearest railway station: Omkareshwar Road (Mortakka), about 12 km from the temple, though only a few trains stop there; Khandwa Junction (about 70-72 km) and Indore (about 77 km) are the better-connected railheads. Most pilgrims drive from Indore via NH-52, about 2-2.5 hours.",
+    visitorInfo: {
+      dressCode: "Simple, modest traditional attire is recommended, and pilgrims often bathe in the Narmada before darshan. The temple sits on an island, so comfortable footwear for walking/crossing the bridge helps.",
+      nearbyPlaces: [
+        { name: "Mamleshwar Temple", description: "A twin Jyotirlinga shrine on the mainland bank, considered part of the same pilgrimage." },
+        { name: "Narmada Ghat", description: "The riverside steps where pilgrims bathe and boats cross to the temple island." },
+        { name: "Statue of Oneness", description: "A large statue of Adi Shankaracharya on a nearby hilltop, with a museum on his life and teachings." },
+      ],
+    },
   },
 
   {
@@ -625,6 +753,14 @@ export const temples: Temple[] = [
       "Wildlife sanctuary",
     ],
     accessNotes: "There is no airport or major railway station near Bhimashankar. Nearest airport: Pune Airport, about 110-120 km away. Nearest railway station: Pune Junction, about 110 km away (Karjat, roughly 100-170 km depending on route, is a secondary option). Buses run from Pune's Shivajinagar bus stand; the drive takes about 3-4 hours through the Sahyadri hills.",
+    visitorInfo: {
+      dressCode: "Modest clothing suited to a forest trek is a good idea — closed shoes, layers, and simple traditional wear for the darshan itself. The temple sits inside a wildlife sanctuary, so quick access changes with weather.",
+      nearbyPlaces: [
+        { name: "Bhimashankar Wildlife Sanctuary", description: "The forest reserve surrounding the temple, home to the Malabar giant squirrel and several trekking trails." },
+        { name: "Gupt Bhimashankar", description: "A secondary shrine and waterfall a short trek from the main temple, believed to mark the river Bhima's source." },
+        { name: "Hanuman Lake", description: "A small lake near the temple complex, a quiet stop before or after darshan." },
+      ],
+    },
   },
 
   {
@@ -669,6 +805,14 @@ export const temples: Temple[] = [
       "Nivruttinath Temple",
     ],
     accessNotes: "Nearest airport: Nashik Airport (Ozar), about 50-55 km away, though flight options are limited; Mumbai's Chhatrapati Shivaji Maharaj International Airport (about 180 km) has far more connections. Nearest railway station: Nashik Road, about 28-30 km from the temple. From Nashik city, it's about a 45-75 minute drive via Trimbak Road.",
+    visitorInfo: {
+      dressCode: "Men are traditionally required to be bare-chested with a dhoti (available for rent on site) to enter the inner sanctum; women wear a saree or salwar kameez. Stitched clothing is generally not allowed for men at the sanctum itself.",
+      nearbyPlaces: [
+        { name: "Brahmagiri Hill", description: "The hill behind the temple regarded as the origin of the Godavari river, reached by a steep flight of steps." },
+        { name: "Kushavarta Kund", description: "A sacred bathing tank near the temple entrance, considered the visible source of the Godavari." },
+        { name: "Anjaneri Hill", description: "A hill about 7-8 km away traditionally identified as Hanuman's birthplace." },
+      ],
+    },
   },
 
   {
@@ -714,6 +858,14 @@ export const temples: Temple[] = [
       "Deoghar pilgrimage",
     ],
     accessNotes: "Nearest airport: Deoghar Airport, about 7-12 km from the temple, with flights from Delhi, Kolkata and Patna (Ranchi's Birsa Munda Airport, about 250 km away, is a well-connected backup). Nearest railway station: Jasidih Junction, about 7 km away, on the Delhi-Howrah line with strong connectivity to Kolkata, Delhi and Patna. Autos and taxis cover the last stretch into Deoghar.",
+    visitorInfo: {
+      dressCode: "Traditional modest clothing is recommended, especially during the Shravan month rush when the temple sees dense crowds of kanwariyas. Footwear is left outside the complex.",
+      nearbyPlaces: [
+        { name: "Basukinath Temple", description: "A Shiva-Parvati temple about 45 km away, often visited together with Vaidyanath by pilgrims." },
+        { name: "Naulakha Mandir", description: "A late-19th-century temple in Deoghar built in white marble, a short ride from the main shrine." },
+        { name: "Tapovan Hills", description: "A rocky hill area outside Deoghar with caves associated with meditating sages." },
+      ],
+    },
   },
 
   {
@@ -758,6 +910,14 @@ export const temples: Temple[] = [
       "Arabian Sea coast",
     ],
     accessNotes: "Nageshwar sits about 15-17 km from Dwarka and shares Dwarka's transport hubs. Nearest airport: Jamnagar Airport, roughly 130-145 km away, with flights from Mumbai and Ahmedabad. Nearest railway station: Dwarka Railway Station, about 15-17 km away, well connected to Ahmedabad, Mumbai and Delhi. It's commonly combined with Dwarkadhish Temple in the same day trip by taxi or auto.",
+    visitorInfo: {
+      dressCode: "Modest, traditional attire is recommended, consistent with other temples in the Dwarka pilgrimage circuit. Footwear is left at the entrance before approaching the sanctum.",
+      nearbyPlaces: [
+        { name: "Dwarkadhish Temple", description: "The main Krishna temple in Dwarka city, about 15-17 km away and usually combined in the same trip." },
+        { name: "Bet Dwarka", description: "An island shrine reached by boat from Okha, associated with Krishna's residence." },
+        { name: "Gomti Ghat", description: "The riverside ghat beside Dwarkadhish Temple, part of the same day's circuit." },
+      ],
+    },
   },
 
   {
@@ -803,6 +963,14 @@ export const temples: Temple[] = [
       "Rameswaram pilgrimage",
     ],
     accessNotes: "Nearest airport: Madurai Airport, about 170-180 km away, with flights from Chennai, Bengaluru and other major cities. Nearest railway station: Rameswaram Railway Station, only about 1-2 km from the temple, connected to Chennai, Madurai, Coimbatore and Tiruchirappalli. Rameswaram sits on Pamban Island, linked to the mainland by the Pamban Bridge.",
+    visitorInfo: {
+      dressCode: "Modest clothing is expected; men often go bare-chested with a dhoti for the sacred bathing ritual at the temple's 22 wells. Wet clothing from the well baths is common inside, so a change of clothes is worth carrying.",
+      nearbyPlaces: [
+        { name: "Dhanushkodi", description: "A near-abandoned ghost town at the tip of the island, about 20 km away, where the sea splits dramatically." },
+        { name: "Pamban Bridge", description: "The railway/road bridge connecting Rameswaram to the mainland, a landmark stop on the way in or out." },
+        { name: "Agni Theertham", description: "The seashore right by the temple where pilgrims traditionally bathe before darshan." },
+      ],
+    },
   },
 
   {
@@ -848,6 +1016,14 @@ export const temples: Temple[] = [
       "Verul heritage area",
     ],
     accessNotes: "Nearest airport: Chhatrapati Sambhajinagar (Aurangabad) Airport, about 30-37 km away, with flights from Mumbai, Delhi and Hyderabad. Nearest railway station: Aurangabad Railway Station, about 25-30 km away, connected to Mumbai and Pune. The temple sits right by the Ellora Caves, so the two are easily combined in one visit by taxi or bus from Aurangabad.",
+    visitorInfo: {
+      dressCode: "Simple, modest traditional clothing is recommended for darshan. Since Ellora Caves are usually visited the same day, comfortable footwear for walking the cave complex is worth carrying too.",
+      nearbyPlaces: [
+        { name: "Ellora Caves", description: "The UNESCO-listed rock-cut cave complex right next to the temple, spanning Buddhist, Hindu and Jain monuments." },
+        { name: "Daulatabad Fort", description: "A hilltop fortress about 15 km away, on the route between Grishneshwar and the city." },
+        { name: "Bibi Ka Maqbara", description: "A Mughal-era mausoleum in Chhatrapati Sambhajinagar, sometimes called the 'Mini Taj Mahal'." },
+      ],
+    },
   },
 ];
 
