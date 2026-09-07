@@ -407,6 +407,7 @@ button { cursor: pointer; }
 .detail-section#reviews { scroll-margin-top: 130px; }
 .detail-section#location { scroll-margin-top: 130px; }
 .detail-section#visitor-info { scroll-margin-top: 130px; }
+.detail-section#highlights { scroll-margin-top: 130px; }
 .detail-section h2 { font:700 34px "Playfair Display",serif; }
 .detail-section p { color:#705d55;line-height:1.85; }
 
@@ -2844,4 +2845,45 @@ img { max-width: 100%; }
   .visitor-info-places {
     grid-template-columns: 1fr;
   }
+}
+
+/* Temple detail page — section quick-nav ("what's on this page") */
+.detail-subnav {
+  background: #fff9f1;
+  border-bottom: 1px solid rgba(128, 48, 28, 0.13);
+}
+
+.detail-subnav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 5.5vw;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.detail-subnav-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-subnav-link {
+  flex: none;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #9b6958;
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.detail-subnav-link:hover {
+  color: #8c2416;
+}
+
+.detail-subnav-link-active {
+  color: #a52d15;
+  border-bottom-color: #a52d15;
 }

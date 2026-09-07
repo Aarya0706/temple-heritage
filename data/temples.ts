@@ -164,7 +164,7 @@ export const temples: Temple[] = [
     highlights: ["Main temple", "Rath Yatra traditions", "Grand Road", "Puri beach"],
     accessNotes: "Puri has no airport; the nearest is Biju Patnaik International Airport in Bhubaneswar, about 60 km away, with flights from Delhi, Mumbai, Kolkata, Chennai and Bengaluru. Puri Railway Station is only 2-3 km from the temple and has direct trains from Delhi, Kolkata, Chennai and Mumbai. Konark's Sun Temple is about 35 km away and makes an easy same-day add-on by taxi or bus.",
     visitorInfo: {
-      dressCode: "Traditional dress is strongly preferred and non-Hindus are not permitted inside the main temple. Men typically wear dhoti/kurta, women wear saree or salwar kameez. Leather belts, bags and footwear must be left outside.",
+      dressCode: "Traditional dress is strongly preferred — men typically wear dhoti/kurta, women wear saree or salwar kameez. Leather belts, bags and footwear must be left outside.",
       nearbyPlaces: [
         { name: "Puri Beach", description: "The Bay of Bengal coastline right by the temple town, popular for a sunrise or sunset walk." },
         { name: "Gundicha Temple", description: "The deities' 'garden house', about 3 km away and the destination of the annual Rath Yatra procession." },

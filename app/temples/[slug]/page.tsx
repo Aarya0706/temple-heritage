@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import TempleAskWidget from "@/components/TempleAskWidget";
 import AuspiciousDatesWidget from "@/components/AuspiciousDatesWidget";
 import VisitorInfoSection from "@/components/VisitorInfoSection";
+import DetailSectionNav from "@/components/DetailSectionNav";
 
 export function generateStaticParams() {
   return temples.map((temple) => ({
@@ -108,32 +109,6 @@ export default async function TempleDetail({
               </span>
 
               <a
-                href="#location"
-                style={{
-                  color: "#9b6958",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  borderBottom: "1px dashed #c9a58f",
-                }}
-              >
-                View on map
-              </a>
-
-              {temple.visitorInfo && (
-                <a
-                  href="#visitor-info"
-                  style={{
-                    color: "#9b6958",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    borderBottom: "1px dashed #c9a58f",
-                  }}
-                >
-                  Visitor info
-                </a>
-              )}
-
-              <a
                 href="#reviews"
                 style={{
                   display: "inline-flex",
@@ -201,7 +176,19 @@ export default async function TempleDetail({
         </div>
       </section>
 
-      <section className="detail-section">
+      <DetailSectionNav
+        sections={[
+          { id: "highlights", label: "Highlights" },
+          { id: "location", label: "Location" },
+          ...(temple.visitorInfo
+            ? [{ id: "visitor-info", label: "Visitor Info" }]
+            : []),
+          { id: "ask-ai", label: "Ask AI" },
+          { id: "reviews", label: "Reviews" },
+        ]}
+      />
+
+      <section className="detail-section" id="highlights">
         <div className="eyebrow">✦ Highlights</div>
         <h2>What to explore</h2>
 
