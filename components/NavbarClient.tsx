@@ -8,15 +8,17 @@ import { useEffect, useRef, useState } from "react";
 const links = [
   { href: "/", label: "Home" },
   { href: "/temples", label: "Browse Temples" },
+  { href: "/discover", label: "Discover" },
   { href: "/festivals", label: "Festivals" },
 ];
 
-// Grouped under a single "Services" dropdown rather than flat top-level
-// links — these are the practical, logged-in-adjacent tools (planning,
-// recommendations, saved trips) as opposed to the browsing pages above.
+// Grouped under a single "Services" dropdown — the practical,
+// logged-in-adjacent tools (planning, saved trips) as opposed to the
+// browsing pages above. "Discover" used to live here as "Recommender" —
+// it moved to a top-level tab since it's meant to be a page people land
+// on repeatedly, not a one-off tool buried in a dropdown.
 const serviceLinks = [
   { href: "/planner", label: "AI Planner", blurb: "Build a pilgrimage itinerary" },
-  { href: "/recommender", label: "Recommender", blurb: "Find temples matched to you" },
   { href: "/horoscope", label: "Horoscope Finder", blurb: "Find temples by your sun sign" },
   { href: "/darshan", label: "Darshan", blurb: "Check timings and crowd info" },
   { href: "/my-yatras", label: "My Yatras", blurb: "Saved temples and trip plans" },
