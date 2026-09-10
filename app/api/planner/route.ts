@@ -229,7 +229,7 @@ ${
   festival
     ? `
 FESTIVAL FOCUS:
-This trip is built around the festival "${festival}". Prioritize temples from the database that are known for celebrating this festival, and center the itinerary's timing and activities around experiencing it — arrival before the festival, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Mention the festival by name in the day descriptions where relevant.
+This trip is built around the festival "${festival}". Prioritize temples from the database that are known for celebrating this festival, and center the itinerary's timing and activities around experiencing it — arrival before the festival, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Refer to the festival ONLY by its exact given name, "${festival}" — do not substitute or rename it to a different, even closely related, festival (e.g. do not call it "Durga Puja" if the given name is "Navratri", or vice versa). Mention "${festival}" by that exact name in the day descriptions where relevant.
 `
     : ""
 }
@@ -314,7 +314,7 @@ Interests: ${
           ? interests.join(", ")
           : "Temples and heritage"
       }
-${festival ? `Festival focus: Build the itinerary around "${festival}", prioritizing temples known for celebrating it.\n` : ""}
+${festival ? `Festival focus: Build the itinerary around "${festival}", prioritizing temples known for celebrating it. Refer to it ONLY by its exact name "${festival}" — never substitute a different, even closely related, festival name.\n` : ""}
 Use only temples from this database:
 
 ${templeContext}
