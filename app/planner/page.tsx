@@ -63,10 +63,20 @@ function dominantRegion(templeSlugs: string[]): string | null {
   return best;
 }
 
+// Formats an ISO date (e.g. "2026-10-11") as "11 October 2026" for display.
+// Falls back to the raw string if it doesn't parse, rather than showing
+// nothing or throwing.
+function formatFestivalDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 function PlannerInner() {
   const searchParams = useSearchParams();
   const festivalParam = searchParams.get("festival");
   const templesParam = searchParams.get("temples");
+  const dateParam = searchParams.get("date");
 
   const [days, setDays] = useState("5");
   const [from, setFrom] = useState("Mumbai");
@@ -87,6 +97,7 @@ function PlannerInner() {
   const [saved, setSaved] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [festival, setFestival] = useState<string | null>(() => festivalParam || null);
+  const [festivalDate, setFestivalDate] = useState<string | null>(() => dateParam || null);
 
   function toggleInterest(item: string) {
     setSelected((current) => (current.includes(item) ? current.filter((x) => x !== item) : [...current, item]));
@@ -108,6 +119,7 @@ function PlannerInner() {
           region,
           interests: selected,
           festival,
+          festivalDate,
           festivalTemples: festival && templesParam ? templesParam.split(",").filter(Boolean) : [],
         }),
       });
@@ -180,10 +192,19 @@ function PlannerInner() {
           >
             <span style={{ color: "#6b4a3d", fontSize: 14 }}>
               <Sparkles size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
-              Planning around <strong>{festival}</strong> — we&apos;ll build your yatra around this festival and where it&apos;s celebrated.
+              Planning around <strong>{festival}</strong>
+              {festivalDate ? (
+                <>
+                  {" "}(<strong>{formatFestivalDate(festivalDate)}</strong>)
+                </>
+              ) : null}{" "}
+              — we&apos;ll build your yatra around this festival and where it&apos;s celebrated.
             </span>
             <button
-              onClick={() => setFestival(null)}
+              onClick={() => {
+                setFestival(null);
+                setFestivalDate(null);
+              }}
               aria-label="Clear festival context"
               style={{ background: "none", border: 0, cursor: "pointer", color: "#6b4a3d", flexShrink: 0 }}
             >

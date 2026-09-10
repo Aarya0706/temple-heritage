@@ -14,6 +14,7 @@ type PlannerRequest = {
   region: string;
   interests: string[];
   festival?: string | null;
+  festivalDate?: string | null;
   festivalTemples?: string[];
 };
 
@@ -207,6 +208,22 @@ export async function POST(req: NextRequest) {
       ? body.festival.trim()
       : null;
 
+  // Only accept a clean ISO date (YYYY-MM-DD) — reject anything else so a
+  // malformed or tampered value can't get echoed into the prompt.
+  const festivalDate =
+    typeof body.festivalDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.festivalDate.trim())
+      ? body.festivalDate.trim()
+      : null;
+
+  const festivalDateReadable = festivalDate
+    ? new Date(`${festivalDate}T00:00:00Z`).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+
   // Resolve the festival's linked temple slugs against the real database —
   // never trust client-supplied slugs directly, and drop anything that
   // doesn't exist so the AI is never told to use a fake temple.
@@ -241,7 +258,11 @@ ${
   festival
     ? `
 FESTIVAL FOCUS:
-This trip is built around the festival "${festival}". ${
+This trip is built around the festival "${festival}"${festivalDateReadable ? `, which falls on ${festivalDateReadable}` : ""}. ${
+        festivalDateReadable
+          ? `Structure the itinerary's days so the celebration day genuinely lines up with ${festivalDateReadable} — arrive with enough buffer beforehand, and state the actual date (or "the day of the festival, ${festivalDateReadable}") in the day description for the celebration day, so the trip reads as a real, dated plan rather than a vague "sometime during the festival" itinerary. `
+          : ""
+      }${
         festivalTemples.length > 0
           ? `The temples in the database specifically known for celebrating "${festival}" are: ${festivalTemples
               .map((t) => `${t.name} (slug: ${t.slug}, ${t.city}, ${t.state})`)
@@ -336,7 +357,9 @@ Interests: ${
       }
 ${
         festival
-          ? `Festival focus: Build the itinerary around "${festival}", refer to it ONLY by that exact name. ${
+          ? `Festival focus: Build the itinerary around "${festival}", refer to it ONLY by that exact name.${
+              festivalDateReadable ? ` It falls on ${festivalDateReadable} — state that actual date on the celebration day.` : ""
+            } ${
               festivalTemples.length > 0
                 ? `You MUST feature at least one of these exact temples, known for celebrating it: ${festivalTemples
                     .map((t) => `${t.name} (slug: ${t.slug})`)

@@ -64,7 +64,7 @@ export default async function FestivalDetail({ params }: { params: Promise<{ slu
             <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} />
             <div className="hero-actions">
               <Link
-                href={`/planner?festival=${encodeURIComponent(festival.name)}&temples=${festival.relatedTempleSlugs.join(",")}`}
+                href={`/planner?festival=${encodeURIComponent(festival.name)}&temples=${festival.relatedTempleSlugs.join(",")}&date=${encodeURIComponent(festival.date2026)}`}
                 className="btn-primary"
                 style={{ background: "#a52d15", color: "white" }}
               >
