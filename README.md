@@ -2,7 +2,7 @@
 
 **A full-stack Next.js + Supabase platform for discovering Indian temples and planning AI-assisted pilgrimages.**
 
-🔗 **[Live Demo](https://temple-heritage-fawn.vercel.app/)** · **[GitHub Repo](https://github.com/Aarya0706/temple-heritage)**
+🔗 **[Live Demo](https://templeheritage.me/)** · **[GitHub Repo](https://github.com/Aarya0706/temple-heritage)**
 
 ---
 
@@ -204,7 +204,7 @@ Key engineering aspects include:
 
 The application is deployed on **Vercel**.
 
-🔗 **Live:** https://temple-heritage-fawn.vercel.app/
+🔗 **Live:** https://templeheritage.me/
 
 ---
 
@@ -229,17 +229,10 @@ Developer & Creator of Temple Heritage
 
 ---
 
-## 🌸 Vision
+## 🌸 Why I Built This
 
-Temple Heritage was built around a simple idea:
-
-> **Technology can make India's sacred heritage easier to discover while helping people turn that discovery into meaningful journeys.**
-
-Every temple has a story.
-Every journey creates a memory.
-
-**Temple Heritage brings both together.** 🪷
+India's temples carry centuries of history, architecture, and tradition, but that information is scattered across guidebooks, forums, and word of mouth. Temple Heritage brings it into one place and pairs it with AI-assisted planning, so discovering a temple's story and actually planning a visit aren't two separate efforts.
 
 ---
 
-⭐ **Explore the live project:** https://temple-heritage-fawn.vercel.app/
+⭐ **Explore the live project:** https://templeheritage.me/
