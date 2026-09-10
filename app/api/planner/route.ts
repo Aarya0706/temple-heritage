@@ -268,7 +268,7 @@ This trip is built around the festival "${festival}"${festivalDateReadable ? `, 
               .map((t) => `${t.name} (slug: ${t.slug}, ${t.city}, ${t.state})`)
               .join(
                 "; "
-              )}. Your itinerary MUST feature at least one of these exact temples as the main festival-celebration day — do not substitute a different, more famous temple from an unrelated state instead.`
+              )}. Your itinerary MUST feature at least one of these exact temples for the festival-celebration day — but choose WHICHEVER one of them fits best into a single, non-backtracking route through the region, and place the festival day wherever it naturally falls in that route (it does not have to be the last day, and you do not need to return to a temple you already left earlier in the trip just to end there). Do not substitute a different, more famous temple from an unrelated state.`
           : `The database has no temple explicitly tagged for "${festival}" — use your best geographic and cultural judgment to pick temples in the region genuinely associated with this festival.`
       } Center the itinerary's timing and activities around experiencing the festival — arrival before it, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Refer to the festival ONLY by its exact given name, "${festival}" — do not substitute or rename it to a different, even closely related, festival (e.g. do not call it "Durga Puja" if the given name is "Navratri", or vice versa). Mention "${festival}" by that exact name in the day descriptions where relevant.
 `
@@ -300,6 +300,8 @@ CRITICAL RULES:
 18. No text before or after the JSON.
 19. When mentioning travel time, distance, trek length, or any number range, NEVER use hyphens between numbers.
 20. Write ranges using words instead.
+21. Plan temple visits in a single geographically efficient direction. Do NOT double back to a city or temple you have already left earlier in the trip, unless it is genuinely unavoidable.
+22. For the journey home, depart from the nearest reasonable airport or station to your LAST stop — not necessarily the same city or airport used to arrive in the region.
 
 Examples:
 - Write "seven to ten hours", NOT "7-10 hours".
@@ -363,7 +365,7 @@ ${
               festivalTemples.length > 0
                 ? `You MUST feature at least one of these exact temples, known for celebrating it: ${festivalTemples
                     .map((t) => `${t.name} (slug: ${t.slug})`)
-                    .join("; ")}.`
+                    .join("; ")}. Pick whichever fits best into a non-backtracking route; the festival day doesn't have to be last.`
                 : ""
             }\n`
           : ""
