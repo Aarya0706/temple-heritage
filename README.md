@@ -1,10 +1,16 @@
 # 🛕 Temple Heritage
 
-### Discover India's Sacred Heritage Through Technology
+**A full-stack Next.js + Supabase platform for discovering Indian temples and planning AI-assisted pilgrimages** — with authentication, an AI itinerary planner, review moderation, and an admin analytics dashboard.
 
-**Temple Heritage** is a modern web platform for exploring India's temples, festivals, cultural heritage, and pilgrimage experiences. It combines curated temple information with personalized discovery and AI-assisted yatra planning to help users move from **exploring a temple to planning a journey**.
+🔗 **[Live Demo](https://temple-heritage-fawn.vercel.app/)** · [Screenshots](#-screenshots) · [Features](#-what-you-can-do) · [Architecture](#%EF%B8%8F-architecture) · [Tech Stack](#%EF%B8%8F-tech-stack) · [Run Locally](#%EF%B8%8F-run-locally)
 
-🔗 **Live Application:** https://temple-heritage-fawn.vercel.app/
+---
+
+## 📸 Screenshots
+
+| Home | Itinerary | Planner |
+|---|---|---|
+| ![Home](./public/screenshots/home.png) | ![Itinerary](./public/screenshots/itinerary.png) | ![Planner](./public/screenshots/planner.png) |
 
 ---
 
@@ -52,13 +58,25 @@ Discover temples through a zodiac-based experience for users who want a more per
 
 Authenticated users can save temples and revisit their generated pilgrimage journeys from their personal space.
 
+### 🏅 Yatra Completion Badges
+
+Completed pilgrimages roll up into a stats view: total Yatras completed, a day-based completion streak, and region badges (North / South / East / West / Central India) that unlock once a completed itinerary touches temples in that region.
+
+### 👨‍💼 Admin Dashboard & Analytics
+
+A dedicated, RLS-protected admin panel for platform moderation and insight, including:
+
+* Review moderation queue (publish / flag / hide)
+* Platform stats bar — registered users, saved temples, yatra plans, completed yatras
+* Charts for top-viewed temples, planner region popularity, and signup growth over time
+
 ### 📜 Pilgrimage Passport
 
 Keep a personal record of your temple exploration and turn individual visits into an ongoing pilgrimage journey.
 
 ### 💬 Temple AI Assistant
 
-Ask questions about temples and pilgrimage planning through the built-in AI assistant, including voice-input support.
+Ask questions about temples and pilgrimage planning through the built-in AI assistant. Supports voice input, not just typed queries.
 
 ### ⭐ Reviews & Visitor Photos
 
@@ -110,19 +128,6 @@ User Preferences
 ```
 
 The AI flow is designed to handle imperfect model output safely through validation, normalization, fallback handling, rate limiting, and error handling.
-
----
-
-## Screenshots
-
-### Home
-![Home](./public/screenshots/home.png)
-
-### Itinerary
-![Itinerary](./public/screenshots/itinerary.png)
-
-### Planner
-![Planner](./public/screenshots/planner.png)
 
 ---
 
@@ -275,7 +280,7 @@ Future improvements can include:
 * 📍 Broader temple coverage across India
 * 🌐 Expanded multilingual experiences
 * 📊 More advanced recommendation models
-* 👨‍💼 Expanded administrative and analytics tooling
+* 👨‍💼 Deeper admin analytics (retention, cohort views)
 
 ---
 
