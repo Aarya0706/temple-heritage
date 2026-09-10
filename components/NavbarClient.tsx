@@ -149,6 +149,30 @@ export function NavbarClient({
                 Admin
               </Link>
             )}
+
+            {/* .login-btn and .explore-btn are hidden by CSS at <=1000px
+                (only the hamburger shows), but this panel — .nav-links —
+                is what the hamburger actually opens. Without these here,
+                logged-out visitors on phone have no way to log in. */}
+            {!displayName && (
+              <>
+                <Link
+                  href="/login"
+                  className={`nav-link ${pathname === "/login" ? "active" : ""}`}
+                  onClick={closeAll}
+                >
+                  Login
+                </Link>
+
+                <Link
+                  href="/signup"
+                  className={`nav-link ${pathname === "/signup" ? "active" : ""}`}
+                  onClick={closeAll}
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 
