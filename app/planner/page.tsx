@@ -102,7 +102,14 @@ function PlannerInner() {
       const res = await fetch("/api/planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from, days: Number(days), region, interests: selected, festival }),
+        body: JSON.stringify({
+          from,
+          days: Number(days),
+          region,
+          interests: selected,
+          festival,
+          festivalTemples: festival && templesParam ? templesParam.split(",").filter(Boolean) : [],
+        }),
       });
       const data = await res.json();
       if (!res.ok) {

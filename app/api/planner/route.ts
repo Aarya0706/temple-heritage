@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { groq, AI_MODEL, buildTempleContext } from "@/lib/ai";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import { temples } from "@/data/temples";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,7 @@ type PlannerRequest = {
   region: string;
   interests: string[];
   festival?: string | null;
+  festivalTemples?: string[];
 };
 
 type ItineraryDay = {
@@ -205,6 +207,16 @@ export async function POST(req: NextRequest) {
       ? body.festival.trim()
       : null;
 
+  // Resolve the festival's linked temple slugs against the real database —
+  // never trust client-supplied slugs directly, and drop anything that
+  // doesn't exist so the AI is never told to use a fake temple.
+  const festivalTemples = Array.isArray(body.festivalTemples)
+    ? body.festivalTemples
+        .filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0)
+        .map((slug) => temples.find((t) => t.slug === slug.trim()))
+        .filter((t): t is (typeof temples)[number] => Boolean(t))
+    : [];
+
   try {
     const templeContext = buildTempleContext().slice(0, 9000);
 
@@ -229,7 +241,15 @@ ${
   festival
     ? `
 FESTIVAL FOCUS:
-This trip is built around the festival "${festival}". Prioritize temples from the database that are known for celebrating this festival, and center the itinerary's timing and activities around experiencing it — arrival before the festival, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Refer to the festival ONLY by its exact given name, "${festival}" — do not substitute or rename it to a different, even closely related, festival (e.g. do not call it "Durga Puja" if the given name is "Navratri", or vice versa). Mention "${festival}" by that exact name in the day descriptions where relevant.
+This trip is built around the festival "${festival}". ${
+        festivalTemples.length > 0
+          ? `The temples in the database specifically known for celebrating "${festival}" are: ${festivalTemples
+              .map((t) => `${t.name} (slug: ${t.slug}, ${t.city}, ${t.state})`)
+              .join(
+                "; "
+              )}. Your itinerary MUST feature at least one of these exact temples as the main festival-celebration day — do not substitute a different, more famous temple from an unrelated state instead.`
+          : `The database has no temple explicitly tagged for "${festival}" — use your best geographic and cultural judgment to pick temples in the region genuinely associated with this festival.`
+      } Center the itinerary's timing and activities around experiencing the festival — arrival before it, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Refer to the festival ONLY by its exact given name, "${festival}" — do not substitute or rename it to a different, even closely related, festival (e.g. do not call it "Durga Puja" if the given name is "Navratri", or vice versa). Mention "${festival}" by that exact name in the day descriptions where relevant.
 `
     : ""
 }
@@ -314,7 +334,17 @@ Interests: ${
           ? interests.join(", ")
           : "Temples and heritage"
       }
-${festival ? `Festival focus: Build the itinerary around "${festival}", prioritizing temples known for celebrating it. Refer to it ONLY by its exact name "${festival}" — never substitute a different, even closely related, festival name.\n` : ""}
+${
+        festival
+          ? `Festival focus: Build the itinerary around "${festival}", refer to it ONLY by that exact name. ${
+              festivalTemples.length > 0
+                ? `You MUST feature at least one of these exact temples, known for celebrating it: ${festivalTemples
+                    .map((t) => `${t.name} (slug: ${t.slug})`)
+                    .join("; ")}.`
+                : ""
+            }\n`
+          : ""
+      }
 Use only temples from this database:
 
 ${templeContext}
