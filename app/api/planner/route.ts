@@ -12,6 +12,7 @@ type PlannerRequest = {
   days: number;
   region: string;
   interests: string[];
+  festival?: string | null;
 };
 
 type ItineraryDay = {
@@ -199,6 +200,11 @@ export async function POST(req: NextRequest) {
     Math.min(10, Number(body.days) || 5)
   );
 
+  const festival =
+    typeof body.festival === "string" && body.festival.trim()
+      ? body.festival.trim()
+      : null;
+
   try {
     const templeContext = buildTempleContext().slice(0, 9000);
 
@@ -219,7 +225,14 @@ ${
     ? interests.join(", ")
     : "Temples and heritage"
 }
-
+${
+  festival
+    ? `
+FESTIVAL FOCUS:
+This trip is built around the festival "${festival}". Prioritize temples from the database that are known for celebrating this festival, and center the itinerary's timing and activities around experiencing it — arrival before the festival, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Mention the festival by name in the day descriptions where relevant.
+`
+    : ""
+}
 AVAILABLE TEMPLE DATABASE:
 
 ${templeContext}
@@ -301,7 +314,7 @@ Interests: ${
           ? interests.join(", ")
           : "Temples and heritage"
       }
-
+${festival ? `Festival focus: Build the itinerary around "${festival}", prioritizing temples known for celebrating it.\n` : ""}
 Use only temples from this database:
 
 ${templeContext}

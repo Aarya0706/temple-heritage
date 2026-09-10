@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Sparkles, Loader2 } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { ArrowRight, Sparkles, Loader2, X } from "lucide-react";
 import { temples } from "@/data/temples";
 
 const interests = ["Temples", "Architecture", "Food", "Nature", "History", "Festivals"];
@@ -41,7 +42,32 @@ type ItineraryDay = {
   templeSlugs: string[];
 };
 
-export default function PlannerPage() {
+// When arriving from a festival page with a `temples` query param, figure out
+// which region those temples are mostly in, so the region dropdown starts on
+// something relevant instead of the hardcoded South India default.
+function dominantRegion(templeSlugs: string[]): string | null {
+  const counts = new Map<string, number>();
+  for (const slug of templeSlugs) {
+    const temple = temples.find((t) => t.slug === slug);
+    if (!temple) continue;
+    counts.set(temple.region, (counts.get(temple.region) || 0) + 1);
+  }
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [region, count] of counts) {
+    if (count > bestCount) {
+      best = region;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+function PlannerInner() {
+  const searchParams = useSearchParams();
+  const festivalParam = searchParams.get("festival");
+  const templesParam = searchParams.get("temples");
+
   const [days, setDays] = useState("5");
   const [from, setFrom] = useState("Mumbai");
   const [region, setRegion] = useState("South India");
@@ -53,6 +79,19 @@ export default function PlannerPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [festival, setFestival] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!festivalParam) return;
+    setFestival(festivalParam);
+    setSelected((current) => (current.includes("Festivals") ? current : [...current, "Festivals"]));
+
+    const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
+    const inferredRegion = dominantRegion(slugs);
+    if (inferredRegion) setRegion(inferredRegion);
+    // Only run once, when the page first loads from a festival link.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggleInterest(item: string) {
     setSelected((current) => (current.includes(item) ? current.filter((x) => x !== item) : [...current, item]));
@@ -68,7 +107,7 @@ export default function PlannerPage() {
       const res = await fetch("/api/planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from, days: Number(days), region, interests: selected }),
+        body: JSON.stringify({ from, days: Number(days), region, interests: selected, festival }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -120,6 +159,37 @@ export default function PlannerPage() {
         <h1>Plan Your Yatra</h1>
         <p>Tell us what kind of journey you want, and our AI will build a real, personalized itinerary from our temple database.</p>
       </section>
+
+      {festival && (
+        <section className="section-light" style={{ paddingTop: 0, paddingBottom: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              background: "#fdf1ea",
+              border: "1px solid #e8c4ac",
+              borderRadius: 10,
+              padding: "12px 18px",
+              margin: "0 auto 24px",
+              maxWidth: 900,
+            }}
+          >
+            <span style={{ color: "#6b4a3d", fontSize: 14 }}>
+              <Sparkles size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+              Planning around <strong>{festival}</strong> — we&apos;ll build your yatra around this festival and where it&apos;s celebrated.
+            </span>
+            <button
+              onClick={() => setFestival(null)}
+              aria-label="Clear festival context"
+              style={{ background: "none", border: 0, cursor: "pointer", color: "#6b4a3d", flexShrink: 0 }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="section section-light">
         <div className="planner-grid">
@@ -258,5 +328,13 @@ export default function PlannerPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function PlannerPage() {
+  return (
+    <Suspense fallback={null}>
+      <PlannerInner />
+    </Suspense>
   );
 }
