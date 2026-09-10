@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, Sparkles, Loader2, X } from "lucide-react";
 import { temples } from "@/data/temples";
@@ -70,8 +70,15 @@ function PlannerInner() {
 
   const [days, setDays] = useState("5");
   const [from, setFrom] = useState("Mumbai");
-  const [region, setRegion] = useState("South India");
-  const [selected, setSelected] = useState(["Temples", "Architecture"]);
+  const [region, setRegion] = useState(() => {
+    if (!festivalParam) return "South India";
+    const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
+    return dominantRegion(slugs) || "South India";
+  });
+  const [selected, setSelected] = useState(() => {
+    const base = ["Temples", "Architecture"];
+    return festivalParam ? [...base, "Festivals"] : base;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryDay[] | null>(null);
@@ -79,19 +86,7 @@ function PlannerInner() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
-  const [festival, setFestival] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!festivalParam) return;
-    setFestival(festivalParam);
-    setSelected((current) => (current.includes("Festivals") ? current : [...current, "Festivals"]));
-
-    const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
-    const inferredRegion = dominantRegion(slugs);
-    if (inferredRegion) setRegion(inferredRegion);
-    // Only run once, when the page first loads from a festival link.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [festival, setFestival] = useState<string | null>(() => festivalParam || null);
 
   function toggleInterest(item: string) {
     setSelected((current) => (current.includes(item) ? current.filter((x) => x !== item) : [...current, item]));
