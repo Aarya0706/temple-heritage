@@ -1,8 +1,8 @@
 # 🛕 Temple Heritage
 
-**A full-stack Next.js + Supabase platform for discovering Indian temples and planning AI-assisted pilgrimages** — with authentication, an AI itinerary planner, review moderation, and an admin analytics dashboard.
+**A full-stack Next.js + Supabase platform for discovering Indian temples and planning AI-assisted pilgrimages.**
 
-🔗 **[Live Demo](https://temple-heritage-fawn.vercel.app/)** · [Screenshots](#-screenshots) · [Features](#-what-you-can-do) · [Architecture](#%EF%B8%8F-architecture) · [Tech Stack](#%EF%B8%8F-tech-stack) · [Run Locally](#%EF%B8%8F-run-locally)
+🔗 **[Live Demo](https://temple-heritage-fawn.vercel.app/)** · **[GitHub Repo](https://github.com/Aarya0706/temple-heritage)**
 
 ---
 
@@ -14,120 +14,19 @@
 
 ---
 
-## ✨ What You Can Do
+## ✨ Key Features
 
-### 🛕 Explore Temples
-
-Browse temple profiles with useful information about:
-
-* History and cultural significance
-* Architecture and traditions
-* Deity and spiritual importance
-* Location and region
-* Associated festivals
-* Visitor and darshan information
-
-### 🤖 AI Yatra Planner
-
-Create a personalized pilgrimage itinerary using:
-
-* 📍 Starting city
-* 📅 Number of travel days
-* 🗺️ Preferred region
-* ❤️ Personal interests
-
-The planner uses **Groq AI** to generate a structured, day-wise itinerary and turns the result into a downloadable travel plan.
-
-### 🧠 Temple Recommender
-
-Get personalized temple suggestions based on interests and preferences, making it easier to discover places beyond simple browsing.
-
-### 📅 Festival Calendar
-
-Explore temple festivals and cultural celebrations and discover temples associated with them.
-
-### 🕉️ Darshan Information
-
-Access temple-specific darshan and visitor information while planning a visit.
-
-### ♈ Horoscope Finder
-
-Discover temples through a zodiac-based experience for users who want a more personalized way to explore sacred places.
-
-### ❤️ Saved Temples & My Yatras
-
-Authenticated users can save temples and revisit their generated pilgrimage journeys from their personal space.
-
-### 🏅 Yatra Completion Badges
-
-Completed pilgrimages roll up into a stats view: total Yatras completed, a day-based completion streak, and region badges (North / South / East / West / Central India) that unlock once a completed itinerary touches temples in that region.
-
-### 👨‍💼 Admin Dashboard & Analytics
-
-A dedicated, RLS-protected admin panel for platform moderation and insight, including:
-
-* Review moderation queue (publish / flag / hide)
-* Platform stats bar — registered users, saved temples, yatra plans, completed yatras
-* Charts for top-viewed temples, planner region popularity, and signup growth over time
-
-### 📜 Pilgrimage Passport
-
-Keep a personal record of your temple exploration and turn individual visits into an ongoing pilgrimage journey.
-
-### 💬 Temple AI Assistant
-
-Ask questions about temples and pilgrimage planning through the built-in AI assistant. Supports voice input, not just typed queries.
-
-### ⭐ Reviews & Visitor Photos
-
-Share real experiences through ratings, written reviews, and visitor photos.
-
-* 1–5 star ratings
-* Written reviews
-* Up to 3 photos per review
-* Client-side image resizing and compression before upload
-* One review per user per temple
-* Personal review deletion
-* Aggregate ratings on temple listings and detail pages
-
----
-
-## 🧠 AI Yatra Planning Pipeline
-
-```text
-User Preferences
-       │
-       ▼
-┌──────────────────────┐
-│ Starting City        │
-│ Number of Days       │
-│ Preferred Region     │
-│ Personal Interests   │
-└──────────┬───────────┘
-           │
-           ▼
-     Temple Context
-           │
-           ▼
-        Groq AI
-           │
-           ▼
-    Structured JSON
-           │
-           ▼
-  Validation & Parsing
-           │
-           ▼
- Response Normalization
-           │
-           ▼
-  Personalized Yatra
-           │
-           ▼
- Downloadable Itinerary
-```
-
-The AI flow is designed to handle imperfect model output safely through validation, normalization, fallback handling, rate limiting, and error handling.
+* 🛕 **Explore Temples** — profiles with history, architecture, deity, festivals, and darshan info
+* 🤖 **AI Yatra Planner** — Groq-powered, day-wise itinerary from city, days, region & interests; exports to PDF
+* 🧠 **Temple Recommender** — personalized suggestions based on interests
+* 📅 **Festival Calendar** — festivals linked to the temples that host them
+* ♈ **Horoscope Finder** — zodiac-based temple discovery
+* ❤️ **Saved Temples & My Yatras** — save temples and revisit generated itineraries
+* 🏅 **Yatra Completion Badges** — completion streaks + region badges (North/South/East/West/Central India)
+* 👨‍💼 **Admin Dashboard** — RLS-protected review moderation, platform stats, and usage charts
+* 📜 **Pilgrimage Passport** — a running record of visits, exportable and shareable
+* 💬 **Temple AI Assistant** — chat + voice Q&A about temples and planning
+* ⭐ **Reviews & Photos** — ratings, written reviews, up to 3 compressed photos each
 
 ---
 
@@ -241,6 +140,45 @@ npm run lint         # Run ESLint
 npm test             # Run Vitest tests
 npm run test:watch   # Run tests in watch mode
 ```
+
+---
+
+## 🧠 AI Yatra Planning Pipeline
+
+```text
+User Preferences
+       │
+       ▼
+┌──────────────────────┐
+│ Starting City        │
+│ Number of Days       │
+│ Preferred Region     │
+│ Personal Interests   │
+└──────────┬───────────┘
+           │
+           ▼
+     Temple Context
+           │
+           ▼
+        Groq AI
+           │
+           ▼
+    Structured JSON
+           │
+           ▼
+  Validation & Parsing
+           │
+           ▼
+ Response Normalization
+           │
+           ▼
+  Personalized Yatra
+           │
+           ▼
+ Downloadable Itinerary
+```
+
+The AI flow is designed to handle imperfect model output safely through validation, normalization, fallback handling, rate limiting, and error handling.
 
 ---
 
