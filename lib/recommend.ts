@@ -101,6 +101,23 @@ function popularityScore(rating?: RatingRow): number {
   return rating.average_rating * Math.log(1 + rating.review_count);
 }
 
+// Confidence curve for the collaborative signal: coCount / (coCount + k).
+// Deliberately NOT normalized against the max count in the current pool —
+// that approach let a single co-save (coCount=1, everyone else at 0) get
+// rescaled up to a "perfect" 1.0 score, which on a young app with sparse
+// saved_temples data made the same one or two temples dominate every
+// recommendation regardless of what the user picked in the preference
+// filters. This asymptotic curve instead treats co-save count as an
+// absolute confidence measure: 1 save is weak evidence (~0.33), 5 saves
+// is fairly strong (~0.71), and it only approaches 1.0 with real,
+// repeated behavioral support — letting stated preferences actually move
+// the ranking until the collaborative data has enough weight to earn it.
+const COLLABORATIVE_SATURATION_K = 2;
+function collaborativeConfidence(coCount: number): number {
+  if (coCount <= 0) return 0;
+  return coCount / (coCount + COLLABORATIVE_SATURATION_K);
+}
+
 export function recommendTemples({
   temples,
   selectedPreferences,
@@ -123,7 +140,6 @@ export function recommendTemples({
   const coOccurrence = coOccurrenceCounts(savedSet, allSaved);
   const sign = birthDate ? getZodiacSign(birthDate) : null;
 
-  const maxCoOccurrence = Math.max(1, ...coOccurrence.values());
   const maxPopularity = Math.max(1, ...temples.map((t) => popularityScore(ratingBySlug.get(t.slug))));
   const maxPreference = Math.max(1, ...temples.map((t) => preferenceScore(t, selectedPreferences)));
   const maxHoroscope = Math.max(1, ...temples.map((t) => horoscopeScore(t, sign)));
@@ -132,7 +148,7 @@ export function recommendTemples({
 
   const scored: ScoredRecommendation[] = candidates.map((temple) => {
     const coCount = coOccurrence.get(temple.slug) ?? 0;
-    const collab = coCount / maxCoOccurrence;
+    const collab = collaborativeConfidence(coCount);
     const pref = preferenceScore(temple, selectedPreferences) / maxPreference;
     const pop = popularityScore(ratingBySlug.get(temple.slug)) / maxPopularity;
     const horoscope = horoscopeScore(temple, sign) / maxHoroscope;
