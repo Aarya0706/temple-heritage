@@ -2153,6 +2153,52 @@ img { max-width: 100%; }
 
 
 /* =====================================================
+   MOBILE AUTH LINKS (compact, next to hamburger)
+===================================================== */
+
+.mobile-auth-links {
+  display: none;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.mobile-login-btn {
+  color: #7b1710;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.mobile-signup-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 7px 14px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a52d15,
+      #d94712
+    );
+
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* =====================================================
    MOBILE MENU BUTTON
 ===================================================== */
 
@@ -2377,6 +2423,11 @@ img { max-width: 100%; }
   }
 
 
+  .mobile-auth-links {
+    display: flex;
+  }
+
+
   .menu-btn {
     display: block;
   }
@@ -2417,6 +2468,19 @@ img { max-width: 100%; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .mobile-auth-links {
+    gap: 6px;
+  }
+
+  .mobile-login-btn {
+    font-size: 12px;
+  }
+
+  .mobile-signup-btn {
+    padding: 6px 11px;
+    font-size: 12px;
   }
 }
 /* Review photo lightbox */
