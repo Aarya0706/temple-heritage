@@ -117,7 +117,7 @@ export default function Home() {
             </Link>
 
             <Link className="btn-secondary" href="/planner">
-              Plan My Yatra <Sparkles size={17} />
+              Plan My Yatra with AI <Sparkles size={17} />
             </Link>
           </div>
         </div>
@@ -146,8 +146,8 @@ export default function Home() {
           <span>States Covered</span>
         </div>
         <div className="stat">
-          <strong>{deityCount}</strong>
-          <span>Deities Featured</span>
+          <strong>AI</strong>
+          <span>Powered Planner</span>
         </div>
         <div className="stat">
           <strong>{festivalCount}</strong>
