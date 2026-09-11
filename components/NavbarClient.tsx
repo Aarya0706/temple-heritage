@@ -150,29 +150,6 @@ export function NavbarClient({
               </Link>
             )}
 
-            {/* .login-btn and .explore-btn are hidden by CSS at <=1000px
-                (only the hamburger shows), but this panel — .nav-links —
-                is what the hamburger actually opens. Without these here,
-                logged-out visitors on phone have no way to log in. */}
-            {!displayName && (
-              <>
-                <Link
-                  href="/login"
-                  className={`nav-link ${pathname === "/login" ? "active" : ""}`}
-                  onClick={closeAll}
-                >
-                  Login
-                </Link>
-
-                <Link
-                  href="/signup"
-                  className={`nav-link ${pathname === "/signup" ? "active" : ""}`}
-                  onClick={closeAll}
-                >
-                  Sign up
-                </Link>
-              </>
-            )}
           </div>
         </nav>
 
@@ -203,6 +180,23 @@ export function NavbarClient({
                 Sign up
               </Link>
             </>
+          )}
+
+          {/* Compact login/signup shown only at <=1000px, next to the
+              hamburger button, so logged-out visitors on phone see auth
+              instantly instead of having to open the menu. The full-size
+              .login-btn/.explore-btn versions above cover desktop and are
+              hidden by CSS at this breakpoint. */}
+          {!displayName && (
+            <div className="mobile-auth-links">
+              <Link href="/login" className="mobile-login-btn">
+                Login
+              </Link>
+
+              <Link href="/signup" className="mobile-signup-btn">
+                Sign up
+              </Link>
+            </div>
           )}
 
           <button
