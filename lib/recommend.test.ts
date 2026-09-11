@@ -163,4 +163,30 @@ describe("recommendTemples", () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((r) => Number.isFinite(r.score))).toBe(true);
   });
+
+  it("lets stated preferences move the ranking even when a single sparse co-save exists", () => {
+    // Regression test: on a young app, saved_temples often has only one
+    // or two overlapping rows. Previously the collaborative score was
+    // normalized against the max count in the pool, so a single co-save
+    // (coCount=1, everyone else 0) got rescaled up to a "perfect" 1.0 and
+    // permanently outranked every preference-based match — changing the
+    // filter checkboxes did nothing. One thin co-save shouldn't be able
+    // to out-rank a temple that's a direct, explicit preference match.
+    const allSaved = [
+      { user_id: "u1", temple_slug: "a" },
+      { user_id: "u1", temple_slug: "b" },
+    ];
+    const results = recommendTemples({
+      temples: catalog,
+      selectedPreferences: ["Lord Shiva"], // "d" is a direct deity match; "b" is not
+      savedSlugs: ["a"],
+      allSaved,
+      ratings: [],
+    });
+    // "b" has one weak co-save (coCount=1) and matches no preference here.
+    // With the old max-normalized scoring this coCount=1 got rescaled to
+    // a perfect 1.0 and always won; it should no longer beat "d"'s direct
+    // preference match.
+    expect(results[0].temple.slug).toBe("d");
+  });
 });
