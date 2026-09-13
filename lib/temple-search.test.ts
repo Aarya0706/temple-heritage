@@ -92,4 +92,29 @@ describe("searchTemples", () => {
     const results = searchTemples("varansi", catalog); // missing 'i'
     expect(results[0]?.temple.slug).toBe("kashi-vishwanath");
   });
+
+  it("ranks by actual distance for a 'near <city>' query, not by coincidental text matches", () => {
+    // Regression test for a real bug: Somnath (Gujarat) used to outrank
+    // Mahakaleshwar (Ujjain, ~180km from Bhopal) for "near Bhopal" purely
+    // because a highlight tag ("Nearby Prabhas Patan") fuzzy-matched the
+    // word "near" — nothing to do with real proximity to Bhopal.
+    const ujjain = makeTemple({ slug: "mahakaleshwar", name: "Mahakaleshwar Temple", deity: "Lord Shiva", city: "Ujjain", state: "Madhya Pradesh", lat: 23.1828, lng: 75.7683 });
+    const gujarat = makeTemple({ slug: "somnath-2", name: "Somnath Temple", deity: "Lord Shiva", city: "Somnath", state: "Gujarat", highlights: ["Nearby Prabhas Patan"], lat: 20.888, lng: 70.4014 });
+    const results = searchTemples("Shiva temples near bhopal", [ujjain, gujarat]);
+    expect(results[0]?.temple.slug).toBe("mahakaleshwar");
+  });
+
+  it("falls back to plain text search when the place after 'near' doesn't resolve", () => {
+    const results = searchTemples("shiva temples near nowhereville", catalog);
+    // Should behave like a plain "shiva temples" search rather than
+    // silently dropping the unresolvable location and returning nothing.
+    expect(results.length).toBeGreaterThan(0);
+  });
+
+  it("resolves 'near <place>' even when more sentence follows it", () => {
+    const ujjain = makeTemple({ slug: "mahakaleshwar", name: "Mahakaleshwar Temple", deity: "Lord Shiva", city: "Ujjain", state: "Madhya Pradesh", lat: 23.1828, lng: 75.7683 });
+    const gujarat = makeTemple({ slug: "somnath-2", name: "Somnath Temple", deity: "Lord Shiva", city: "Somnath", state: "Gujarat", lat: 20.888, lng: 70.4014 });
+    const results = searchTemples("Shiva temples near Bhopal in the mornings", [ujjain, gujarat]);
+    expect(results[0]?.temple.slug).toBe("mahakaleshwar");
+  });
 });
