@@ -1,20 +1,45 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { Star, Heart } from "lucide-react";
 import { Temple } from "@/data/temples";
 
 export function TempleCard({
   temple,
   rating,
+  saved,
+  onToggleSave,
 }: {
   temple: Temple;
   rating?: { average_rating: number; review_count: number };
+  // Both optional: pages that render TempleCard without wiring up saved-state
+  // (e.g. a future admin preview) still get a working card, just without
+  // the save button's toggled state.
+  saved?: boolean;
+  onToggleSave?: (slug: string) => void;
 }) {
   return (
     <article className="temple-card">
       <Link href={`/temples/${temple.slug}`}>
         <div className="temple-image">
           <Image src={temple.image} alt={temple.name} fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: "cover" }} />
+          {onToggleSave && (
+            <button
+              type="button"
+              className={`temple-save-btn ${saved ? "saved" : ""}`}
+              aria-label={saved ? "Remove from saved temples" : "Save temple"}
+              aria-pressed={saved}
+              onClick={(e) => {
+                // The card's image sits inside the detail-page Link, so a
+                // plain click here would also navigate — stop it before it
+                // bubbles up, this button only toggles the save state.
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleSave(temple.slug);
+              }}
+            >
+              <Heart size={17} fill={saved ? "#e14a12" : "none"} strokeWidth={2} />
+            </button>
+          )}
           <span className="tag">{temple.deity}</span>
           <div className="temple-overlay">
             <h3>{temple.name}</h3>

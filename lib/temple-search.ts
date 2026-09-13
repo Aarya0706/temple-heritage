@@ -1,4 +1,5 @@
 import type { Temple } from "@/data/temples";
+import { haversineKm, resolvePlaceToCoords } from "./geo";
 
 // Client-side fuzzy/weighted search over the temple catalog.
 //
@@ -92,6 +93,12 @@ export type ScoredTemple = { temple: Temple; score: number };
  * match anywhere contributes its similarity * that field's weight. A
  * multi-token query ("mahakal ujjain") rewards temples that match more of
  * the tokens, without requiring every token to match.
+ *
+ * Purely lexical — no geography. "near <place>" is handled separately by
+ * searchTemples via proximityScore(), since real distance ranking needs
+ * coordinates, not text matching. (Feeding "near" itself through this
+ * function would just fuzzy-match words like "nearby" in unrelated temple
+ * copy — see the regression test for exactly that failure mode.)
  */
 export function scoreTemple(query: string, temple: Temple): number {
   const tokens = tokenize(query);
@@ -117,13 +124,63 @@ export function scoreTemple(query: string, temple: Temple): number {
   return total;
 }
 
+// Matches a "near <place>" clause anywhere in the query, so it can be
+// pulled out and resolved geographically instead of being tokenized like
+// everything else.
+const NEAR_CLAUSE = /\bnear\s+(.+)$/i;
+
+// A place name is assumed to end where the next clause starts — e.g. "...
+// near Bhopal in the mornings" should read "Bhopal" as the place, not
+// "Bhopal in the mornings". This is a plain word list, not real parsing, so
+// it won't handle every sentence, but it covers common connector words
+// without needing a real NLP step for a search box.
+const CLAUSE_BREAK = /\s+\b(in|for|during|on|at|and|while|before|after|around|within|near)\b.*$/i;
+
+function extractNearClause(query: string): { rest: string; place: string | null } {
+  const match = query.match(NEAR_CLAUSE);
+  if (!match) return { rest: query, place: null };
+
+  const place = match[1].replace(CLAUSE_BREAK, "").trim().replace(/[?!.,]+$/, "");
+
+  // NEAR_CLAUSE is anchored to the end of the string, so everything from
+  // "near" onward — including any trailing connector clause dropped above
+  // — is discarded from the text query; only the words before "near" remain.
+  const rest = query.slice(0, match.index).trim();
+
+  return { rest, place: place || null };
+}
+
+// Distance-to-score curve for "near <place>" queries: highest for a temple
+// right at the resolved point, decaying smoothly with distance but never
+// hitting exactly zero, so a "near <city>" query still ranks every temple
+// (just with distant ones sinking to the bottom) rather than dropping them
+// once the plain text score is 0. 300km is roughly the point where the
+// bonus has halved — tuned for India-scale distances between temples.
+function proximityScore(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
+  const distanceKm = haversineKm(from, to);
+  return 8 / (1 + distanceKm / 300);
+}
+
 /** Ranks temples by relevance to `query`, highest first. Empty query returns the input order unscored. */
 export function searchTemples(query: string, temples: Temple[]): ScoredTemple[] {
   const q = query.trim();
   if (!q) return temples.map((temple) => ({ temple, score: 0 }));
 
+  const { rest, place } = extractNearClause(q);
+  const coords = place ? resolvePlaceToCoords(place, temples) : null;
+
+  // Only strip the "near <place>" clause out of the text query once the
+  // place actually resolved to real coordinates — an unresolvable "near
+  // <gibberish>" falls back to the original, fully lexical behavior rather
+  // than silently discarding half the query.
+  const textQuery = coords ? rest : q;
+
   return temples
-    .map((temple) => ({ temple, score: scoreTemple(q, temple) }))
+    .map((temple) => {
+      const textScore = scoreTemple(textQuery, temple);
+      const bonus = coords ? proximityScore(coords, temple) : 0;
+      return { temple, score: textScore + bonus };
+    })
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score);
 }
