@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TempleCard } from "./TempleCard";
 import { regions, temples } from "@/data/temples";
 import { searchTemples } from "@/lib/temple-search";
+import { festivalNamesWithTemples, templeCelebratesFestival } from "@/lib/temple-festivals";
 
 type RatingMap = Record<string, { average_rating: number; review_count: number }>;
 
@@ -24,6 +25,7 @@ export function TempleExplorer() {
   const [city, setCity] = useState(ALL);
   const [deity, setDeity] = useState(ALL);
   const [type, setType] = useState(ALL);
+  const [festival, setFestival] = useState(ALL);
   const [ratings, setRatings] = useState<RatingMap>({});
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
   const [loggedIn, setLoggedIn] = useState(true);
@@ -32,6 +34,10 @@ export function TempleExplorer() {
   const cities = useMemo(() => uniqueSorted(temples.map((t) => t.city)), []);
   const deities = useMemo(() => uniqueSorted(temples.map((t) => t.deity)), []);
   const types = useMemo(() => uniqueSorted(temples.map((t) => t.type)), []);
+  // Not derived from the temple catalog like the others — festivalsForTemple
+  // only knows festivals with at least one related temple, so this can't
+  // just be uniqueSorted(all festival names).
+  const festivalOptions = useMemo(() => [ALL, ...festivalNamesWithTemples()], []);
 
   useEffect(() => {
     fetch("/api/temple-ratings")
@@ -88,7 +94,7 @@ export function TempleExplorer() {
     }
   };
 
-  const activeFacetCount = [region, state, city, deity, type].filter((f) => f !== ALL).length;
+  const activeFacetCount = [region, state, city, deity, type, festival].filter((f) => f !== ALL).length;
 
   const filtered = useMemo(() => {
     const facetMatched = temples.filter(
@@ -97,7 +103,8 @@ export function TempleExplorer() {
         (state === ALL || t.state === state) &&
         (city === ALL || t.city === city) &&
         (deity === ALL || t.deity === deity) &&
-        (type === ALL || t.type === type)
+        (type === ALL || t.type === type) &&
+        (festival === ALL || templeCelebratesFestival(t.slug, festival))
     );
 
     // searchTemples does typo-tolerant, weighted-relevance ranking (name >
@@ -108,7 +115,7 @@ export function TempleExplorer() {
     // against every field, so a temple matching "Shiva" (deity) and
     // "Bhopal" (city/region) ranks above one matching only one term.
     return searchTemples(query, facetMatched).map((r) => r.temple);
-  }, [query, region, state, city, deity, type]);
+  }, [query, region, state, city, deity, type, festival]);
 
   const clearFacets = () => {
     setRegion(ALL);
@@ -116,6 +123,7 @@ export function TempleExplorer() {
     setCity(ALL);
     setDeity(ALL);
     setType(ALL);
+    setFestival(ALL);
   };
 
   return (
@@ -161,6 +169,11 @@ export function TempleExplorer() {
         <select className="facet-select" value={type} onChange={(e) => setType(e.target.value)} aria-label="Filter by temple type">
           {types.map((t) => (
             <option key={t} value={t}>{t === ALL ? "All temple types" : t}</option>
+          ))}
+        </select>
+        <select className="facet-select" value={festival} onChange={(e) => setFestival(e.target.value)} aria-label="Filter by festival">
+          {festivalOptions.map((f) => (
+            <option key={f} value={f}>{f === ALL ? "All festivals" : f}</option>
           ))}
         </select>
         {activeFacetCount > 0 && (
