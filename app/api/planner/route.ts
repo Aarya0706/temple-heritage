@@ -13,6 +13,7 @@ type PlannerRequest = {
   days: number;
   region: string;
   interests: string[];
+  travelStyle?: string;
   festival?: string | null;
   festivalDate?: string | null;
   festivalTemples?: string[];
@@ -203,6 +204,24 @@ export async function POST(req: NextRequest) {
     Math.min(10, Number(body.days) || 5)
   );
 
+  // Whitelist rather than trust the client string directly — it goes
+  // straight into the prompt below.
+  const TRAVEL_STYLES = ["Relaxed", "Balanced", "Packed"] as const;
+  const travelStyle: (typeof TRAVEL_STYLES)[number] = TRAVEL_STYLES.includes(
+    body.travelStyle as (typeof TRAVEL_STYLES)[number]
+  )
+    ? (body.travelStyle as (typeof TRAVEL_STYLES)[number])
+    : "Balanced";
+
+  const TRAVEL_STYLE_GUIDANCE: Record<(typeof TRAVEL_STYLES)[number], string> = {
+    Relaxed:
+      "Relaxed pace: at most one major temple per day, with generous rest time, and never schedule back-to-back travel days.",
+    Balanced:
+      "Balanced pace: typically one, occasionally two, temples per day when they are genuinely close together, with reasonable rest built in.",
+    Packed:
+      "Packed pace: fit two to three temples into a day wherever they are genuinely close together, minimizing idle time while staying realistic about travel time.",
+  };
+
   const festival =
     typeof body.festival === "string" && body.festival.trim()
       ? body.festival.trim()
@@ -254,6 +273,9 @@ ${
     ? interests.join(", ")
     : "Temples and heritage"
 }
+
+TRAVEL STYLE:
+${travelStyle} — ${TRAVEL_STYLE_GUIDANCE[travelStyle]}
 ${
   festival
     ? `
@@ -302,6 +324,8 @@ CRITICAL RULES:
 20. Write ranges using words instead.
 21. Plan temple visits in a single geographically efficient direction. Do NOT double back to a city or temple you have already left earlier in the trip, unless it is genuinely unavoidable.
 22. For the journey home, depart from the nearest reasonable airport or station to your LAST stop — not necessarily the same city or airport used to arrive in the region.
+23. Structure every day's description around a clear morning, afternoon and evening flow (e.g. "Begin the morning at...", "In the afternoon...", "As evening falls...") so the traveler can see roughly when each activity happens — without inventing exact clock times.
+24. Respect the requested travel style's pace (see TRAVEL STYLE above) when deciding how many temples to place in a single day.
 
 Examples:
 - Write "seven to ten hours", NOT "7-10 hours".
@@ -309,8 +333,8 @@ Examples:
 - Write "sixteen to eighteen kilometres", NOT "16-18 km".
 - Write "approximately one and a half hours", NOT "1.5 hours".
 
-21. Make all travel durations and distances easy to read in normal sentences.
-22. Never combine two numbers together without spaces or words between them.
+25. Make all travel durations and distances easy to read in normal sentences.
+26. Never combine two numbers together without spaces or words between them.
 
 Return exactly this structure:
 
@@ -357,6 +381,7 @@ Interests: ${
           ? interests.join(", ")
           : "Temples and heritage"
       }
+Travel style: ${travelStyle} — ${TRAVEL_STYLE_GUIDANCE[travelStyle]}
 ${
         festival
           ? `Festival focus: Build the itinerary around "${festival}", refer to it ONLY by that exact name.${

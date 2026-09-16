@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Calendar, MapPin, Sparkles, Globe } from 'lucide-react'
 import YatraRouteMapLoader, { YatraRouteDay } from '@/components/YatraRouteMapLoader'
+import { DayStopThumbs } from '@/components/DayStopThumbs'
 import { resolveTemples } from '@/lib/yatra-route'
 
 type ItineraryDay = {
@@ -127,6 +128,7 @@ export default async function PublicYatraPage({ params }: { params: Promise<{ id
                     {d.day} · {d.title}
                   </div>
                   <p style={{ color: "#6b4a3d", lineHeight: 1.6, margin: 0 }}>{d.description}</p>
+                  <DayStopThumbs stops={resolveTemples(d.templeSlugs)} />
                 </div>
               ))}
             </div>
