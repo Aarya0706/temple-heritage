@@ -2,10 +2,19 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, Sparkles, Loader2, X } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, Loader2, X, Check } from "lucide-react";
 import { temples } from "@/data/temples";
+import { resolveTemples } from "@/lib/yatra-route";
+import { DayStopThumbs } from "@/components/DayStopThumbs";
 
 const interests = ["Temples", "Architecture", "Food", "Nature", "History", "Festivals"];
+const travelStyles = [
+  { value: "Relaxed", blurb: "One temple a day, plenty of rest." },
+  { value: "Balanced", blurb: "A comfortable mix of sights and downtime." },
+  { value: "Packed", blurb: "See as much as realistically possible." },
+] as const;
+
+const STEPS = ["Where & when", "Region & pace", "Interests", "Review"] as const;
 
 // The AI planner is allowed to pull in a temple from an adjacent region when
 // it meaningfully improves the trip (see the system prompt in
@@ -72,14 +81,36 @@ function formatFestivalDate(iso: string): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
+function WizardSteps({ current }: { current: number }) {
+  return (
+    <>
+      <div className="wizard-steps">
+        {STEPS.map((_, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : "0 0 auto" }}>
+            <div className={`wizard-step-dot ${i === current ? "active" : ""} ${i < current ? "done" : ""}`}>
+              {i < current ? <Check size={14} /> : i + 1}
+            </div>
+            {i < STEPS.length - 1 && <div className={`wizard-step-line ${i < current ? "done" : ""}`} />}
+          </div>
+        ))}
+      </div>
+      <div className="wizard-step-label">
+        Step {current + 1} of {STEPS.length} · {STEPS[current]}
+      </div>
+    </>
+  );
+}
+
 function PlannerInner() {
   const searchParams = useSearchParams();
   const festivalParam = searchParams.get("festival");
   const templesParam = searchParams.get("temples");
   const dateParam = searchParams.get("date");
 
+  const [step, setStep] = useState(0);
   const [days, setDays] = useState("5");
   const [from, setFrom] = useState("Mumbai");
+  const [travelStyle, setTravelStyle] = useState<(typeof travelStyles)[number]["value"]>("Balanced");
   const [region, setRegion] = useState(() => {
     if (!festivalParam) return "South India";
     const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
@@ -103,6 +134,13 @@ function PlannerInner() {
     setSelected((current) => (current.includes(item) ? current.filter((x) => x !== item) : [...current, item]));
   }
 
+  function goNext() {
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  }
+  function goBack() {
+    setStep((s) => Math.max(s - 1, 0));
+  }
+
   async function generate() {
     setLoading(true);
     setError(null);
@@ -118,6 +156,7 @@ function PlannerInner() {
           days: Number(days),
           region,
           interests: selected,
+          travelStyle,
           festival,
           festivalDate,
           festivalTemples: festival && templesParam ? templesParam.split(",").filter(Boolean) : [],
@@ -150,7 +189,7 @@ function PlannerInner() {
           // Keep both: `region` stays the user's requested filter (useful for
           // "plan again" / analytics), `displayRegion` is what should actually
           // be shown to the user since it reflects the real itinerary content.
-          itinerary: { days: itinerary, summary, region, displayRegion, from },
+          itinerary: { days: itinerary, summary, region, displayRegion, from, travelStyle },
         }),
       });
       if (res.status === 401) {
@@ -218,47 +257,126 @@ function PlannerInner() {
         <div className="planner-grid">
           <div className="panel">
             <h3>Your preferences</h3>
-            <div className="form-group">
-              <label>Starting city</label>
-              <input value={from} onChange={(e) => setFrom(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>How many days?</label>
-              <select value={days} onChange={(e) => setDays(e.target.value)}>
-                {[2, 3, 4, 5, 6, 7].map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Preferred region</label>
-              <select value={region} onChange={(e) => setRegion(e.target.value)}>
-                <option>North India</option>
-                <option>South India</option>
-                <option>East India</option>
-                <option>West India</option>
-                <option>Central India</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Interests</label>
-              <div className="chips">
-                {interests.map((item) => (
-                  <button key={item} className={`chip ${selected.includes(item) ? "selected" : ""}`} onClick={() => toggleInterest(item)}>
-                    {item}
-                  </button>
-                ))}
+            <WizardSteps current={step} />
+
+            {step === 0 && (
+              <>
+                <div className="form-group">
+                  <label>Starting city</label>
+                  <input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="e.g. Mumbai" />
+                </div>
+                <div className="form-group">
+                  <label>How many days?</label>
+                  <select value={days} onChange={(e) => setDays(e.target.value)}>
+                    {[2, 3, 4, 5, 6, 7].map((d) => (
+                      <option key={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {step === 1 && (
+              <>
+                <div className="form-group">
+                  <label>Preferred region</label>
+                  <select value={region} onChange={(e) => setRegion(e.target.value)}>
+                    <option>North India</option>
+                    <option>South India</option>
+                    <option>East India</option>
+                    <option>West India</option>
+                    <option>Central India</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Travel style</label>
+                  <div className="chips">
+                    {travelStyles.map((ts) => (
+                      <button
+                        key={ts.value}
+                        type="button"
+                        className={`chip ${travelStyle === ts.value ? "selected" : ""}`}
+                        onClick={() => setTravelStyle(ts.value)}
+                        title={ts.blurb}
+                      >
+                        {ts.value}
+                      </button>
+                    ))}
+                  </div>
+                  <p style={{ margin: "8px 0 0", fontSize: 13, color: "#a3806f" }}>
+                    {travelStyles.find((ts) => ts.value === travelStyle)?.blurb}
+                  </p>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <div className="form-group">
+                <label>Interests</label>
+                <div className="chips">
+                  {interests.map((item) => (
+                    <button key={item} type="button" className={`chip ${selected.includes(item) ? "selected" : ""}`} onClick={() => toggleInterest(item)}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {step === 3 && (
+              <div style={{ marginBottom: 10 }}>
+                <div className="wizard-review-item">
+                  <span>Starting from</span>
+                  <span>{from || "—"}</span>
+                </div>
+                <div className="wizard-review-item">
+                  <span>Duration</span>
+                  <span>{days} days</span>
+                </div>
+                <div className="wizard-review-item">
+                  <span>Region</span>
+                  <span>{region}</span>
+                </div>
+                <div className="wizard-review-item">
+                  <span>Travel style</span>
+                  <span>{travelStyle}</span>
+                </div>
+                <div className="wizard-review-item">
+                  <span>Interests</span>
+                  <span>{selected.join(", ") || "General heritage"}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="wizard-nav">
+              {step > 0 && (
+                <button type="button" className="btn-secondary" style={{ color: "#8d2416", borderColor: "#b85c42" }} onClick={goBack}>
+                  <ArrowLeft size={16} /> Back
+                </button>
+              )}
+              {step < STEPS.length - 1 ? (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ background: "#a52d15", color: "white", border: 0, flex: 1 }}
+                  onClick={goNext}
+                  disabled={step === 0 && !from.trim()}
+                >
+                  Continue <ArrowRight size={16} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ background: "#a52d15", color: "white", border: 0, flex: 1, opacity: loading ? 0.7 : 1 }}
+                  onClick={generate}
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 size={17} className="spin" /> : <Sparkles size={17} />}
+                  {loading ? "Planning your yatra..." : "Generate My Yatra"}
+                </button>
+              )}
             </div>
-            <button
-              className="btn-primary"
-              style={{ background: "#a52d15", color: "white", width: "100%", border: 0, opacity: loading ? 0.7 : 1 }}
-              onClick={generate}
-              disabled={loading}
-            >
-              {loading ? <Loader2 size={17} className="spin" /> : <Sparkles size={17} />}
-              {loading ? "Planning your yatra..." : "Generate My Yatra"}
-            </button>
             {error && <p style={{ color: "#b3261e", marginTop: 10, fontSize: 14 }}>{error}</p>}
           </div>
 
@@ -299,7 +417,8 @@ function PlannerInner() {
                       {d.day} · {d.title}
                     </strong>
                     <p>{d.description}</p>
-                    <small style={{ color: "#9d3b1b" }}>Interests: {selected.join(", ") || "General heritage"}</small>
+                    <DayStopThumbs stops={resolveTemples(d.templeSlugs)} />
+                    <small style={{ color: "#9d3b1b", display: "block", marginTop: 8 }}>Interests: {selected.join(", ") || "General heritage"}</small>
                   </div>
                 ))}
 
