@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Tooltip, useMap } from "react-leaflet";
 import { divIcon } from "leaflet";
 import { ExternalLink } from "lucide-react";
 import { Temple } from "@/data/temples";
 import { googleMapsRouteUrl } from "@/lib/yatra-route";
+import { formatKm, RouteLeg, RouteOrigin } from "@/lib/route-optimize";
 import "leaflet/dist/leaflet.css";
 
 function numberedIcon(index: number) {
@@ -17,39 +18,63 @@ function numberedIcon(index: number) {
   });
 }
 
-/** Pans/zooms the map to fit every stop once, after the map instance exists. */
-function FitToStops({ stops }: { stops: Temple[] }) {
+/** The city (or previous day's temple) the traveller sets off from. */
+const originIcon = divIcon({
+  className: "yatra-route-marker yatra-route-marker-origin",
+  html: `<span></span>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
+/** Pans/zooms the map to fit every point once, after the map instance exists. */
+function FitToPoints({ points }: { points: [number, number][] }) {
   const map = useMap();
   // fitBounds/setView are side effects on the Leaflet map instance, not a
   // computed value, so this belongs in useEffect. We derive a stable string
-  // key from the stops first so the effect's dependency array only contains
-  // simple expressions (map, stopsKey) rather than an inline .map().join().
-  const stopsKey = useMemo(() => stops.map((t) => t.slug).join(","), [stops]);
+  // key from the points first so the effect's dependency array only contains
+  // simple expressions (map, pointsKey) rather than an inline .map().join().
+  const pointsKey = useMemo(() => points.map((p) => p.join()).join("|"), [points]);
 
   useEffect(() => {
-    if (stops.length === 1) {
-      map.setView([stops[0].lat, stops[0].lng], 7);
-    } else if (stops.length > 1) {
-      map.fitBounds(
-        stops.map((t) => [t.lat, t.lng] as [number, number]),
-        { padding: [36, 36] }
-      );
+    if (points.length === 1) {
+      map.setView(points[0], 7);
+    } else if (points.length > 1) {
+      map.fitBounds(points, { padding: [40, 40] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stopsKey, map]);
+  }, [pointsKey, map]);
   return null;
 }
 
-export default function YatraRouteMap({ stops }: { stops: Temple[] }) {
+export type YatraRouteMapProps = {
+  stops: Temple[];
+  /** Where this leg of the journey begins — null when the city couldn't be placed on the map. */
+  startsFrom: RouteOrigin | null;
+  legs: RouteLeg[];
+  totalKm: number;
+};
+
+export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: YatraRouteMapProps) {
   if (stops.length === 0) return null;
 
-  const center: [number, number] = [stops[0].lat, stops[0].lng];
-  const path = stops.map((t) => [t.lat, t.lng] as [number, number]);
+  const stopPoints = stops.map((t) => [t.lat, t.lng] as [number, number]);
+  const allPoints: [number, number][] = startsFrom
+    ? [[startsFrom.lat, startsFrom.lng], ...stopPoints]
+    : stopPoints;
+
+  // The approach leg is drawn separately and more faintly than the temple-to-
+  // temple legs: it's the drive into the region, not part of the pilgrimage.
+  const approach: [number, number][] | null =
+    startsFrom && stopPoints.length > 0 ? [[startsFrom.lat, startsFrom.lng], stopPoints[0]] : null;
+
+  // One leg per drawn segment, so a distance label can sit on each line.
+  const stopLegs = startsFrom ? legs.slice(1) : legs;
+  const approachLeg = startsFrom ? legs[0] : null;
 
   return (
     <div className="yatra-route-map">
       <MapContainer
-        center={center}
+        center={allPoints[0]}
         zoom={6}
         style={{ height: 340, width: "100%" }}
         scrollWheelZoom={false}
@@ -58,32 +83,77 @@ export default function YatraRouteMap({ stops }: { stops: Temple[] }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        {stops.length > 1 && (
-          <Polyline positions={path} pathOptions={{ color: "#c94a13", weight: 3, dashArray: "6 8" }} />
+
+        {approach && (
+          <Polyline positions={approach} pathOptions={{ color: "#c9a227", weight: 2, dashArray: "3 7" }}>
+            {approachLeg && (
+              <Tooltip permanent direction="center" className="yatra-route-leg-label">
+                {formatKm(approachLeg.km)}
+              </Tooltip>
+            )}
+          </Polyline>
         )}
-        {stops.map((t, i) => (
-          <Marker key={t.slug} position={[t.lat, t.lng]} icon={numberedIcon(i)} />
+
+        {stopPoints.slice(1).map((point, i) => (
+          <Polyline
+            key={stops[i + 1].slug}
+            positions={[stopPoints[i], point]}
+            pathOptions={{ color: "#c94a13", weight: 3 }}
+          >
+            {stopLegs[i] && (
+              <Tooltip permanent direction="center" className="yatra-route-leg-label">
+                {formatKm(stopLegs[i].km)}
+              </Tooltip>
+            )}
+          </Polyline>
         ))}
-        <FitToStops stops={stops} />
+
+        {startsFrom && (
+          <Marker position={[startsFrom.lat, startsFrom.lng]} icon={originIcon}>
+            <Tooltip direction="top">Start: {startsFrom.name}</Tooltip>
+          </Marker>
+        )}
+
+        {stops.map((t, i) => (
+          <Marker key={t.slug} position={[t.lat, t.lng]} icon={numberedIcon(i)}>
+            <Tooltip direction="top">{t.name}</Tooltip>
+          </Marker>
+        ))}
+
+        <FitToPoints points={allPoints} />
       </MapContainer>
 
       <div className="yatra-route-footer">
         <div className="yatra-route-stops">
-          {stops.map((t, i) => (
-            <span key={t.slug} className="yatra-route-stop">
-              <span className="yatra-route-stop-num">{i + 1}</span> {t.name}
-            </span>
-          ))}
+          {startsFrom && <span className="yatra-route-origin-chip">{startsFrom.name}</span>}
+          {stops.map((t, i) => {
+            const leg = legs[startsFrom ? i : i - 1];
+            return (
+              <span key={t.slug} className="yatra-route-stop">
+                {leg && <span className="yatra-route-leg-km">{formatKm(leg.km)} →</span>}
+                <span className="yatra-route-stop-num">{i + 1}</span> {t.name}
+              </span>
+            );
+          })}
         </div>
-        <a
-          href={googleMapsRouteUrl(stops)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary"
-          style={{ color: "#8c2416", borderColor: "#b95a40", display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}
-        >
-          Open route in Google Maps <ExternalLink size={15} />
-        </a>
+
+        <div className="yatra-route-actions">
+          <span
+            className="yatra-route-total"
+            title="Straight-line distance between stops — road distance will be longer."
+          >
+            {formatKm(totalKm)} between stops
+          </span>
+          <a
+            href={googleMapsRouteUrl(stops, startsFrom?.name)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary"
+            style={{ color: "#8c2416", borderColor: "#b95a40", display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}
+          >
+            Open route in Google Maps <ExternalLink size={15} />
+          </a>
+        </div>
       </div>
     </div>
   );

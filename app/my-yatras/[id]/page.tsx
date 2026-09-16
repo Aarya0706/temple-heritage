@@ -118,7 +118,7 @@ export default async function YatraDetailPage({ params }: { params: Promise<{ id
             </div>
           )}
 
-          <YatraRouteMapLoader days={routeDays} />
+          <YatraRouteMapLoader days={routeDays} from={from} />
 
           <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
             <DownloadItineraryButton

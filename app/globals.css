@@ -1096,6 +1096,113 @@ img { max-width: 100%; }
   font-weight: 700;
 }
 
+/* Route optimizer: the banner that offers a shorter ordering of the same
+   temples, plus the per-leg distances drawn on the map and listed below it. */
+
+.route-optimizer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border: 1px solid #e8c4ac;
+  border-left: 4px solid #c9a227;
+  border-radius: 12px;
+  background: #fdf6ec;
+}
+
+.route-optimizer-icon {
+  color: #a9791a;
+  flex-shrink: 0;
+}
+
+.route-optimizer-copy {
+  flex: 1 1 260px;
+  margin: 0;
+  color: #6b4a3d;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.route-optimizer-copy strong {
+  color: #8c2416;
+}
+
+.route-optimizer-btn {
+  color: #8c2416;
+  border-color: #b95a40;
+  white-space: nowrap;
+}
+
+.route-optimizer-clear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #6f7a55;
+  font-size: 13.5px;
+}
+
+.yatra-route-marker-origin span {
+  width: 18px;
+  height: 18px;
+  background: #c9a227;
+}
+
+.yatra-route-leg-label {
+  background: rgba(255, 253, 248, 0.94);
+  border: 1px solid #e8d3bb;
+  border-radius: 20px;
+  box-shadow: none;
+  color: #8c2416;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+/* Leaflet draws a small arrow on every tooltip; the distance pills sit on
+   top of the route lines, where an arrow just reads as a stray mark. */
+.yatra-route-leg-label::before {
+  display: none;
+}
+
+.yatra-route-origin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b4a3d;
+  font-size: 13px;
+}
+
+.yatra-route-origin-chip::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #c9a227;
+}
+
+.yatra-route-leg-km {
+  color: #a3806f;
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+}
+
+.yatra-route-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.yatra-route-total {
+  color: #6b4a3d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* =================================
    ALL TEMPLES MAP
 ================================= */

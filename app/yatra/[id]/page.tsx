@@ -134,7 +134,7 @@ export default async function PublicYatraPage({ params }: { params: Promise<{ id
             </div>
           )}
 
-          <YatraRouteMapLoader days={routeDays} />
+          <YatraRouteMapLoader days={routeDays} from={from} />
 
           <div style={{
             marginTop: 32,
