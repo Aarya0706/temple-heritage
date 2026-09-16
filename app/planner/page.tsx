@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, Sparkles, Loader2, X, Check } from "lucide-react
 import { temples } from "@/data/temples";
 import { resolveTemples } from "@/lib/yatra-route";
 import { DayStopThumbs } from "@/components/DayStopThumbs";
+import YatraRouteMapLoader from "@/components/YatraRouteMapLoader";
 
 const interests = ["Temples", "Architecture", "Food", "Nature", "History", "Festivals"];
 const travelStyles = [
@@ -421,6 +422,14 @@ function PlannerInner() {
                     <small style={{ color: "#9d3b1b", display: "block", marginTop: 8 }}>Interests: {selected.join(", ") || "General heritage"}</small>
                   </div>
                 ))}
+
+                <YatraRouteMapLoader
+                  days={itinerary!.map((d) => ({
+                    label: d.day,
+                    stops: resolveTemples(d.templeSlugs),
+                  }))}
+                  from={from}
+                />
 
                 {needsLogin ? (
                   <div
