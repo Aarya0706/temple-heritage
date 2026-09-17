@@ -13,6 +13,7 @@ import SaveTempleButton from "@/components/SaveTempleButton";
 import HighlightCard from "@/components/HighlightCard";
 import ReviewsSection from "@/components/ReviewsSection";
 import TempleMap from "@/components/TempleMap";
+import NearbyTemples from "@/components/NearbyTemples";
 import { createClient } from "@/lib/supabase/server";
 import TempleAskWidget from "@/components/TempleAskWidget";
 import AuspiciousDatesWidget from "@/components/AuspiciousDatesWidget";
@@ -222,6 +223,7 @@ export default async function TempleDetail({
                 <div className="eyebrow">✦ Getting There</div>
                 <h2>Location</h2>
                 <TempleMap name={temple.name} city={temple.city} state={temple.state} />
+                <NearbyTemples temple={temple} />
               </section>
             ),
           },
