@@ -155,7 +155,7 @@ export default async function TempleDetail({
 
             <div className="hero-actions">
               <Link
-                href="/planner"
+                href={`/planner?anchorTemple=${temple.slug}`}
                 className="btn-primary"
                 style={{ background: "#a52d15", color: "white" }}
               >
@@ -278,7 +278,7 @@ export default async function TempleDetail({
           <div className="underline" />
 
           <Link
-            href="/planner"
+            href={`/planner?anchorTemple=${temple.slug}`}
             className="btn-primary"
             style={{ marginTop: 25 }}
           >

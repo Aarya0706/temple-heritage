@@ -17,6 +17,7 @@ type PlannerRequest = {
   festival?: string | null;
   festivalDate?: string | null;
   festivalTemples?: string[];
+  anchorTempleSlug?: string | null;
 };
 
 type ItineraryDay = {
@@ -253,6 +254,16 @@ export async function POST(req: NextRequest) {
         .filter((t): t is (typeof temples)[number] => Boolean(t))
     : [];
 
+  // Resolve a single "anchor" temple against the real database — set when the
+  // planner was opened from a temple's own page via "Plan a Visit" /
+  // "Build My Itinerary", so the trip should be built around that specific
+  // temple rather than only the general region/interests. Never trust the
+  // client-supplied slug directly.
+  const anchorTemple =
+    typeof body.anchorTempleSlug === "string" && body.anchorTempleSlug.trim()
+      ? temples.find((t) => t.slug === body.anchorTempleSlug!.trim()) || null
+      : null;
+
   try {
     const templeContext = buildTempleContext().slice(0, 9000);
 
@@ -293,6 +304,14 @@ This trip is built around the festival "${festival}"${festivalDateReadable ? `, 
               )}. Your itinerary MUST feature at least one of these exact temples for the festival-celebration day — but choose WHICHEVER one of them fits best into a single, non-backtracking route through the region, and place the festival day wherever it naturally falls in that route (it does not have to be the last day, and you do not need to return to a temple you already left earlier in the trip just to end there). Do not substitute a different, more famous temple from an unrelated state.`
           : `The database has no temple explicitly tagged for "${festival}" — use your best geographic and cultural judgment to pick temples in the region genuinely associated with this festival.`
       } Center the itinerary's timing and activities around experiencing the festival — arrival before it, the celebration itself as a highlight day, and time to explore the surrounding temples and region. Refer to the festival ONLY by its exact given name, "${festival}" — do not substitute or rename it to a different, even closely related, festival (e.g. do not call it "Durga Puja" if the given name is "Navratri", or vice versa). Mention "${festival}" by that exact name in the day descriptions where relevant.
+`
+    : ""
+}
+${
+  anchorTemple
+    ? `
+ANCHOR TEMPLE:
+This trip is being planned from the page of a specific temple: ${anchorTemple.name} (slug: ${anchorTemple.slug}, ${anchorTemple.city}, ${anchorTemple.state}). The itinerary MUST feature this exact temple, ideally as one of the earlier highlight days, and the rest of the route should be built sensibly around it — nearby temples and stops that fit a single, non-backtracking route through the region containing it. Do not substitute a different, more famous temple in its place.
 `
     : ""
 }
@@ -393,6 +412,11 @@ ${
                     .join("; ")}. Pick whichever fits best into a non-backtracking route; the festival day doesn't have to be last.`
                 : ""
             }\n`
+          : ""
+      }
+${
+        anchorTemple
+          ? `Anchor temple: This trip MUST feature ${anchorTemple.name} (slug: ${anchorTemple.slug}, ${anchorTemple.city}, ${anchorTemple.state}), ideally as an early highlight day, with the rest of the route built sensibly around it.\n`
           : ""
       }
 Use only temples from this database:
