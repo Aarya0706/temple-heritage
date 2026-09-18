@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { MapPinned, Lock } from "lucide-react";
 import type { PassportData, PassportStamp } from "@/lib/passport";
 import { generatePassportPdf } from "@/lib/generatePassportPdf";
+import { computePassportStats } from "@/lib/passport-stats";
+import { REGIONS } from "@/lib/yatra-stats";
+import { temples } from "@/data/temples";
+import PassportMapLoader from "@/components/PassportMapLoader";
 
 const METHOD_LABEL: Record<PassportStamp["method"], string> = {
   manual: "Marked visited",
@@ -12,6 +17,14 @@ const METHOD_LABEL: Record<PassportStamp["method"], string> = {
   qr: "QR check-in",
   geo: "Geo-tagged",
   itinerary: "Yatra completed",
+};
+
+const REGION_ICON: Record<string, string> = {
+  "North India": "🏔️",
+  "South India": "🛕",
+  "East India": "🌊",
+  "West India": "🏜️",
+  "Central India": "🌳",
 };
 
 export default function PassportView({
@@ -25,6 +38,16 @@ export default function PassportView({
   const pct = passport.totalTemples
     ? Math.round((passport.stamps.length / passport.totalTemples) * 100)
     : 0;
+
+  const stats = useMemo(
+    () => computePassportStats(passport.stamps, passport.totalTemples),
+    [passport.stamps, passport.totalTemples]
+  );
+
+  const visitedTemples = useMemo(() => {
+    const slugs = new Set(passport.stamps.map((s) => s.templeSlug));
+    return temples.filter((t) => slugs.has(t.slug));
+  }, [passport.stamps]);
 
   // Prefer the deployed site's public URL (same env var used for OG image
   // tags -- see lib/site-url.ts) over window.location.origin, so the share
@@ -83,7 +106,67 @@ export default function PassportView({
         <div className="passport-progress-track">
           <div className="passport-progress-fill" style={{ width: `${pct}%` }} />
         </div>
+        <p className="passport-milestone">
+          {stats.allTemplesVisited
+            ? "Every sacred site visited — full passport!"
+            : stats.nextMilestone
+            ? `${stats.nextMilestone.remaining} more stamp${
+                stats.nextMilestone.remaining === 1 ? "" : "s"
+              } to unlock "${stats.nextMilestone.label}"`
+            : null}
+        </p>
       </div>
+
+      {stamps.length > 0 && (
+        <div className="passport-stats-row">
+          <div className="passport-stat">
+            <div className="passport-stat-value">{passport.stamps.length}</div>
+            <div className="passport-stat-label">Temples visited</div>
+          </div>
+          <div className="passport-stat">
+            <div className="passport-stat-value">
+              {stats.statesExplored.length}
+              <span className="passport-stat-total">/{stats.totalStates}</span>
+            </div>
+            <div className="passport-stat-label">States explored</div>
+          </div>
+        </div>
+      )}
+
+      {stamps.length > 0 && (
+        <div className="passport-badges">
+          <div className="passport-badges-heading">
+            <MapPinned size={15} /> Region badges
+          </div>
+          <div className="passport-badges-row">
+            {REGIONS.map((region) => {
+              const unlocked = stats.unlockedRegions.includes(region);
+              return (
+                <div
+                  key={region}
+                  className={`passport-badge ${unlocked ? "unlocked" : ""}`}
+                  title={
+                    unlocked
+                      ? `${region} — unlocked`
+                      : `${region} — visit a temple here to unlock`
+                  }
+                >
+                  <span>{REGION_ICON[region] || "🗺️"}</span>
+                  {region}
+                  {!unlocked && <Lock size={11} />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {stamps.length > 0 && (
+        <div className="passport-map-section">
+          <h3 className="passport-map-heading">Where you've been</h3>
+          <PassportMapLoader temples={visitedTemples} />
+        </div>
+      )}
 
       {stamps.length === 0 ? (
         <div className="passport-empty">

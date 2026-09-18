@@ -7,6 +7,7 @@ export type PassportStamp = {
   templeName: string;
   city: string | null;
   state: string | null;
+  region: string | null;
   imageUrl: string | null;
   visitedAt: string;
   method: "manual" | "review" | "qr" | "geo" | "itinerary";
@@ -37,6 +38,7 @@ function buildStamp(row: {
     templeName: t?.name ?? "Unknown Temple",
     city: t?.city ?? null,
     state: t?.state ?? null,
+    region: t?.region ?? null,
     imageUrl: t?.image ?? null,
     visitedAt: row.visited_at,
     method: row.check_in_method,

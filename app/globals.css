@@ -2818,6 +2818,87 @@ img { max-width: 100%; }
   transition: width 0.5s ease;
 }
 
+.passport-milestone {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a52d15;
+  min-height: 1em;
+}
+
+/* Stats row: temples visited / states explored */
+.passport-stats-row {
+  display: flex;
+  gap: 32px;
+  margin: 28px 0 0;
+  flex-wrap: wrap;
+}
+.passport-stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #a52d15;
+  line-height: 1;
+}
+.passport-stat-total {
+  font-size: 16px;
+  font-weight: 600;
+  color: #b3a190;
+  margin-left: 2px;
+}
+.passport-stat-label {
+  font-size: 13px;
+  color: #8c6a54;
+  margin-top: 4px;
+}
+
+/* Region badges */
+.passport-badges {
+  margin-top: 26px;
+}
+.passport-badges-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a1a10;
+  margin-bottom: 12px;
+}
+.passport-badges-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.passport-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #e3d5c3;
+  background: #f5efe6;
+  color: #b3a190;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.65;
+}
+.passport-badge.unlocked {
+  border-color: #e2b04a;
+  background: #fff2d0;
+  color: #8c5a10;
+  opacity: 1;
+}
+
+/* Map of visited temples */
+.passport-map-section {
+  margin-top: 32px;
+}
+.passport-map-heading {
+  font: 700 18px "Playfair Display", serif;
+  color: #3a1a10;
+  margin-bottom: 14px;
+}
+
 /* Empty state */
 .passport-empty {
   text-align: center;
