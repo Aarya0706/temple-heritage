@@ -107,16 +107,27 @@ function PlannerInner() {
   const festivalParam = searchParams.get("festival");
   const templesParam = searchParams.get("temples");
   const dateParam = searchParams.get("date");
+  // Set when arriving from a temple's own page via "Plan a Visit" / "Build My
+  // Itinerary" — anchors the generated yatra around that one temple, the way
+  // `temples`/`festival` already anchor it around a festival's temples.
+  const anchorTempleParam = searchParams.get("anchorTemple");
+  const anchorTempleData = anchorTempleParam
+    ? temples.find((t) => t.slug === anchorTempleParam) || null
+    : null;
 
   const [step, setStep] = useState(0);
   const [days, setDays] = useState("5");
   const [from, setFrom] = useState("Mumbai");
   const [travelStyle, setTravelStyle] = useState<(typeof travelStyles)[number]["value"]>("Balanced");
   const [region, setRegion] = useState(() => {
-    if (!festivalParam) return "South India";
-    const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
-    return dominantRegion(slugs) || "South India";
+    if (festivalParam) {
+      const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
+      return dominantRegion(slugs) || "South India";
+    }
+    if (anchorTempleData) return anchorTempleData.region;
+    return "South India";
   });
+  const [anchorTemple, setAnchorTemple] = useState<typeof anchorTempleData>(anchorTempleData);
   const [selected, setSelected] = useState(() => {
     const base = ["Temples", "Architecture"];
     return festivalParam ? [...base, "Festivals"] : base;
@@ -161,6 +172,7 @@ function PlannerInner() {
           festival,
           festivalDate,
           festivalTemples: festival && templesParam ? templesParam.split(",").filter(Boolean) : [],
+          anchorTempleSlug: anchorTemple ? anchorTemple.slug : null,
         }),
       });
       const data = await res.json();
@@ -246,6 +258,38 @@ function PlannerInner() {
                 setFestivalDate(null);
               }}
               aria-label="Clear festival context"
+              style={{ background: "none", border: 0, cursor: "pointer", color: "#6b4a3d", flexShrink: 0 }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!festival && anchorTemple && (
+        <section className="section-light" style={{ paddingTop: 0, paddingBottom: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              background: "#fdf1ea",
+              border: "1px solid #e8c4ac",
+              borderRadius: 10,
+              padding: "12px 18px",
+              margin: "0 auto 24px",
+              maxWidth: 900,
+            }}
+          >
+            <span style={{ color: "#6b4a3d", fontSize: 14 }}>
+              <Sparkles size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
+              Planning around <strong>{anchorTemple.name}</strong> — we&apos;ll build your yatra
+              around this temple and its surroundings.
+            </span>
+            <button
+              onClick={() => setAnchorTemple(null)}
+              aria-label="Clear temple context"
               style={{ background: "none", border: 0, cursor: "pointer", color: "#6b4a3d", flexShrink: 0 }}
             >
               <X size={16} />
