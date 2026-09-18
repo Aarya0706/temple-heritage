@@ -163,7 +163,7 @@ export default function PassportView({
 
       {stamps.length > 0 && (
         <div className="passport-map-section">
-          <h3 className="passport-map-heading">Where you&apos;ve been</h3>
+          <h3 className="passport-map-heading">{"Where you've been"}</h3>
           <PassportMapLoader temples={visitedTemples} />
         </div>
       )}
