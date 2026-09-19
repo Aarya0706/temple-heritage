@@ -1267,6 +1267,12 @@ img { max-width: 100%; }
   font-style: italic;
 }
 
+.yatra-route-loading-dot {
+  color: #9b7a6c;
+  font-weight: 400;
+  font-style: italic;
+}
+
 /* =================================
    ALL TEMPLES MAP
 ================================= */

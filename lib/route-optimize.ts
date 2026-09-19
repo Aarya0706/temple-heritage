@@ -76,7 +76,10 @@ export function pathLengthKm(points: LatLng[]): number {
  * first temple when a start point is known, so "Bhopal → Ujjain, 180 km"
  * shows up rather than silently disappearing.
  */
-export function buildLegs(stops: Temple[], start: RouteOrigin | null): RouteLeg[] {
+export function buildLegs(
+  stops: Pick<Temple, "name" | "lat" | "lng">[],
+  start: RouteOrigin | null
+): RouteLeg[] {
   const points: { name: string; lat: number; lng: number }[] = [
     ...(start ? [{ name: start.name, lat: start.lat, lng: start.lng }] : []),
     ...stops.map((t) => ({ name: t.name, lat: t.lat, lng: t.lng })),

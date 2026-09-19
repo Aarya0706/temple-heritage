@@ -6,7 +6,8 @@ import { divIcon } from "leaflet";
 import { ExternalLink } from "lucide-react";
 import { Temple } from "@/data/temples";
 import { googleMapsRouteUrl } from "@/lib/yatra-route";
-import { formatKm, RouteLeg, RouteOrigin } from "@/lib/route-optimize";
+import { formatKm, RouteOrigin } from "@/lib/route-optimize";
+import { describeLeg, formatDuration, TimedLeg } from "@/lib/route-time";
 import "leaflet/dist/leaflet.css";
 
 function numberedIcon(index: number) {
@@ -50,11 +51,22 @@ export type YatraRouteMapProps = {
   stops: Temple[];
   /** Where this leg of the journey begins — null when the city couldn't be placed on the map. */
   startsFrom: RouteOrigin | null;
-  legs: RouteLeg[];
+  legs: TimedLeg[];
   totalKm: number;
+  /** Sum of every leg's driving time, in minutes — null until road times are known for the whole route. */
+  totalDurationMin?: number | null;
+  /** True while the routing service call for this route is still in flight. */
+  loadingTravelTime?: boolean;
 };
 
-export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: YatraRouteMapProps) {
+export default function YatraRouteMap({
+  stops,
+  startsFrom,
+  legs,
+  totalKm,
+  totalDurationMin,
+  loadingTravelTime,
+}: YatraRouteMapProps) {
   if (stops.length === 0) return null;
 
   const stopPoints = stops.map((t) => [t.lat, t.lng] as [number, number]);
@@ -88,7 +100,7 @@ export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: Yatr
           <Polyline positions={approach} pathOptions={{ color: "#c9a227", weight: 2, dashArray: "3 7" }}>
             {approachLeg && (
               <Tooltip permanent direction="center" className="yatra-route-leg-label">
-                {formatKm(approachLeg.km)}
+                {describeLeg(approachLeg)}
               </Tooltip>
             )}
           </Polyline>
@@ -102,7 +114,7 @@ export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: Yatr
           >
             {stopLegs[i] && (
               <Tooltip permanent direction="center" className="yatra-route-leg-label">
-                {formatKm(stopLegs[i].km)}
+                {describeLeg(stopLegs[i])}
               </Tooltip>
             )}
           </Polyline>
@@ -130,7 +142,7 @@ export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: Yatr
             const leg = legs[startsFrom ? i : i - 1];
             return (
               <span key={t.slug} className="yatra-route-stop">
-                {leg && <span className="yatra-route-leg-km">{formatKm(leg.km)} →</span>}
+                {leg && <span className="yatra-route-leg-km">{describeLeg(leg)} →</span>}
                 <span className="yatra-route-stop-num">{i + 1}</span> {t.name}
               </span>
             );
@@ -139,8 +151,22 @@ export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: Yatr
 
         <div className="yatra-route-actions">
           <span className="yatra-route-total">
-            <span className="yatra-route-total-figure">{formatKm(totalKm)} straight-line distance</span>
-            <span className="yatra-route-total-note">Road distance may be longer.</span>
+            {totalDurationMin != null ? (
+              <>
+                <span className="yatra-route-total-figure">
+                  ~{formatDuration(totalDurationMin)} driving · {formatKm(totalKm)}
+                </span>
+                <span className="yatra-route-total-note">Estimated road time; actual travel time may vary.</span>
+              </>
+            ) : (
+              <>
+                <span className="yatra-route-total-figure">
+                  {formatKm(totalKm)} straight-line distance
+                  {loadingTravelTime && <span className="yatra-route-loading-dot"> · estimating travel time…</span>}
+                </span>
+                <span className="yatra-route-total-note">Road distance and travel time may be longer.</span>
+              </>
+            )}
           </span>
           <a
             href={googleMapsRouteUrl(stops, startsFrom?.name)}
