@@ -109,9 +109,33 @@ function findItineraryDataIssues(data: ItineraryResponse): {
   return { unknownSlugs, duplicateSlugs: [...duplicateSlugs] };
 }
 
-function hasNoDataIssues(data: ItineraryResponse): boolean {
-  const { unknownSlugs, duplicateSlugs } = findItineraryDataIssues(data);
-  return unknownSlugs.length === 0 && duplicateSlugs.length === 0;
+/**
+ * Runs the structural check and, only when it passes, the data-integrity
+ * check — in a single function so TypeScript's type-guard narrowing from
+ * `isValidItinerary` stays in scope for the `findItineraryDataIssues` call.
+ * (Splitting this into `const structurallyValid = isValidItinerary(...)`
+ * followed by a separate `structurallyValid ? findItineraryDataIssues(parsed) : ...`
+ * loses that narrowing, since TS can't trace the boolean back to `parsed`,
+ * which is what previously caused the ItineraryResponse | null build errors.)
+ */
+function analyzeItinerary(
+  data: ItineraryResponse | null,
+  totalDays: number
+): {
+  structurallyValid: boolean;
+  dataIssues: { unknownSlugs: string[]; duplicateSlugs: string[] };
+} {
+  if (!isValidItinerary(data, totalDays)) {
+    return {
+      structurallyValid: false,
+      dataIssues: { unknownSlugs: [], duplicateSlugs: [] },
+    };
+  }
+
+  return {
+    structurallyValid: true,
+    dataIssues: findItineraryDataIssues(data),
+  };
 }
 
 function normalizeItinerary(
@@ -415,10 +439,7 @@ Do not return more than ${safeDays} days.
 `;
 
     let parsed = await generateItinerary(prompt);
-    let structurallyValid = isValidItinerary(parsed, safeDays);
-    let dataIssues = structurallyValid
-      ? findItineraryDataIssues(parsed)
-      : { unknownSlugs: [], duplicateSlugs: [] };
+    let { structurallyValid, dataIssues } = analyzeItinerary(parsed, safeDays);
 
     if (!structurallyValid || dataIssues.unknownSlugs.length > 0 || dataIssues.duplicateSlugs.length > 0) {
       console.log(
@@ -497,8 +518,7 @@ Return only valid JSON:
 `;
 
       parsed = await generateItinerary(retryPrompt);
-      structurallyValid = isValidItinerary(parsed, safeDays);
-      dataIssues = structurallyValid ? findItineraryDataIssues(parsed) : { unknownSlugs: [], duplicateSlugs: [] };
+      ({ structurallyValid, dataIssues } = analyzeItinerary(parsed, safeDays));
     }
 
     if (!isValidItinerary(parsed, safeDays) || dataIssues.unknownSlugs.length > 0 || dataIssues.duplicateSlugs.length > 0) {
