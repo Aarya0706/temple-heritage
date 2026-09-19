@@ -80,6 +80,64 @@ function isValidItinerary(
   );
 }
 
+const KNOWN_TEMPLE_SLUGS = new Set(temples.map((t) => t.slug));
+
+/**
+ * Data-integrity checks on top of `isValidItinerary`'s structural check.
+ * Catches the two failure modes that used to reach the route layer
+ * unnoticed: a slug the model invented (not in the real database) and a
+ * slug the model placed on more than one day (which produces a 0 km leg
+ * once the route optimizer runs, since the "trip" visits the same place
+ * twice). Called only once `isValidItinerary` has already confirmed
+ * `data.days[].templeSlugs` exists and is an array.
+ */
+function findItineraryDataIssues(data: ItineraryResponse): {
+  unknownSlugs: string[];
+  duplicateSlugs: string[];
+} {
+  const allSlugs = data.days.flatMap((d) => d.templeSlugs);
+
+  const unknownSlugs = [...new Set(allSlugs.filter((slug) => !KNOWN_TEMPLE_SLUGS.has(slug)))];
+
+  const seen = new Set<string>();
+  const duplicateSlugs = new Set<string>();
+  for (const slug of allSlugs) {
+    if (seen.has(slug)) duplicateSlugs.add(slug);
+    seen.add(slug);
+  }
+
+  return { unknownSlugs, duplicateSlugs: [...duplicateSlugs] };
+}
+
+/**
+ * Runs the structural check and, only when it passes, the data-integrity
+ * check — in a single function so TypeScript's type-guard narrowing from
+ * `isValidItinerary` stays in scope for the `findItineraryDataIssues` call.
+ * (Splitting this into `const structurallyValid = isValidItinerary(...)`
+ * followed by a separate `structurallyValid ? findItineraryDataIssues(parsed) : ...`
+ * loses that narrowing, since TS can't trace the boolean back to `parsed`,
+ * which is what previously caused the ItineraryResponse | null build errors.)
+ */
+function analyzeItinerary(
+  data: ItineraryResponse | null,
+  totalDays: number
+): {
+  structurallyValid: boolean;
+  dataIssues: { unknownSlugs: string[]; duplicateSlugs: string[] };
+} {
+  if (!isValidItinerary(data, totalDays)) {
+    return {
+      structurallyValid: false,
+      dataIssues: { unknownSlugs: [], duplicateSlugs: [] },
+    };
+  }
+
+  return {
+    structurallyValid: true,
+    dataIssues: findItineraryDataIssues(data),
+  };
+}
+
 function normalizeItinerary(
   data: ItineraryResponse,
   totalDays: number,
@@ -354,6 +412,7 @@ Examples:
 
 25. Make all travel durations and distances easy to read in normal sentences.
 26. Never combine two numbers together without spaces or words between them.
+27. Every temple slug must appear AT MOST ONCE across the ENTIRE trip. Never place the same temple on two different days, even as a "return visit" or "on the way back" — once a temple has been visited on one day, do not include its slug again on any later day.
 
 Return exactly this structure:
 
@@ -380,15 +439,25 @@ Do not return more than ${safeDays} days.
 `;
 
     let parsed = await generateItinerary(prompt);
+    let { structurallyValid, dataIssues } = analyzeItinerary(parsed, safeDays);
 
-    if (!isValidItinerary(parsed, safeDays)) {
+    if (!structurallyValid || dataIssues.unknownSlugs.length > 0 || dataIssues.duplicateSlugs.length > 0) {
       console.log(
-        "Planner returned incomplete itinerary. Retrying..."
+        "Planner returned incomplete or invalid itinerary. Retrying...",
+        structurallyValid ? dataIssues : "structurally invalid"
       );
 
       const retryPrompt = `
 Your previous response was incomplete or invalid.
-
+${
+        dataIssues.duplicateSlugs.length > 0
+          ? `\nIt repeated the following temple slug(s) on more than one day, which is not allowed — each temple may appear on AT MOST ONE day across the entire trip: ${dataIssues.duplicateSlugs.join(", ")}. Rebuild the route so each of these appears only once.\n`
+          : ""
+      }${
+        dataIssues.unknownSlugs.length > 0
+          ? `\nIt used the following temple slug(s) that do NOT exist in the database below — do not invent slugs, use only ones listed: ${dataIssues.unknownSlugs.join(", ")}.\n`
+          : ""
+      }
 Generate the itinerary again from scratch.
 
 You MUST return exactly ${safeDays} complete days.
@@ -431,6 +500,8 @@ Every day must contain:
 
 The days array must contain exactly ${safeDays} objects.
 
+Each temple slug must appear on AT MOST ONE day across the entire trip — never repeat the same temple on two different days.
+
 Return only valid JSON:
 
 {
@@ -447,9 +518,10 @@ Return only valid JSON:
 `;
 
       parsed = await generateItinerary(retryPrompt);
+      ({ structurallyValid, dataIssues } = analyzeItinerary(parsed, safeDays));
     }
 
-    if (!isValidItinerary(parsed, safeDays)) {
+    if (!isValidItinerary(parsed, safeDays) || dataIssues.unknownSlugs.length > 0 || dataIssues.duplicateSlugs.length > 0) {
       return NextResponse.json(
         {
           error:

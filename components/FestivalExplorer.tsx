@@ -135,6 +135,10 @@ export function FestivalExplorer() {
                     <span className="festival-days-badge festival-days-badge-passed">
                       Passed this year
                     </span>
+                  ) : countdown.isOngoing ? (
+                    <span className="festival-days-badge festival-days-badge-ongoing">
+                      Happening now
+                    </span>
                   ) : (
                     <span className="festival-days-badge">
                       {countdown.daysUntil === 0

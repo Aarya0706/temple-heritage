@@ -61,7 +61,7 @@ export default async function FestivalDetail({ params }: { params: Promise<{ slu
             <h1>{festival.name}</h1>
             <div className="location"><MapPin size={17} style={{ verticalAlign: "middle" }} /> {festival.place}</div>
             <p>{festival.note}</p>
-            <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} />
+            <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} duration={festival.duration} />
             <div className="hero-actions">
               <Link
                 href={`/planner?festival=${encodeURIComponent(festival.name)}&temples=${festival.relatedTempleSlugs.join(",")}&date=${encodeURIComponent(festival.date2026)}`}

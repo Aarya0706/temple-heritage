@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CalendarHeart } from "lucide-react";
 import { formatFestivalDate } from "@/lib/festival-countdown";
+import { parseDurationDays } from "@/lib/ics";
 
 type TimeLeft = {
   days: number;
@@ -24,21 +25,38 @@ function getTimeLeft(target: Date): TimeLeft | null {
 }
 
 /**
- * Live countdown to a festival's verified `date2026`. If that date has
- * already passed, shows an honest "just celebrated" note instead of a
- * fabricated countdown — the real next date depends on next year's
- * lunar calendar, which isn't in the data set yet.
+ * Live countdown to a festival's verified `date2026`. Once that date
+ * arrives, the festival isn't necessarily over — `duration` (e.g. "10 days"
+ * for Ganesh Chaturthi) says how many days it actually runs, so this shows
+ * an "on now, through <end date>" state for the whole run and only falls
+ * back to the honest "was celebrated" note once the LAST day has passed.
+ * The real next-year date depends on next year's lunar calendar, which
+ * isn't in the data set yet.
  */
 export default function FestivalCountdown({
   festivalName,
   date2026,
+  duration,
   compact = false,
 }: {
   festivalName: string;
   date2026: string;
+  duration: string;
   compact?: boolean;
 }) {
   const target = new Date(`${date2026}T00:00:00`);
+  const spanDays = parseDurationDays(duration);
+  const endDate = new Date(target);
+  endDate.setDate(endDate.getDate() + spanDays - 1);
+  // End of the last calendar day, so the festival still counts as "ongoing"
+  // for the whole of its final day rather than cutting off at midnight.
+  const endOfCelebration = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    endDate.getDate(),
+    23, 59, 59, 999
+  );
+
   // Start as null on both server and the client's first render pass, and only
   // compute the real (Date.now()-based) value after mount. Computing it eagerly
   // in the useState initializer runs once on the server and again on the client
@@ -49,6 +67,7 @@ export default function FestivalCountdown({
   // invisible to the user.
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [nowMs, setNowMs] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,15 +81,19 @@ export default function FestivalCountdown({
       if (cancelled) return;
       setMounted(true);
       setTimeLeft(getTimeLeft(target));
+      setNowMs(Date.now());
     });
 
-    const id = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
+    const id = setInterval(() => {
+      setTimeLeft(getTimeLeft(target));
+      setNowMs(Date.now());
+    }, 1000);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date2026]);
+  }, [date2026, duration]);
 
   if (!mounted) {
     // Same shape as the "counting down" state below, with placeholder dashes,
@@ -95,11 +118,27 @@ export default function FestivalCountdown({
     );
   }
 
+  const isOngoing = nowMs !== null && nowMs >= target.getTime() && nowMs <= endOfCelebration.getTime();
+
+  if (isOngoing) {
+    return (
+      <div className={`festival-countdown festival-countdown-ongoing ${compact ? "festival-countdown-compact" : ""}`}>
+        <CalendarHeart size={compact ? 15 : 18} />
+        <span>
+          {festivalName} celebrations are on now — continuing through {formatFestivalDate(endDate)}.
+        </span>
+      </div>
+    );
+  }
+
   if (!timeLeft) {
     return (
       <div className={`festival-countdown festival-countdown-passed ${compact ? "festival-countdown-compact" : ""}`}>
         <CalendarHeart size={compact ? 15 : 18} />
-        <span>{festivalName} was celebrated on {formatFestivalDate(target)} this year.</span>
+        <span>
+          {festivalName} was celebrated {formatFestivalDate(target)}
+          {spanDays > 1 ? `–${formatFestivalDate(endDate)}` : ""} this year.
+        </span>
       </div>
     );
   }
