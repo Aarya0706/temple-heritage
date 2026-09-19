@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Map as MapIcon, Route, Check } from "lucide-react";
 import { Temple } from "@/data/temples";
@@ -11,6 +11,7 @@ import {
   formatKm,
   OptimizedDay,
 } from "@/lib/route-optimize";
+import { TimedLeg, toStraightLineLegs } from "@/lib/route-time";
 
 const YatraRouteMap = dynamic(() => import("./YatraRouteMap"), {
   ssr: false,
@@ -68,10 +69,78 @@ export default function YatraRouteMapLoader({
     };
   }, [trip]);
 
-  if (withStops.length === 0) return null;
-
   const views: OptimizedDay[] = wholeTrip ? [wholeTrip, ...trip.days] : trip.days;
-  const active = views[Math.min(activeIndex, views.length - 1)];
+  const active: OptimizedDay | undefined = views[Math.min(activeIndex, views.length - 1)];
+
+  const activePointsKey = useMemo(
+    () =>
+      !active
+        ? ""
+        : [
+            active.startsFrom ? `${active.startsFrom.lat},${active.startsFrom.lng}` : "",
+            ...active.stops.map((t) => `${t.lat},${t.lng}`),
+          ].join("|"),
+    [active]
+  );
+
+  // Road distance + driving time for the currently-active view, keyed to the
+  // route it was fetched for. Tagging the result with the key it belongs to
+  // (rather than resetting state imperatively when the view changes) means a
+  // response that arrives for a tab the traveller has since switched away
+  // from is simply ignored below, instead of racing a reset.
+  const [resolved, setResolved] = useState<{ key: string; legs: TimedLeg[] } | null>(null);
+  const [loadingTravelTime, setLoadingTravelTime] = useState(false);
+  const requestId = useRef(0);
+
+  useEffect(() => {
+    if (!active || active.legs.length === 0) return;
+
+    const points = [
+      ...(active.startsFrom
+        ? [{ name: active.startsFrom.name, lat: active.startsFrom.lat, lng: active.startsFrom.lng }]
+        : []),
+      ...active.stops.map((t) => ({ name: t.name, lat: t.lat, lng: t.lng })),
+    ];
+    const key = activePointsKey;
+    const legCount = active.legs.length;
+
+    const thisRequest = ++requestId.current;
+    // This effect exists specifically to kick off the routing-service fetch
+    // when the active route changes, so flagging "in flight" as soon as that
+    // starts is the effect's actual job, not a synchronization side-effect
+    // the linter's cascading-render warning is meant to catch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoadingTravelTime(true);
+
+    fetch("/api/route-time", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ points }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { legs?: TimedLeg[] } | null) => {
+        if (thisRequest !== requestId.current) return; // a newer request has since started
+        if (data?.legs && data.legs.length === legCount) {
+          setResolved({ key, legs: data.legs });
+        }
+      })
+      .catch(() => {
+        // Straight-line legs (derived below) already cover this case.
+      })
+      .finally(() => {
+        if (thisRequest === requestId.current) setLoadingTravelTime(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePointsKey]);
+
+  if (!active) return null;
+
+  const timedLegs: TimedLeg[] =
+    resolved && resolved.key === activePointsKey ? resolved.legs : toStraightLineLegs(active.legs);
+  const hasRoadTimes = timedLegs.some((leg) => leg.source === "road");
+  const totalDurationMin = hasRoadTimes
+    ? timedLegs.reduce((sum, leg) => sum + (leg.durationMin ?? 0), 0)
+    : null;
 
   return (
     <div style={{ marginTop: 32 }}>
@@ -130,8 +199,10 @@ export default function YatraRouteMapLoader({
       <YatraRouteMap
         stops={active.stops}
         startsFrom={active.startsFrom}
-        legs={active.legs}
+        legs={timedLegs}
         totalKm={active.totalKm}
+        totalDurationMin={totalDurationMin}
+        loadingTravelTime={loadingTravelTime}
       />
     </div>
   );
