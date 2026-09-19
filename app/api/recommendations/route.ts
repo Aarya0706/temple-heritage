@@ -30,6 +30,12 @@ export async function GET(req: NextRequest) {
     .filter(Boolean);
   const birthDate = req.nextUrl.searchParams.get("birthdate");
 
+  // Optional — lets the client ask for more than the original hardcoded 4
+  // (e.g. a "Show more" button on /discover). Clamped so a crafted request
+  // can't force an expensive over-large scored/sorted result.
+  const limitParam = Number(req.nextUrl.searchParams.get("limit"));
+  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 24) : 4;
+
   const supabase = await createClient();
 
   const {
@@ -51,7 +57,7 @@ export async function GET(req: NextRequest) {
     allSaved: allSaved ?? [],
     ratings: ratings ?? [],
     birthDate,
-    limit: 4,
+    limit,
   });
 
   return NextResponse.json({
