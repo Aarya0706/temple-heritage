@@ -46,31 +46,34 @@ type RecommendationResponse = {
   hasSavedTemples: boolean;
 };
 
+// Each signal gets its own accent so the reason reads at a glance instead
+// of blending into one generic pill — the badge is also the first thing
+// under the temple name now, not an afterthought under the description.
 function ReasonBadge({ reason }: { reason: Reason }) {
   if (reason.type === "saved_by_similar_users") {
     return (
-      <span className="reason-badge">
-        <Heart size={13} /> Saved by {reason.count} visitor{reason.count === 1 ? "" : "s"} with similar taste
+      <span className="reason-badge reason-badge-social">
+        <Heart size={14} /> Saved by {reason.count} visitor{reason.count === 1 ? "" : "s"} with similar taste
       </span>
     );
   }
   if (reason.type === "matches_horoscope") {
     return (
-      <span className="reason-badge">
-        <Moon size={13} /> Suited to {reason.sign}
+      <span className="reason-badge reason-badge-horoscope">
+        <Moon size={14} /> Suited to {reason.sign}
       </span>
     );
   }
   if (reason.type === "matches_interests") {
     return (
-      <span className="reason-badge">
-        <Sparkles size={13} /> Matches your interests
+      <span className="reason-badge reason-badge-interests">
+        <Sparkles size={14} /> Matches your interests
       </span>
     );
   }
   return (
-    <span className="reason-badge">
-      <TrendingUp size={13} /> Popular with visitors
+    <span className="reason-badge reason-badge-popular">
+      <TrendingUp size={14} /> Popular with visitors
     </span>
   );
 }
@@ -254,11 +257,11 @@ export default function DiscoverPage() {
                   <img src={temple.image} alt={temple.name} />
                   <div style={{ flex: 1 }}>
                     <h4>{temple.name}</h4>
-                    <p>📍 {temple.city}, {temple.state}</p>
-                    <p style={{ marginTop: 6 }}>{temple.shortDescription}</p>
-                    <div style={{ marginTop: 8 }}>
+                    <div style={{ margin: "4px 0 6px" }}>
                       <ReasonBadge reason={reason} />
                     </div>
+                    <p>📍 {temple.city}, {temple.state}</p>
+                    <p style={{ marginTop: 6 }}>{temple.shortDescription}</p>
                   </div>
                   <ArrowRight size={18} color="#a52d15" />
                 </Link>

@@ -96,60 +96,68 @@ export default function PassportView({
         )}
       </header>
 
-      <div className="passport-progress-wrap">
-        <div className="passport-progress-row">
-          <span className="passport-progress-count">
-            {passport.stamps.length} / {passport.totalTemples} stamps
-          </span>
-          <span className="passport-progress-pct">{pct}%</span>
-        </div>
-        <div className="passport-progress-track">
-          <div className="passport-progress-fill" style={{ width: `${pct}%` }} />
-        </div>
-        <p className="passport-milestone">
-          {stats.allTemplesVisited
-            ? "Every sacred site visited — full passport!"
-            : stats.nextMilestone
-            ? `${stats.nextMilestone.remaining} more stamp${
-                stats.nextMilestone.remaining === 1 ? "" : "s"
-              } to unlock "${stats.nextMilestone.label}"`
-            : null}
-        </p>
-      </div>
-
-      {stamps.length > 0 && (
-        <div className="passport-stats-row">
-          <div className="passport-stat">
-            <div className="passport-stat-value">{passport.stamps.length}</div>
-            <div className="passport-stat-label">Temples visited</div>
+      <div className="passport-summary">
+        <div className="passport-progress-wrap">
+          <div className="passport-progress-row">
+            <span className="passport-progress-count">
+              {passport.stamps.length} / {passport.totalTemples} stamps
+            </span>
+            <span className="passport-progress-pct">{pct}%</span>
           </div>
-          <div className="passport-stat">
-            <div className="passport-stat-value">
-              {stats.statesExplored.length}
-              <span className="passport-stat-total">/{stats.totalStates}</span>
+          <div className="passport-progress-track">
+            <div className="passport-progress-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="passport-milestone">
+            {stats.allTemplesVisited
+              ? "Every sacred site visited — full passport!"
+              : stats.nextMilestone
+              ? `${stats.nextMilestone.remaining} more stamp${
+                  stats.nextMilestone.remaining === 1 ? "" : "s"
+                } to unlock "${stats.nextMilestone.label}"`
+              : null}
+          </p>
+        </div>
+
+        {stamps.length > 0 && (
+          <div className="passport-stat-grid">
+            <div className="passport-stat-card">
+              <div className="passport-stat-value">{passport.stamps.length}</div>
+              <div className="passport-stat-label">Temples visited</div>
             </div>
-            <div className="passport-stat-label">States explored</div>
+            <div className="passport-stat-card">
+              <div className="passport-stat-value">
+                {stats.statesExplored.length}
+                <span className="passport-stat-total">/{stats.totalStates}</span>
+              </div>
+              <div className="passport-stat-label">States explored</div>
+            </div>
+            <div className="passport-stat-card">
+              <div className="passport-stat-value">
+                {stats.unlockedRegions.length}
+                <span className="passport-stat-total">/{REGIONS.length}</span>
+              </div>
+              <div className="passport-stat-label">Regions unlocked</div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {stamps.length > 0 && (
-        <div className="passport-badges">
-          <div className="passport-badges-heading">
-            <MapPinned size={15} /> Region badges
-          </div>
-          <div className="passport-badges-row">
-            {REGIONS.map((region) => {
-              const unlocked = stats.unlockedRegions.includes(region);
-              return (
-                <div
-                  key={region}
-                  className={`passport-badge ${unlocked ? "unlocked" : ""}`}
-                  title={
-                    unlocked
-                      ? `${region} — unlocked`
-                      : `${region} — visit a temple here to unlock`
-                  }
+        {stamps.length > 0 && (
+          <div className="passport-badges">
+            <div className="passport-badges-heading">
+              <MapPinned size={15} /> Region badges
+            </div>
+            <div className="passport-badges-row">
+              {REGIONS.map((region) => {
+                const unlocked = stats.unlockedRegions.includes(region);
+                return (
+                  <div
+                    key={region}
+                    className={`passport-badge ${unlocked ? "unlocked" : ""}`}
+                    title={
+                      unlocked
+                        ? `${region} — unlocked`
+                        : `${region} — visit a temple here to unlock`
+                    }
                 >
                   <span>{REGION_ICON[region] || "🗺️"}</span>
                   {region}
@@ -160,6 +168,7 @@ export default function PassportView({
           </div>
         </div>
       )}
+      </div>
 
       {stamps.length > 0 && (
         <div className="passport-map-section">

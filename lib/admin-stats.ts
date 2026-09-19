@@ -58,6 +58,68 @@ export function plannerRegionCounts(itineraries: YatraItinerary[]): RegionCount[
     .sort((a, b) => b.count - a.count);
 }
 
+export type MostSaved = {
+  slug: string;
+  name: string;
+  count: number;
+};
+
+/**
+ * The single most-saved temple across every user's saved_temples rows, with
+ * its slug resolved to a display name. Ties break on whichever slug sorts
+ * first, same as Array.prototype.sort's stable ordering — good enough for a
+ * single "most saved" headline stat, unlike topViewedTemples this only
+ * needs the winner, not a ranked list.
+ */
+export function mostSavedTemple(
+  rows: { temple_slug: string }[],
+  templeNames: Map<string, string>
+): MostSaved | null {
+  const counts = new Map<string, number>();
+  for (const { temple_slug: slug } of rows) {
+    if (!templeNames.has(slug)) continue;
+    counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+  if (counts.size === 0) return null;
+
+  let best: MostSaved | null = null;
+  for (const [slug, count] of counts) {
+    if (!best || count > best.count) {
+      best = { slug, name: templeNames.get(slug)!, count };
+    }
+  }
+  return best;
+}
+
+export type MostCompletedRegion = {
+  region: Region;
+  count: number;
+};
+
+/**
+ * The region with the most *completed* Yatras (not just saved/planned
+ * ones) — pass only itineraries whose plan has a completed_at set. Reuses
+ * the same regionsForItinerary resolution as plannerRegionCounts, so a
+ * completed plan spanning two regions still credits both.
+ */
+export function mostCompletedRegion(
+  completedItineraries: YatraItinerary[]
+): MostCompletedRegion | null {
+  const counts = plannerRegionCounts(completedItineraries);
+  return counts.length > 0 ? counts[0] : null;
+}
+
+/**
+ * How many Yatra plans were generated/saved in the last `days` days
+ * (default 7, i.e. "this week" on a rolling basis rather than calendar
+ * Mon-Sun, so the number is always "since a week ago" instead of
+ * resetting to 0 every Monday).
+ */
+export function yatrasGeneratedInLastDays(createdAtDates: string[], days = 7): number {
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return createdAtDates.filter((iso) => new Date(iso).getTime() >= cutoff).length;
+}
+
 export type SignupDay = {
   date: string; // YYYY-MM-DD
   signups: number;

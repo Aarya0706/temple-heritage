@@ -4,7 +4,14 @@ import { temples } from "@/data/temples";
 import StarRating from "@/components/StarRating";
 import AdminReviewActions from "@/components/AdminReviewActions";
 import { TopTemplesChart, PlannerRegionsChart, SignupGrowthChart } from "@/components/admin/AdminCharts";
-import { topViewedTemples, plannerRegionCounts, bucketSignupsByDay } from "@/lib/admin-stats";
+import {
+  topViewedTemples,
+  plannerRegionCounts,
+  bucketSignupsByDay,
+  mostSavedTemple,
+  mostCompletedRegion,
+  yatrasGeneratedInLastDays,
+} from "@/lib/admin-stats";
 import type { YatraItinerary } from "@/lib/yatra-stats";
 
 type ReviewRow = {
@@ -24,6 +31,28 @@ const STATUS_STYLE: Record<ReviewRow["status"], { bg: string; color: string }> =
   flagged: { bg: "#fdf0dc", color: "#a5661a" },
   hidden: { bg: "#f2e6e6", color: "#8c2416" },
 };
+
+// A single "what actually happened" headline number — deliberately plainer
+// than the stats-bar cards above (no big colored figure) since these carry
+// a name/label as the main content, with the count as supporting detail.
+function InsightTile({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div
+      style={{
+        border: "1px solid #f0ddc8",
+        borderRadius: 14,
+        padding: "14px 16px",
+        background: "white",
+      }}
+    >
+      <div style={{ color: "#9b6958", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>
+        {label}
+      </div>
+      <div style={{ color: "#542019", fontSize: 17, fontWeight: 700, marginTop: 6, lineHeight: 1.3 }}>{value}</div>
+      <div style={{ color: "#a5661a", fontSize: 13, marginTop: 2 }}>{detail}</div>
+    </div>
+  );
+}
 
 export default async function AdminReviewsPage({
   searchParams,
@@ -83,18 +112,32 @@ export default async function AdminReviewsPage({
   // for profiles/yatra_plans; temple_views is admin-only from the start --
   // see 0010_temple_views.sql). The actual chart math lives in
   // lib/admin-stats.ts so it stays unit-testable outside a server component.
-  const [{ data: viewRows }, { data: planRows }, { data: profileRows }] = await Promise.all([
-    supabase.from("temple_views").select("temple_slug, view_count"),
-    supabase.from("yatra_plans").select("itinerary"),
-    supabase.from("profiles").select("created_at"),
-  ]);
+  const [{ data: viewRows }, { data: planRows }, { data: profileRows }, { data: savedRows }] =
+    await Promise.all([
+      supabase.from("temple_views").select("temple_slug, view_count"),
+      supabase.from("yatra_plans").select("itinerary, created_at, completed_at"),
+      supabase.from("profiles").select("created_at"),
+      supabase.from("saved_temples").select("temple_slug"),
+    ]);
 
   const templeNames = new Map(temples.map((t) => [t.slug, t.name]));
   const topTemples = topViewedTemples(viewRows ?? [], templeNames);
-  const regionCounts = plannerRegionCounts(
-    (planRows ?? []).map((r) => r.itinerary as YatraItinerary)
-  );
+  const plans = planRows ?? [];
+  const regionCounts = plannerRegionCounts(plans.map((r) => r.itinerary as YatraItinerary));
   const signupSeries = bucketSignupsByDay((profileRows ?? []).map((r) => r.created_at as string));
+
+  // Compact "what actually happened lately" tiles — deliberately a handful
+  // of single-number headlines rather than more charts, so an admin can
+  // read the state of the platform in one glance without hunting through
+  // the charts below for it.
+  const insights = {
+    mostSaved: mostSavedTemple(savedRows ?? [], templeNames),
+    mostViewed: topTemples[0] ?? null,
+    mostCompletedRegion: mostCompletedRegion(
+      plans.filter((r) => r.completed_at).map((r) => r.itinerary as YatraItinerary)
+    ),
+    yatrasThisWeek: yatrasGeneratedInLastDays(plans.map((r) => r.created_at as string)),
+  };
 
   let query = supabase
     .from("temple_reviews")
@@ -155,6 +198,41 @@ export default async function AdminReviewsPage({
                 <div style={{ color: "#9b6958", fontSize: 13, marginTop: 4 }}>{stat.label}</div>
               </div>
             ))}
+          </div>
+
+          <h3 style={{ color: "#3a1a10", marginBottom: 14 }}>Insights</h3>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 14,
+              marginBottom: 32,
+            }}
+          >
+            <InsightTile
+              label="Most saved temple"
+              value={insights.mostSaved ? insights.mostSaved.name : "—"}
+              detail={insights.mostSaved ? `${insights.mostSaved.count} saves` : "No saves yet"}
+            />
+            <InsightTile
+              label="Most viewed temple"
+              value={insights.mostViewed ? insights.mostViewed.name : "—"}
+              detail={insights.mostViewed ? `${insights.mostViewed.views} views` : "No views logged yet"}
+            />
+            <InsightTile
+              label="Most completed region"
+              value={insights.mostCompletedRegion ? insights.mostCompletedRegion.region : "—"}
+              detail={
+                insights.mostCompletedRegion
+                  ? `${insights.mostCompletedRegion.count} completed Yatras`
+                  : "No completed Yatras yet"
+              }
+            />
+            <InsightTile
+              label="Yatras generated"
+              value={String(insights.yatrasThisWeek)}
+              detail="In the last 7 days"
+            />
           </div>
 
           <div

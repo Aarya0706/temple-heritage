@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { topViewedTemples, plannerRegionCounts, bucketSignupsByDay } from "./admin-stats";
+import {
+  topViewedTemples,
+  plannerRegionCounts,
+  bucketSignupsByDay,
+  mostSavedTemple,
+  mostCompletedRegion,
+  yatrasGeneratedInLastDays,
+} from "./admin-stats";
 
 // Real slugs from data/temples.ts, chosen for their known regions:
 // meenakshi-amman -> South India, dwarkadhish -> West India,
@@ -69,6 +76,71 @@ describe("plannerRegionCounts", () => {
 
   it("handles an empty list", () => {
     expect(plannerRegionCounts([])).toEqual([]);
+  });
+});
+
+describe("mostSavedTemple", () => {
+  const names = new Map([
+    ["meenakshi-amman", "Meenakshi Amman Temple"],
+    ["dwarkadhish", "Dwarkadhish Temple"],
+  ]);
+
+  it("returns the temple saved the most times, with its display name", () => {
+    const rows = [
+      { temple_slug: "dwarkadhish" },
+      { temple_slug: "meenakshi-amman" },
+      { temple_slug: "meenakshi-amman" },
+    ];
+    expect(mostSavedTemple(rows, names)).toEqual({
+      slug: "meenakshi-amman",
+      name: "Meenakshi Amman Temple",
+      count: 2,
+    });
+  });
+
+  it("skips slugs with no matching temple name", () => {
+    const rows = [{ temple_slug: "removed-temple" }, { temple_slug: "removed-temple" }];
+    expect(mostSavedTemple(rows, names)).toBeNull();
+  });
+
+  it("returns null for an empty saved_temples table", () => {
+    expect(mostSavedTemple([], names)).toBeNull();
+  });
+});
+
+describe("mostCompletedRegion", () => {
+  it("returns the region with the most completed Yatras", () => {
+    const completed = [
+      { days: [{ templeSlugs: ["meenakshi-amman"] }] }, // South
+      { days: [{ templeSlugs: ["kashi-vishwanath"] }] }, // North
+      { days: [{ templeSlugs: ["kashi-vishwanath"] }] }, // North
+    ];
+    expect(mostCompletedRegion(completed)).toEqual({ region: "North India", count: 2 });
+  });
+
+  it("returns null when nothing has been completed yet", () => {
+    expect(mostCompletedRegion([])).toBeNull();
+  });
+});
+
+describe("yatrasGeneratedInLastDays", () => {
+  function daysAgoIso(n: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString();
+  }
+
+  it("counts only plans created within the window", () => {
+    const dates = [daysAgoIso(1), daysAgoIso(3), daysAgoIso(10)];
+    expect(yatrasGeneratedInLastDays(dates, 7)).toBe(2);
+  });
+
+  it("returns 0 when nothing was created recently", () => {
+    expect(yatrasGeneratedInLastDays([daysAgoIso(30)], 7)).toBe(0);
+  });
+
+  it("handles an empty list", () => {
+    expect(yatrasGeneratedInLastDays([], 7)).toBe(0);
   });
 });
 

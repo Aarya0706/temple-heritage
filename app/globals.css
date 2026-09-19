@@ -360,7 +360,13 @@ button { cursor: pointer; }
 .result-card img { width:110px;height:90px;object-fit:cover;border-radius:12px; }
 .result-card h4 { margin:0 0 5px;font:700 20px "Playfair Display",serif; }
 .result-card p { margin:0;color:#77645b;font-size:14px; }
-.reason-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#fdf0dc;color:#a5661a;font-size:12px;font-weight:600; }
+.reason-badge { display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:#fdf0dc;color:#a5661a;font-size:12.5px;font-weight:700;border:1px solid transparent; }
+/* Distinct accent per recommendation signal so the "why" reads at a
+   glance instead of every card showing the same generic amber pill. */
+.reason-badge-social { background:#fdeef0;color:#a5273f;border-color:#f6d3d9; }
+.reason-badge-horoscope { background:#f0edfb;color:#5b3fa8;border-color:#ddd5f4; }
+.reason-badge-interests { background:#fdf0dc;color:#a5661a;border-color:#f3ddb4; }
+.reason-badge-popular { background:#e9f6ee;color:#2f7a4a;border-color:#c9ebd5; }
 .chat-box {
   width: min(1000px, calc(100vw - 48px));
   height: 360px;
@@ -2837,9 +2843,21 @@ img { max-width: 100%; }
   background: var(--cream-2);
 }
 
+/* Summary card: progress + stat tiles + region badges bundled into one
+   compact block instead of three loosely-spaced sections, so the top of
+   the page reads like a dashboard rather than leaving large gaps before
+   the map/travel log below. */
+.passport-summary {
+  border: 1px solid #f0ddc8;
+  border-radius: 18px;
+  background: #fffaf3;
+  padding: 22px 24px;
+  margin-bottom: 28px;
+}
+
 /* Progress */
 .passport-progress-wrap {
-  margin-bottom: 36px;
+  margin-bottom: 18px;
 }
 
 .passport-progress-row {
@@ -2885,21 +2903,29 @@ img { max-width: 100%; }
   min-height: 1em;
 }
 
-/* Stats row: temples visited / states explored */
-.passport-stats-row {
-  display: flex;
-  gap: 32px;
-  margin: 28px 0 0;
-  flex-wrap: wrap;
+/* Stat tiles: temples visited / states explored / regions unlocked —
+   bordered cards in a grid (same idea as the admin dashboard's insight
+   tiles) instead of a sparse flex row with big gaps between two numbers. */
+.passport-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+}
+.passport-stat-card {
+  border: 1px solid #f0ddc8;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: white;
 }
 .passport-stat-value {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   color: #a52d15;
   line-height: 1;
 }
 .passport-stat-total {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #b3a190;
   margin-left: 2px;
@@ -2912,7 +2938,7 @@ img { max-width: 100%; }
 
 /* Region badges */
 .passport-badges {
-  margin-top: 26px;
+  margin-top: 20px;
 }
 .passport-badges-heading {
   display: flex;
@@ -2950,7 +2976,7 @@ img { max-width: 100%; }
 
 /* Map of visited temples */
 .passport-map-section {
-  margin-top: 32px;
+  margin-top: 0;
 }
 .passport-map-heading {
   font: 700 18px "Playfair Display", serif;

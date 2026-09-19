@@ -1,0 +1,22 @@
+--- post_prev/base/app/festivals/[slug]/page.tsx	2026-09-19 10:27:16.052597507 +0000
++++ temple-heritage-main/app/festivals/[slug]/page.tsx	2026-09-19 10:26:53.133749902 +0000
+@@ -61,7 +61,7 @@
+             <h1>{festival.name}</h1>
+             <div className="location"><MapPin size={17} style={{ verticalAlign: "middle" }} /> {festival.place}</div>
+             <p>{festival.note}</p>
+-            <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} />
++            <FestivalCountdown festivalName={festival.name} date2026={festival.date2026} duration={festival.duration} />
+             <div className="hero-actions">
+               <Link
+                 href={`/planner?festival=${encodeURIComponent(festival.name)}&temples=${festival.relatedTempleSlugs.join(",")}&date=${encodeURIComponent(festival.date2026)}`}
+--- post_prev/base/lib/ics.ts	2026-09-19 10:27:18.433033404 +0000
++++ temple-heritage-main/lib/ics.ts	2026-09-19 10:26:59.212249841 +0000
+@@ -23,7 +23,7 @@
+ // leading number off the front for the event length and fall back to a
+ // single day when nothing parses.
+ export function parseDurationDays(duration: string): number {
+-  const match = duration.match(/^(\d+)/);
++  const match = typeof duration === "string" ? duration.match(/^(\d+)/) : null;
+   const days = match ? parseInt(match[1], 10) : 1;
+   return Number.isFinite(days) && days > 0 ? days : 1;
+ }

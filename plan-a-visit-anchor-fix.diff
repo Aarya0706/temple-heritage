@@ -1,0 +1,154 @@
+--- pristine/orig/app/temples/[slug]/page.tsx	2026-09-18 13:27:11.000000000 +0000
++++ temple-heritage-main/app/temples/[slug]/page.tsx	2026-09-18 13:42:56.096074721 +0000
+@@ -155,7 +155,7 @@
+ 
+             <div className="hero-actions">
+               <Link
+-                href="/planner"
++                href={`/planner?anchorTemple=${temple.slug}`}
+                 className="btn-primary"
+                 style={{ background: "#a52d15", color: "white" }}
+               >
+@@ -278,7 +278,7 @@
+           <div className="underline" />
+ 
+           <Link
+-            href="/planner"
++            href={`/planner?anchorTemple=${temple.slug}`}
+             className="btn-primary"
+             style={{ marginTop: 25 }}
+           >
+--- pristine/orig/app/planner/page.tsx	2026-09-18 13:27:11.000000000 +0000
++++ temple-heritage-main/app/planner/page.tsx	2026-09-18 13:43:11.082976172 +0000
+@@ -107,16 +107,27 @@
+   const festivalParam = searchParams.get("festival");
+   const templesParam = searchParams.get("temples");
+   const dateParam = searchParams.get("date");
++  // Set when arriving from a temple's own page via "Plan a Visit" / "Build My
++  // Itinerary" — anchors the generated yatra around that one temple, the way
++  // `temples`/`festival` already anchor it around a festival's temples.
++  const anchorTempleParam = searchParams.get("anchorTemple");
++  const anchorTempleData = anchorTempleParam
++    ? temples.find((t) => t.slug === anchorTempleParam) || null
++    : null;
+ 
+   const [step, setStep] = useState(0);
+   const [days, setDays] = useState("5");
+   const [from, setFrom] = useState("Mumbai");
+   const [travelStyle, setTravelStyle] = useState<(typeof travelStyles)[number]["value"]>("Balanced");
+   const [region, setRegion] = useState(() => {
+-    if (!festivalParam) return "South India";
+-    const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
+-    return dominantRegion(slugs) || "South India";
++    if (festivalParam) {
++      const slugs = templesParam ? templesParam.split(",").filter(Boolean) : [];
++      return dominantRegion(slugs) || "South India";
++    }
++    if (anchorTempleData) return anchorTempleData.region;
++    return "South India";
+   });
++  const [anchorTemple, setAnchorTemple] = useState<typeof anchorTempleData>(anchorTempleData);
+   const [selected, setSelected] = useState(() => {
+     const base = ["Temples", "Architecture"];
+     return festivalParam ? [...base, "Festivals"] : base;
+@@ -161,6 +172,7 @@
+           festival,
+           festivalDate,
+           festivalTemples: festival && templesParam ? templesParam.split(",").filter(Boolean) : [],
++          anchorTempleSlug: anchorTemple ? anchorTemple.slug : null,
+         }),
+       });
+       const data = await res.json();
+@@ -249,6 +261,38 @@
+               style={{ background: "none", border: 0, cursor: "pointer", color: "#6b4a3d", flexShrink: 0 }}
+             >
+               <X size={16} />
++            </button>
++          </div>
++        </section>
++      )}
++
++      {!festival && anchorTemple && (
++        <section className="section-light" style={{ paddingTop: 0, paddingBottom: 0 }}>
++          <div
++            style={{
++              display: "flex",
++              alignItems: "center",
++              justifyContent: "space-between",
++              gap: 12,
++              background: "#fdf1ea",
++              border: "1px solid #e8c4ac",
++              borderRadius: 10,
++              padding: "12px 18px",
++              margin: "0 auto 24px",
++              maxWidth: 900,
++            }}
++          >
++            <span style={{ color: "#6b4a3d", fontSize: 14 }}>
++              <Sparkles size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />
++              Planning around <strong>{anchorTemple.name}</strong> — we&apos;ll build your yatra
++              around this temple and its surroundings.
++            </span>
++            <button
++              onClick={() => setAnchorTemple(null)}
++              aria-label="Clear temple context"
++              style={{ background: "none", border: 0, cursor: "pointer", color: "#6b4a3d", flexShrink: 0 }}
++            >
++              <X size={16} />
+             </button>
+           </div>
+         </section>
+--- pristine/orig/app/api/planner/route.ts	2026-09-18 13:27:11.000000000 +0000
++++ temple-heritage-main/app/api/planner/route.ts	2026-09-18 13:43:25.196072516 +0000
+@@ -17,6 +17,7 @@
+   festival?: string | null;
+   festivalDate?: string | null;
+   festivalTemples?: string[];
++  anchorTempleSlug?: string | null;
+ };
+ 
+ type ItineraryDay = {
+@@ -253,6 +254,16 @@
+         .filter((t): t is (typeof temples)[number] => Boolean(t))
+     : [];
+ 
++  // Resolve a single "anchor" temple against the real database — set when the
++  // planner was opened from a temple's own page via "Plan a Visit" /
++  // "Build My Itinerary", so the trip should be built around that specific
++  // temple rather than only the general region/interests. Never trust the
++  // client-supplied slug directly.
++  const anchorTemple =
++    typeof body.anchorTempleSlug === "string" && body.anchorTempleSlug.trim()
++      ? temples.find((t) => t.slug === body.anchorTempleSlug!.trim()) || null
++      : null;
++
+   try {
+     const templeContext = buildTempleContext().slice(0, 9000);
+ 
+@@ -296,6 +307,14 @@
+ `
+     : ""
+ }
++${
++  anchorTemple
++    ? `
++ANCHOR TEMPLE:
++This trip is being planned from the page of a specific temple: ${anchorTemple.name} (slug: ${anchorTemple.slug}, ${anchorTemple.city}, ${anchorTemple.state}). The itinerary MUST feature this exact temple, ideally as one of the earlier highlight days, and the rest of the route should be built sensibly around it — nearby temples and stops that fit a single, non-backtracking route through the region containing it. Do not substitute a different, more famous temple in its place.
++`
++    : ""
++}
+ AVAILABLE TEMPLE DATABASE:
+ 
+ ${templeContext}
+@@ -395,6 +414,11 @@
+             }\n`
+           : ""
+       }
++${
++        anchorTemple
++          ? `Anchor temple: This trip MUST feature ${anchorTemple.name} (slug: ${anchorTemple.slug}, ${anchorTemple.city}, ${anchorTemple.state}), ideally as an early highlight day, with the rest of the route built sensibly around it.\n`
++          : ""
++      }
+ Use only temples from this database:
+ 
+ ${templeContext}
