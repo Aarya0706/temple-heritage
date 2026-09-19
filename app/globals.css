@@ -2940,6 +2940,47 @@ img { max-width: 100%; }
 .passport-badges {
   margin-top: 20px;
 }
+
+/* Milestone track: every named milestone (First Stamp, Wandering
+   Pilgrim, ... Heritage Keeper), not just a single "X more to unlock Y"
+   teaser line, so a pilgrim can see the whole ladder and which rungs
+   they've already reached. */
+.passport-milestones {
+  margin-top: 20px;
+}
+.passport-milestones-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.passport-milestone-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #e3d5c3;
+  background: #f5efe6;
+  color: #b3a190;
+  font-size: 13px;
+  font-weight: 600;
+}
+.passport-milestone-chip.unlocked {
+  border-color: #e2b04a;
+  background: #fff2d0;
+  color: #8c5a10;
+}
+.passport-milestone-chip.next {
+  border-color: var(--saffron);
+  background: #fff3e6;
+  color: #a52d15;
+  box-shadow: 0 0 0 1px var(--saffron);
+}
+.passport-milestone-count {
+  color: inherit;
+  opacity: 0.65;
+  font-weight: 700;
+}
 .passport-badges-heading {
   display: flex;
   align-items: center;

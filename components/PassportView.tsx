@@ -3,10 +3,10 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPinned, Lock } from "lucide-react";
+import { MapPinned, Lock, Check } from "lucide-react";
 import type { PassportData, PassportStamp } from "@/lib/passport";
 import { generatePassportPdf } from "@/lib/generatePassportPdf";
-import { computePassportStats } from "@/lib/passport-stats";
+import { computePassportStats, PASSPORT_MILESTONES } from "@/lib/passport-stats";
 import { REGIONS } from "@/lib/yatra-stats";
 import { temples } from "@/data/temples";
 import PassportMapLoader from "@/components/PassportMapLoader";
@@ -137,6 +137,37 @@ export default function PassportView({
                 <span className="passport-stat-total">/{REGIONS.length}</span>
               </div>
               <div className="passport-stat-label">Regions unlocked</div>
+            </div>
+          </div>
+        )}
+
+        {stamps.length > 0 && (
+          <div className="passport-milestones">
+            <div className="passport-badges-heading">
+              <MapPinned size={15} /> Milestones
+            </div>
+            <div className="passport-milestones-row">
+              {PASSPORT_MILESTONES.map((milestone) => {
+                const unlocked = passport.stamps.length >= milestone.count;
+                const isNext = stats.nextMilestone?.target === milestone.count;
+                return (
+                  <div
+                    key={milestone.count}
+                    className={`passport-milestone-chip ${unlocked ? "unlocked" : ""} ${
+                      isNext ? "next" : ""
+                    }`}
+                    title={
+                      unlocked
+                        ? `${milestone.label} — unlocked at ${milestone.count} stamps`
+                        : `${milestone.label} — unlocks at ${milestone.count} stamps`
+                    }
+                  >
+                    {unlocked ? <Check size={12} /> : <Lock size={11} />}
+                    <span className="passport-milestone-label">{milestone.label}</span>
+                    <span className="passport-milestone-count">{milestone.count}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
