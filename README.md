@@ -1,97 +1,424 @@
 # 🛕 Temple Heritage
 
-**A full-stack Next.js + Supabase platform for discovering Indian temples and planning AI-assisted pilgrimages.**
+**An AI-powered full-stack platform for discovering India's temple heritage and planning personalized pilgrimages.**
 
-🔗 **[Live Demo](https://templeheritage.me/)** · **[GitHub Repo](https://github.com/Aarya0706/temple-heritage)**
+<p align="center">
+  <a href="https://templeheritage.me/">Live Demo</a> •
+  <a href="https://github.com/Aarya0706/temple-heritage">GitHub</a>
+</p>
 
 ---
 
-## 📸 Screenshots
+## 📸 Preview
 
-| Home | Itinerary | Planner |
-|---|---|---|
+| Home                                   | Itinerary                                        | AI Planner                                   |
+| -------------------------------------- | ------------------------------------------------ | -------------------------------------------- |
 | ![Home](./public/screenshots/home.png) | ![Itinerary](./public/screenshots/itinerary.png) | ![Planner](./public/screenshots/planner.png) |
 
 ---
 
-## ✨ Key Features
+## ✨ Overview
 
-* 🛕 **Explore Temples** — profiles with history, architecture, deity, festivals, and darshan info
-* 🤖 **AI Yatra Planner** — Groq-powered, day-wise itinerary from city, days, region & interests; exports to PDF
-* 🧠 **Temple Recommender** — personalized suggestions based on interests
-* 📅 **Festival Calendar** — festivals linked to the temples that host them
-* ♈ **Horoscope Finder** — zodiac-based temple discovery
-* ❤️ **Saved Temples & My Yatras** — save temples and revisit generated itineraries
-* 🏅 **Yatra Completion Badges** — completion streaks + region badges (North/South/East/West/Central India)
-* 👨‍💼 **Admin Dashboard** — RLS-protected review moderation, platform stats, and usage charts
-* 📜 **Pilgrimage Passport** — a running record of visits, exportable and shareable
-* 💬 **Temple AI Assistant** — chat + voice Q&A about temples and planning
-* ⭐ **Reviews & Photos** — ratings, written reviews, up to 3 compressed photos each
+Temple Heritage is a full-stack web platform built to make India's rich temple heritage easier to **discover, understand, and experience**.
+
+Instead of separating cultural information from travel planning, the platform combines:
+
+* 🛕 Curated temple discovery
+* 🤖 AI-assisted pilgrimage planning
+* 🧠 Personalized temple recommendations
+* 🗺️ Interactive maps and route visualization
+* 📅 Festival discovery and temple associations
+* 💬 AI-powered temple assistant with voice interaction
+* ❤️ Saved temples and personalized yatras
+* ⭐ Reviews, ratings, and visitor photos
+* 🏅 Pilgrimage passport and completion badges
+* 👨‍💼 Admin moderation and analytics
+
+The result is a single platform that connects **heritage discovery + intelligent planning + user-generated experiences**.
+
+---
+
+## 🚀 Live Application
+
+**Live:** https://templeheritage.me/
+
+The application is deployed on **Vercel**.
+
+---
+
+## 🌟 Key Features
+
+### 🛕 Temple Discovery
+
+Explore a curated collection of Indian temples with structured information including:
+
+* History
+* Architecture
+* Deity
+* Festivals
+* Darshan information
+* Best time to visit
+* Visitor and access notes
+* Highlights and nearby destinations
+
+Each temple has its own dedicated detail experience rather than being reduced to a simple card.
+
+---
+
+### 🤖 AI Yatra Planner
+
+Generate a personalized pilgrimage itinerary using:
+
+* Starting city
+* Trip duration
+* Preferred region
+* Interests
+* Travel style
+* Festival focus
+* Optional anchor temple
+
+The planner generates a complete day-wise journey and combines AI output with the application's structured temple data.
+
+### AI planning pipeline
+
+```text
+User Preferences
+       │
+       ▼
+Planner Input
+       │
+       ▼
+Temple Dataset Context
+       │
+       ▼
+Groq AI
+       │
+       ▼
+Structured JSON
+       │
+       ▼
+Schema + Data Validation
+       │
+       ├── Invalid temple slug
+       ├── Duplicate temple
+       ├── Missing day
+       └── Malformed response
+       │
+       ▼
+Retry / Fallback Handling
+       │
+       ▼
+Normalized Itinerary
+       │
+       ▼
+Route Visualization
+       │
+       ▼
+Save / Export
+```
+
+The planner is designed to prevent common LLM failure cases such as invented destinations, repeated temples, incomplete day arrays, and malformed responses.
+
+---
+
+### 🧠 Temple AI Assistant
+
+Ask questions about:
+
+* Temple history
+* Deities
+* Festivals
+* Travel planning
+* Pilgrimage destinations
+* Temple-specific information
+
+The assistant supports conversational interaction and voice-based input/output.
+
+Responses are grounded against the application's structured temple and festival data instead of relying entirely on unrestricted model generation.
+
+---
+
+### 🧭 Personalized Recommendations
+
+Recommend temples using user interests and travel preferences such as:
+
+* Heritage
+* Architecture
+* Spiritual traditions
+* Deity preferences
+* Region
+* Travel style
+
+The recommendation system combines structured temple metadata with deterministic application logic.
+
+---
+
+### 🗺️ Interactive Temple Map
+
+Explore temples geographically through an interactive map.
+
+Features include:
+
+* Clustered temple markers
+* State-based exploration
+* Deity filtering
+* Festival filtering
+* Route visualization
+* Google Maps handoff for navigation
+
+---
+
+### 📅 Festival Discovery
+
+Browse festivals connected to temples and discover:
+
+* Festival dates
+* Associated temples
+* Cultural context
+* Festival-specific temple experiences
+
+Festival information is also used by the AI planner when building festival-focused yatras.
+
+---
+
+### ♈ Horoscope-Based Discovery
+
+Discover temples using zodiac and planetary associations.
+
+Users can explore temple recommendations based on their sun sign and related traditional associations.
+
+---
+
+### ❤️ Saved Temples & My Yatras
+
+Authenticated users can:
+
+* Save temples
+* Save generated itineraries
+* Revisit previous yatras
+* Track pilgrimage progress
+* View completed journeys
+
+---
+
+### 🏅 Pilgrimage Passport
+
+The pilgrimage passport turns temple visits into a persistent travel record.
+
+Users can:
+
+* Track visited temples
+* Record completed journeys
+* Earn regional badges
+* View pilgrimage statistics
+* Export their passport
+* Share a public passport experience
+
+---
+
+### ⭐ Reviews & Visitor Photos
+
+Users can submit:
+
+* Star ratings
+* Written reviews
+* Visitor photos
+
+The system includes moderation states and restrictions around review/photo creation.
+
+Photo uploads are compressed client-side before storage, while limits are also enforced at the database layer.
+
+---
+
+### 👨‍💼 Admin Dashboard
+
+An admin experience is included for platform management.
+
+Capabilities include:
+
+* Review moderation
+* Review status management
+* Platform statistics
+* Usage analytics
+* Administrative access control
+
+Admin access is protected through **Supabase Row Level Security and database-level authorization controls**.
 
 ---
 
 ## 🏗️ Architecture
 
 ```text
-┌─────────────────────────────────────┐
-│            Next.js App              │
-│       React UI + App Router         │
-└──────────────────┬──────────────────┘
-                   │
-          ┌────────┴─────────┐
-          │                  │
-          ▼                  ▼
-   Next.js API Routes     Supabase
-          │              Auth + Postgres
-          │               + Storage
-          │                  │
-          ▼                  ▼
-       Groq AI          User Content
-          │
-          ▼
-  Validated AI Response
+                         ┌──────────────────────┐
+                         │      Next.js App     │
+                         │ React + App Router   │
+                         └──────────┬───────────┘
+                                    │
+                   ┌────────────────┼────────────────┐
+                   │                │                │
+                   ▼                ▼                ▼
+            UI / Components     API Routes      Server Logic
+                   │                │                │
+                   │                ▼                │
+                   │             Groq AI             │
+                   │                │                │
+                   │                ▼                │
+                   │       Validation / Retry        │
+                   │                │                │
+                   └────────────────┼────────────────┘
+                                    │
+                                    ▼
+                           ┌──────────────────┐
+                           │     Supabase     │
+                           │ Auth / Postgres  │
+                           │     Storage      │
+                           └──────────────────┘
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🧰 Tech Stack
 
-| Technology                  | Purpose                                                   |
-| --------------------------- | --------------------------------------------------------- |
-| **Next.js**                 | Full-stack React framework and application routing        |
-| **React**                   | Frontend user interface                                   |
-| **TypeScript**              | Type-safe application development                         |
-| **Supabase**                | Authentication, PostgreSQL database, and storage          |
-| **Groq SDK**                | AI-powered itinerary generation and assistant experiences |
-| **Leaflet / React Leaflet** | Interactive map experiences                               |
-| **jsPDF**                   | Downloadable itinerary generation                         |
-| **Recharts**                | Data visualization and dashboard charts                   |
-| **Lucide React**            | Interface icons                                           |
-| **Vitest**                  | Automated tests                                           |
+| Technology                  | Purpose                                           |
+| --------------------------- | ------------------------------------------------- |
+| **Next.js**                 | Full-stack framework and application routing      |
+| **React**                   | Interactive user interface                        |
+| **TypeScript**              | Type-safe application development                 |
+| **Supabase**                | Authentication, PostgreSQL database and storage   |
+| **Groq SDK**                | AI itinerary planning and assistant capabilities  |
+| **Leaflet / React Leaflet** | Interactive maps and route visualization          |
+| **jsPDF**                   | Client-side itinerary and passport PDF generation |
+| **Recharts**                | Admin analytics and data visualization            |
+| **Lucide React**            | UI icons                                          |
+| **Vitest**                  | Automated unit testing                            |
+| **GitHub Actions**          | CI and database migration workflow                |
+| **Vercel**                  | Production deployment                             |
+
+---
+
+## 🔐 Engineering Highlights
+
+Temple Heritage was designed as more than a collection of UI screens.
+
+### AI Reliability
+
+AI responses are validated before they reach the application UI.
+
+The planner checks for:
+
+* Exact requested number of days
+* Valid temple slugs
+* Duplicate temple destinations
+* Required response structure
+* Safe normalization of generated content
+* Retry handling for invalid generations
+
+This reduces the risk of directly trusting model output.
+
+### Data Integrity
+
+The application validates AI-selected temple destinations against the application's real temple dataset rather than allowing arbitrary model-generated destinations.
+
+### Authentication & Authorization
+
+Supabase Authentication is combined with PostgreSQL Row Level Security for user-specific features and admin functionality.
+
+### Review Moderation
+
+Reviews support moderation states and controlled visibility.
+
+Review photo uploads are limited both in the application layer and at the database level.
+
+### API Protection
+
+AI-heavy endpoints use application-level rate limiting to reduce unnecessary or abusive requests.
+
+### Image Handling
+
+User-uploaded review images are compressed client-side before being stored.
+
+### Route Logic
+
+Generated itineraries can be converted into geographically organized route visualizations, with travel information surfaced separately from the underlying AI-generated descriptions.
+
+### Automated Testing
+
+The repository contains tests covering multiple application utilities and domain-specific logic, including:
+
+* AI helpers
+* Recommendations
+* Route optimization
+* Route timing
+* Temple search
+* Festival logic
+* Statistics
+* Speech utilities
+* Zodiac logic
+
+---
+
+## 🗃️ Database & Supabase
+
+Supabase is used for:
+
+```text
+Authentication
+     │
+     ├── Profiles
+     ├── Saved Temples
+     ├── Yatra Plans
+     ├── Reviews
+     ├── Review Photos
+     └── Pilgrimage / Completion Data
+```
+
+The repository includes versioned SQL migrations for database changes.
+
+Important database protections include:
+
+* Row Level Security
+* Admin authorization controls
+* Review ownership policies
+* Photo ownership policies
+* Review/photo limits
+* Referential cleanup through foreign keys
+* Aggregated review ratings
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-app/                 # Next.js routes, pages and API endpoints
-components/          # Reusable UI components
-data/                # Temple, festival and application data
-lib/                 # Shared utilities and services
-public/              # Static assets
-scripts/             # Utility and development scripts
-supabase/            # Supabase/database-related files
-
-README.md             # Project documentation
-package.json          # Dependencies and scripts
-next.config.ts        # Next.js configuration
-tsconfig.json         # TypeScript configuration
-vitest.config.ts      # Vitest configuration
+temple-heritage/
+│
+├── app/                    # Next.js routes, pages and API endpoints
+│   ├── api/                # Server-side API routes
+│   ├── admin/              # Admin dashboard
+│   ├── planner/            # AI pilgrimage planner
+│   ├── temples/            # Temple discovery and detail pages
+│   ├── festivals/          # Festival discovery
+│   ├── assistant/          # AI assistant
+│   ├── recommender/        # Temple recommendations
+│   ├── passport/           # Shared pilgrimage passport
+│   └── my-yatras/          # Saved pilgrimage plans
+│
+├── components/             # Reusable React components
+├── data/                   # Temple and festival data
+├── lib/                    # Shared business logic and utilities
+├── public/                 # Images, screenshots and static assets
+├── scripts/                # Development / utility scripts
+├── supabase/               # SQL migrations and database setup
+├── .github/workflows/      # CI/CD workflows
+│
+├── package.json
+├── next.config.ts
+├── tsconfig.json
+└── vitest.config.ts
 ```
 
 ---
 
-## ⚙️ Run Locally
+## ⚙️ Getting Started
 
 ### 1. Clone the repository
 
@@ -108,7 +435,7 @@ npm install
 
 ### 3. Configure environment variables
 
-Create a `.env.local` file using the variables required by the project and your Supabase/Groq setup.
+Create a `.env.local` file using `.env.example`.
 
 Example:
 
@@ -118,7 +445,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 GROQ_API_KEY=your_groq_api_key
 ```
 
-> Keep API keys and other secrets in environment variables. Never commit secrets to GitHub.
+Never commit secrets or API keys to the repository.
 
 ### 4. Start the development server
 
@@ -126,113 +453,154 @@ GROQ_API_KEY=your_groq_api_key
 npm run dev
 ```
 
-Open **http://localhost:3000** in your browser.
-
----
-
-## 🧪 Available Scripts
-
-```bash
-npm run dev          # Start development server
-npm run build        # Create production build
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm test             # Run Vitest tests
-npm run test:watch   # Run tests in watch mode
-```
-
----
-
-## 🧠 AI Yatra Planning Pipeline
+Open:
 
 ```text
-User Preferences
-       │
-       ▼
-┌──────────────────────┐
-│ Starting City        │
-│ Number of Days       │
-│ Preferred Region     │
-│ Personal Interests   │
-└──────────┬───────────┘
-           │
-           ▼
-     Temple Context
-           │
-           ▼
-        Groq AI
-           │
-           ▼
-    Structured JSON
-           │
-           ▼
-  Validation & Parsing
-           │
-           ▼
- Response Normalization
-           │
-           ▼
-  Personalized Yatra
-           │
-           ▼
- Downloadable Itinerary
+http://localhost:3000
 ```
 
-The AI flow is designed to handle imperfect model output safely through validation, normalization, fallback handling, rate limiting, and error handling.
+---
+
+## 🧪 Development Commands
+
+```bash
+npm run dev
+```
+
+Start the development server.
+
+```bash
+npm run build
+```
+
+Create a production build.
+
+```bash
+npm run start
+```
+
+Run the production build locally.
+
+```bash
+npm run lint
+```
+
+Run ESLint checks.
+
+```bash
+npm test
+```
+
+Run the automated test suite.
+
+```bash
+npm run test:watch
+```
+
+Run Vitest in watch mode.
 
 ---
 
-## 🔐 Engineering Highlights
+## 🔄 CI / CD
 
-Temple Heritage is built with a focus on practical application behavior, not just UI screens.
+GitHub Actions runs on pushes and pull requests targeting `main`.
 
-Key engineering aspects include:
+The workflow performs:
 
-* Server-side API routes
-* Supabase authentication and persistence
-* AI response validation and normalization
-* Fallback handling for failed AI responses
-* Rate limiting around AI functionality
-* Client-side image optimization before upload
-* Downloadable generated itineraries
-* Automated testing with Vitest
-* Responsive experiences for desktop and mobile
+```text
+Push / Pull Request
+        │
+        ▼
+Install Dependencies
+        │
+        ▼
+ESLint
+        │
+        ▼
+Automated Tests
+        │
+        ▼
+Production Database Migrations
+```
+
+Database migrations are only pushed after the validation job succeeds on the main branch.
 
 ---
 
-## 🌐 Deployment
+## 🧠 What Makes the Project Different
 
-The application is deployed on **Vercel**.
+Temple Heritage brings together several areas of modern application development in one system:
 
-🔗 **Live:** https://templeheritage.me/
+**AI**
+→ structured generation, grounding, validation, retries and rate limiting
+
+**Full Stack**
+→ Next.js frontend + server-side APIs + Supabase backend
+
+**Database Engineering**
+→ PostgreSQL, migrations, RLS and authorization policies
+
+**Product Design**
+→ discovery, planning, personalization, social proof and progression loops
+
+**Software Quality**
+→ reusable components, typed logic, automated tests and CI
+
+The project is intentionally built as an end-to-end product rather than as a standalone AI demo.
+
+---
+
+## 📊 Current Scope
+
+Temple Heritage currently contains a curated collection of temples and festival information designed around the application's core discovery and pilgrimage-planning experience.
+
+The architecture is designed so the content dataset can be expanded independently from the core application logic.
 
 ---
 
 ## 🗺️ Roadmap
 
-Future improvements can include:
+Future improvements include:
 
-* 🗺️ More advanced pilgrimage route optimization
-* 🚗 Travel-distance and transport-aware planning
+* 🧭 More advanced pilgrimage route optimization
+* 🚗 Transport-aware travel planning
+* 📍 Larger temple coverage across India
 * 🔔 Festival and pilgrimage notifications
-* 📍 Broader temple coverage across India
-* 🌐 Expanded multilingual experiences
-* 📊 More advanced recommendation models
-* 👨‍💼 Deeper admin analytics (retention, cohort views)
+* 🌐 Expanded multilingual support
+* 🧠 More advanced recommendation models
+* 📊 Deeper analytics and engagement insights
+* 🚌 More detailed travel and accessibility information
+
+---
+
+## 🌸 Why I Built This
+
+India's temples represent centuries of history, architecture, traditions, and living cultural practices.
+
+But discovering that heritage and planning an actual pilgrimage often means switching between multiple sources.
+
+Temple Heritage was built to bring those experiences together:
+
+> **Discover the temple. Understand its story. Plan the journey. Remember the experience.**
 
 ---
 
 ## 👩‍💻 Author
 
 **Aarya Shirsath**
+
+Computer Science & Engineering Student
 Developer & Creator of Temple Heritage
 
+### Links
+
+* 🌐 Live Project: https://templeheritage.me/
+* 💻 GitHub: https://github.com/Aarya0706/temple-heritage
+
 ---
 
-## 🌸 Why I Built This
+## ⭐ Support the Project
 
-India's temples carry centuries of history, architecture, and tradition, but that information is scattered across guidebooks, forums, and word of mouth. Temple Heritage brings it into one place and pairs it with AI-assisted planning, so discovering a temple's story and actually planning a visit aren't two separate efforts.
+If you found Temple Heritage interesting, consider giving the repository a ⭐ on GitHub.
 
----
-
-⭐ **Explore the live project:** https://templeheritage.me/
+Built with curiosity, code, and a love for India's cultural heritage. 🛕
