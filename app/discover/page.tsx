@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { ArrowRight, Sparkles, Loader2, Heart, Star, TrendingUp, Moon } from "lucide-react";
 import { temples } from "@/data/temples";
 import { getZodiacSign } from "@/lib/zodiac";
@@ -15,6 +15,23 @@ const options = ["Lord Shiva", "Lord Vishnu / Krishna", "Goddess", "Architecture
 // page never writes to it, so it can't clobber what the horoscope page
 // stored.
 const BIRTH_DATE_STORAGE_KEY = "temple-heritage:horoscope-birthdate";
+
+function getStoredBirthDate() {
+  try {
+    return window.localStorage.getItem(BIRTH_DATE_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function subscribeToBirthDate(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getServerBirthDate() {
+  return "";
+}
 
 const PAGE_SIZE = 8;
 
@@ -68,17 +85,15 @@ export default function DiscoverPage() {
   const [count, setCount] = useState(PAGE_SIZE);
 
   // Same hydration-mismatch reasoning as the horoscope page's own birthDate
-  // state: start empty on both server and the client's first render, then
-  // pick up whatever's in storage a beat later in an effect.
-  const [birthDate, setBirthDate] = useState("");
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(BIRTH_DATE_STORAGE_KEY);
-      if (stored) setBirthDate(stored);
-    } catch {
-      // localStorage unavailable — just skip the horoscope signal
-    }
-  }, []);
+  // state: the server snapshot is empty, while the browser reads localStorage
+  // after hydration. useSyncExternalStore (rather than reading in a mount
+  // effect + setState) avoids a synchronous state update inside an effect,
+  // which react-hooks/set-state-in-effect flags as a lint error in CI.
+  const birthDate = useSyncExternalStore(
+    subscribeToBirthDate,
+    getStoredBirthDate,
+    getServerBirthDate
+  );
 
   const sign = useMemo(() => (birthDate ? getZodiacSign(birthDate) : null), [birthDate]);
 

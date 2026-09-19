@@ -19,16 +19,24 @@ export function AnnouncementBar() {
   const [next] = getUpcomingFestivals(festivals);
   if (!next) return null;
 
-  const { festival, date, daysUntil } = next;
-  const whenLabel =
-    daysUntil === 0 ? "today" : daysUntil === 1 ? "tomorrow" : `in ${daysUntil} days`;
+  const { festival, date, endDate, daysUntil, isOngoing } = next;
+  const whenLabel = isOngoing
+    ? "on now"
+    : daysUntil === 0
+    ? "today"
+    : daysUntil === 1
+    ? "tomorrow"
+    : `in ${daysUntil} days`;
 
   return (
     <div className="announcement-bar">
       <Link href={`/festivals/${festival.slug}`} className="announcement-bar-link">
         <Sparkles size={14} />
         <span>
-          <strong>{festival.name}</strong> is {whenLabel} — {formatFestivalDate(date)}
+          <strong>{festival.name}</strong> is {whenLabel} —{" "}
+          {isOngoing
+            ? `through ${formatFestivalDate(endDate)}`
+            : formatFestivalDate(date)}
         </span>
         <span className="announcement-bar-cta">See festival details →</span>
       </Link>

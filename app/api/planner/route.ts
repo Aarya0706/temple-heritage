@@ -17,6 +17,7 @@ type PlannerRequest = {
   festival?: string | null;
   festivalDate?: string | null;
   festivalTemples?: string[];
+  anchorTempleSlug?: string | null;
 };
 
 type ItineraryDay = {
@@ -77,6 +78,40 @@ function isValidItinerary(
       item.description.trim().length > 0 &&
       Array.isArray(item.templeSlugs)
   );
+}
+
+const KNOWN_TEMPLE_SLUGS = new Set(temples.map((t) => t.slug));
+
+/**
+ * Data-integrity checks on top of `isValidItinerary`'s structural check.
+ * Catches the two failure modes that used to reach the route layer
+ * unnoticed: a slug the model invented (not in the real database) and a
+ * slug the model placed on more than one day (which produces a 0 km leg
+ * once the route optimizer runs, since the "trip" visits the same place
+ * twice). Called only once `isValidItinerary` has already confirmed
+ * `data.days[].templeSlugs` exists and is an array.
+ */
+function findItineraryDataIssues(data: ItineraryResponse): {
+  unknownSlugs: string[];
+  duplicateSlugs: string[];
+} {
+  const allSlugs = data.days.flatMap((d) => d.templeSlugs);
+
+  const unknownSlugs = [...new Set(allSlugs.filter((slug) => !KNOWN_TEMPLE_SLUGS.has(slug)))];
+
+  const seen = new Set<string>();
+  const duplicateSlugs = new Set<string>();
+  for (const slug of allSlugs) {
+    if (seen.has(slug)) duplicateSlugs.add(slug);
+    seen.add(slug);
+  }
+
+  return { unknownSlugs, duplicateSlugs: [...duplicateSlugs] };
+}
+
+function hasNoDataIssues(data: ItineraryResponse): boolean {
+  const { unknownSlugs, duplicateSlugs } = findItineraryDataIssues(data);
+  return unknownSlugs.length === 0 && duplicateSlugs.length === 0;
 }
 
 function normalizeItinerary(
@@ -253,6 +288,16 @@ export async function POST(req: NextRequest) {
         .filter((t): t is (typeof temples)[number] => Boolean(t))
     : [];
 
+  // Resolve a single "anchor" temple against the real database — set when the
+  // planner was opened from a temple's own page via "Plan a Visit" /
+  // "Build My Itinerary", so the trip should be built around that specific
+  // temple rather than only the general region/interests. Never trust the
+  // client-supplied slug directly.
+  const anchorTemple =
+    typeof body.anchorTempleSlug === "string" && body.anchorTempleSlug.trim()
+      ? temples.find((t) => t.slug === body.anchorTempleSlug!.trim()) || null
+      : null;
+
   try {
     const templeContext = buildTempleContext().slice(0, 9000);
 
@@ -296,6 +341,14 @@ This trip is built around the festival "${festival}"${festivalDateReadable ? `, 
 `
     : ""
 }
+${
+  anchorTemple
+    ? `
+ANCHOR TEMPLE:
+This trip is being planned from the page of a specific temple: ${anchorTemple.name} (slug: ${anchorTemple.slug}, ${anchorTemple.city}, ${anchorTemple.state}). The itinerary MUST feature this exact temple, ideally as one of the earlier highlight days, and the rest of the route should be built sensibly around it — nearby temples and stops that fit a single, non-backtracking route through the region containing it. Do not substitute a different, more famous temple in its place.
+`
+    : ""
+}
 AVAILABLE TEMPLE DATABASE:
 
 ${templeContext}
@@ -335,6 +388,7 @@ Examples:
 
 25. Make all travel durations and distances easy to read in normal sentences.
 26. Never combine two numbers together without spaces or words between them.
+27. Every temple slug must appear AT MOST ONCE across the ENTIRE trip. Never place the same temple on two different days, even as a "return visit" or "on the way back" — once a temple has been visited on one day, do not include its slug again on any later day.
 
 Return exactly this structure:
 
@@ -361,15 +415,28 @@ Do not return more than ${safeDays} days.
 `;
 
     let parsed = await generateItinerary(prompt);
+    let structurallyValid = isValidItinerary(parsed, safeDays);
+    let dataIssues = structurallyValid
+      ? findItineraryDataIssues(parsed)
+      : { unknownSlugs: [], duplicateSlugs: [] };
 
-    if (!isValidItinerary(parsed, safeDays)) {
+    if (!structurallyValid || dataIssues.unknownSlugs.length > 0 || dataIssues.duplicateSlugs.length > 0) {
       console.log(
-        "Planner returned incomplete itinerary. Retrying..."
+        "Planner returned incomplete or invalid itinerary. Retrying...",
+        structurallyValid ? dataIssues : "structurally invalid"
       );
 
       const retryPrompt = `
 Your previous response was incomplete or invalid.
-
+${
+        dataIssues.duplicateSlugs.length > 0
+          ? `\nIt repeated the following temple slug(s) on more than one day, which is not allowed — each temple may appear on AT MOST ONE day across the entire trip: ${dataIssues.duplicateSlugs.join(", ")}. Rebuild the route so each of these appears only once.\n`
+          : ""
+      }${
+        dataIssues.unknownSlugs.length > 0
+          ? `\nIt used the following temple slug(s) that do NOT exist in the database below — do not invent slugs, use only ones listed: ${dataIssues.unknownSlugs.join(", ")}.\n`
+          : ""
+      }
 Generate the itinerary again from scratch.
 
 You MUST return exactly ${safeDays} complete days.
@@ -395,6 +462,11 @@ ${
             }\n`
           : ""
       }
+${
+        anchorTemple
+          ? `Anchor temple: This trip MUST feature ${anchorTemple.name} (slug: ${anchorTemple.slug}, ${anchorTemple.city}, ${anchorTemple.state}), ideally as an early highlight day, with the rest of the route built sensibly around it.\n`
+          : ""
+      }
 Use only temples from this database:
 
 ${templeContext}
@@ -406,6 +478,8 @@ Every day must contain:
 - templeSlugs
 
 The days array must contain exactly ${safeDays} objects.
+
+Each temple slug must appear on AT MOST ONE day across the entire trip — never repeat the same temple on two different days.
 
 Return only valid JSON:
 
@@ -423,9 +497,11 @@ Return only valid JSON:
 `;
 
       parsed = await generateItinerary(retryPrompt);
+      structurallyValid = isValidItinerary(parsed, safeDays);
+      dataIssues = structurallyValid ? findItineraryDataIssues(parsed) : { unknownSlugs: [], duplicateSlugs: [] };
     }
 
-    if (!isValidItinerary(parsed, safeDays)) {
+    if (!isValidItinerary(parsed, safeDays) || dataIssues.unknownSlugs.length > 0 || dataIssues.duplicateSlugs.length > 0) {
       return NextResponse.json(
         {
           error:

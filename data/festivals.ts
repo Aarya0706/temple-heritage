@@ -117,7 +117,7 @@ export const festivals: Festival[] = [
     place: "Maharashtra & beyond",
     note: "Grand public and family celebrations dedicated to Lord Ganesha.",
     description: "Ganesh Chaturthi celebrates the birth of Lord Ganesha with elaborately decorated clay idols installed in homes and public pandals. The festival culminates in visarjan, a public procession where idols are ceremonially immersed in water, accompanied by music and dance.",
-    duration: "10 days",
+    duration: "11 days",
     relatedTempleSlugs: ["bhimashankar", "trimbakeshwar", "grishneshwar"],
     imageUrl: "https://commons.wikimedia.org/wiki/Special:FilePath/Ganesh%20Chaturthi%202010.jpg?width=800"
   },

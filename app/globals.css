@@ -808,6 +808,11 @@ img { max-width: 100%; }
   color: #e7ded6;
 }
 
+.festival-days-badge-ongoing {
+  background: rgba(46, 125, 50, 0.85);
+  color: #e9ffe9;
+}
+
 .festival-card-link-passed .festival-card {
   opacity: 0.55;
   filter: grayscale(35%);
@@ -941,6 +946,19 @@ img { max-width: 100%; }
   color: #9b7a6c;
   font-size: 14px;
   font-style: italic;
+}
+
+.festival-countdown-ongoing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2e7d32;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.next-festival-banner .festival-countdown-ongoing {
+  color: #b9f6ca;
 }
 
 .festival-countdown-compact {
@@ -1209,9 +1227,22 @@ img { max-width: 100%; }
 }
 
 .yatra-route-total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   color: #6b4a3d;
+}
+
+.yatra-route-total-figure {
   font-size: 13px;
   font-weight: 600;
+}
+
+.yatra-route-total-note {
+  font-size: 11px;
+  font-weight: 400;
+  color: #9b7a6c;
+  font-style: italic;
 }
 
 /* =================================

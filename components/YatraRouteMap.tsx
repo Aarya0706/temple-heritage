@@ -138,11 +138,9 @@ export default function YatraRouteMap({ stops, startsFrom, legs, totalKm }: Yatr
         </div>
 
         <div className="yatra-route-actions">
-          <span
-            className="yatra-route-total"
-            title="Straight-line distance between stops — road distance will be longer."
-          >
-            {formatKm(totalKm)} between stops
+          <span className="yatra-route-total">
+            <span className="yatra-route-total-figure">{formatKm(totalKm)} straight-line distance</span>
+            <span className="yatra-route-total-note">Road distance may be longer.</span>
           </span>
           <a
             href={googleMapsRouteUrl(stops, startsFrom?.name)}

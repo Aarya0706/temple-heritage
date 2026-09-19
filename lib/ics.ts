@@ -22,8 +22,8 @@ function addDays(iso: string, days: number): string {
 // "2 days (week-long in Braj region)"), not machine-readable spans. Pull the
 // leading number off the front for the event length and fall back to a
 // single day when nothing parses.
-function parseDurationDays(duration: string): number {
-  const match = duration.match(/^(\d+)/);
+export function parseDurationDays(duration: string): number {
+  const match = typeof duration === "string" ? duration.match(/^(\d+)/) : null;
   const days = match ? parseInt(match[1], 10) : 1;
   return Number.isFinite(days) && days > 0 ? days : 1;
 }

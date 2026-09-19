@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PartyPopper } from "lucide-react";
+import { festivals } from "@/data/festivals";
+import { getUpcomingFestivals, formatFestivalDate } from "@/lib/festival-countdown";
 
 const FLAG_KEY = "th_show_welcome_modal";
 
@@ -13,6 +16,7 @@ export function WelcomeLoginModal() {
   // synchronization-loop pattern react-hooks/set-state-in-effect warns
   // about, so it's fine to keep even with that rule enabled.
   const [open, setOpen] = useState(false);
+  const [ongoingFestival, setOngoingFestival] = useState<{ name: string; endDate: Date } | null>(null);
 
   useEffect(() => {
     try {
@@ -22,6 +26,18 @@ export function WelcomeLoginModal() {
         // not the synchronization-loop pattern this rule warns about.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setOpen(true);
+
+        // Whatever festival is currently mid-celebration (if any) gets a
+        // greeting added to the same popup. This reuses the same
+        // duration-aware "ongoing" check the festival pages use, so a
+        // multi-day festival (e.g. an 11-day Ganesh Chaturthi) keeps
+        // greeting users for its whole run, not just its first day, and a
+        // festival that hasn't started yet or has fully finished is left
+        // out rather than guessed at.
+        const [next] = getUpcomingFestivals(festivals);
+        if (next?.isOngoing) {
+          setOngoingFestival({ name: next.festival.name, endDate: next.endDate });
+        }
       }
     } catch {
       // sessionStorage unavailable (e.g. private mode edge cases) — just skip the popup
@@ -53,6 +69,7 @@ export function WelcomeLoginModal() {
           position: "relative",
           maxWidth: 340,
           width: "100%",
+          maxHeight: "88vh",
           borderRadius: 20,
           overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
@@ -74,16 +91,38 @@ export function WelcomeLoginModal() {
             fontSize: 18,
             lineHeight: 1,
             cursor: "pointer",
-            zIndex: 1,
+            zIndex: 2,
           }}
         >
           ×
         </button>
-        <img
-          src="/images/welcome-om.png"
-          alt="Om Namah Shivay — welcome"
-          style={{ display: "block", width: "100%", height: "auto" }}
-        />
+        <div style={{ maxHeight: "88vh", overflowY: "auto" }}>
+          <img
+            src="/images/welcome-om.png"
+            alt="Om Namah Shivay — welcome"
+            style={{ display: "block", width: "100%", maxHeight: "60vh", objectFit: "cover" }}
+          />
+          {ongoingFestival && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "#fff5e9",
+                padding: "14px 18px",
+                fontSize: 14,
+                color: "#5a3226",
+                textAlign: "left",
+              }}
+            >
+              <PartyPopper size={18} style={{ color: "#a52d15", flexShrink: 0 }} />
+              <span>
+                Happy <strong>{ongoingFestival.name}</strong>! Celebrations continue through{" "}
+                {formatFestivalDate(ongoingFestival.endDate)}.
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
