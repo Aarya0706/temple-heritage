@@ -27,8 +27,14 @@ export default function TemplesPage() {
         <p>Search temples by name, deity, city, state or region and open a detailed heritage profile.</p>
       </section>
       <section className="section section-light">
-        <AllTemplesMapLoader temples={temples} festivals={festivals} />
-        <TempleExplorer />
+        <div className="browse-layout">
+          <div className="browse-map-col">
+            <AllTemplesMapLoader temples={temples} festivals={festivals} />
+          </div>
+          <div className="browse-results-col">
+            <TempleExplorer />
+          </div>
+        </div>
       </section>
     </main>
   );

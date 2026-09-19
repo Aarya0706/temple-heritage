@@ -128,64 +128,66 @@ export function TempleExplorer() {
 
   return (
     <>
-      <div className="toolbar">
-        <div className="search-box">
-          <Search size={18} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Try “Shiva temples near Bhopal”..."
-          />
+      <div className="browse-controls">
+        <div className="toolbar">
+          <div className="search-box">
+            <Search size={18} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Try “Shiva temples near Bhopal”..."
+            />
+          </div>
+          <div className="filters">
+            {regions.map((item) => (
+              <button
+                key={item}
+                className={`filter-btn ${region === item ? "active" : ""}`}
+                onClick={() => setRegion(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="filters">
-          {regions.map((item) => (
-            <button
-              key={item}
-              className={`filter-btn ${region === item ? "active" : ""}`}
-              onClick={() => setRegion(item)}
-            >
-              {item}
+
+        <div className="facet-row">
+          <select className="facet-select" value={state} onChange={(e) => setState(e.target.value)} aria-label="Filter by state">
+            {states.map((s) => (
+              <option key={s} value={s}>{s === ALL ? "All states" : s}</option>
+            ))}
+          </select>
+          <select className="facet-select" value={city} onChange={(e) => setCity(e.target.value)} aria-label="Filter by city">
+            {cities.map((c) => (
+              <option key={c} value={c}>{c === ALL ? "All cities" : c}</option>
+            ))}
+          </select>
+          <select className="facet-select" value={deity} onChange={(e) => setDeity(e.target.value)} aria-label="Filter by deity">
+            {deities.map((d) => (
+              <option key={d} value={d}>{d === ALL ? "All deities" : d}</option>
+            ))}
+          </select>
+          <select className="facet-select" value={type} onChange={(e) => setType(e.target.value)} aria-label="Filter by temple type">
+            {types.map((t) => (
+              <option key={t} value={t}>{t === ALL ? "All temple types" : t}</option>
+            ))}
+          </select>
+          <select className="facet-select" value={festival} onChange={(e) => setFestival(e.target.value)} aria-label="Filter by festival">
+            {festivalOptions.map((f) => (
+              <option key={f} value={f}>{f === ALL ? "All festivals" : f}</option>
+            ))}
+          </select>
+          {activeFacetCount > 0 && (
+            <button type="button" className="facet-clear" onClick={clearFacets}>
+              Clear filters ({activeFacetCount})
             </button>
-          ))}
+          )}
         </div>
-      </div>
 
-      <div className="facet-row">
-        <select className="facet-select" value={state} onChange={(e) => setState(e.target.value)} aria-label="Filter by state">
-          {states.map((s) => (
-            <option key={s} value={s}>{s === ALL ? "All states" : s}</option>
-          ))}
-        </select>
-        <select className="facet-select" value={city} onChange={(e) => setCity(e.target.value)} aria-label="Filter by city">
-          {cities.map((c) => (
-            <option key={c} value={c}>{c === ALL ? "All cities" : c}</option>
-          ))}
-        </select>
-        <select className="facet-select" value={deity} onChange={(e) => setDeity(e.target.value)} aria-label="Filter by deity">
-          {deities.map((d) => (
-            <option key={d} value={d}>{d === ALL ? "All deities" : d}</option>
-          ))}
-        </select>
-        <select className="facet-select" value={type} onChange={(e) => setType(e.target.value)} aria-label="Filter by temple type">
-          {types.map((t) => (
-            <option key={t} value={t}>{t === ALL ? "All temple types" : t}</option>
-          ))}
-        </select>
-        <select className="facet-select" value={festival} onChange={(e) => setFestival(e.target.value)} aria-label="Filter by festival">
-          {festivalOptions.map((f) => (
-            <option key={f} value={f}>{f === ALL ? "All festivals" : f}</option>
-          ))}
-        </select>
-        {activeFacetCount > 0 && (
-          <button type="button" className="facet-clear" onClick={clearFacets}>
-            Clear filters ({activeFacetCount})
-          </button>
-        )}
+        <p className="result-count">
+          {filtered.length} temple{filtered.length === 1 ? "" : "s"} found
+        </p>
       </div>
-
-      <p className="result-count">
-        {filtered.length} temple{filtered.length === 1 ? "" : "s"} found
-      </p>
 
       {filtered.length ? (
         <div className="temple-grid">
