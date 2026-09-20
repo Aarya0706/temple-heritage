@@ -18,6 +18,8 @@ import { createClient } from "@/lib/supabase/server";
 import TempleAskWidget from "@/components/TempleAskWidget";
 import AuspiciousDatesWidget from "@/components/AuspiciousDatesWidget";
 import VisitorInfoSection from "@/components/VisitorInfoSection";
+import StorySection from "@/components/StorySection";
+import DarshanSection from "@/components/DarshanSection";
 import TempleTabs, { type TempleTab } from "@/components/TempleTabs";
 import {
   getAuspiciousWeekday,
@@ -229,10 +231,40 @@ export default async function TempleDetail({
           },
         ];
 
+        if (temple.history) {
+          tabs.push({
+            id: "history",
+            label: "History",
+            content: (
+              <StorySection eyebrow="History" heading="How it came to be" text={temple.history} />
+            ),
+          });
+        }
+
+        if (temple.architecture) {
+          tabs.push({
+            id: "architecture",
+            label: "Architecture",
+            content: (
+              <StorySection
+                eyebrow="Architecture"
+                heading="Reading the structure"
+                text={temple.architecture}
+              />
+            ),
+          });
+        }
+
+        tabs.push({
+          id: "darshan",
+          label: "Darshan",
+          content: <DarshanSection temple={temple} />,
+        });
+
         if (hasTimings) {
           tabs.push({
-            id: "timings",
-            label: "Timings",
+            id: "festivals",
+            label: "Festivals",
             content: <AuspiciousDatesWidget temple={temple} />,
           });
         }

@@ -3222,6 +3222,25 @@ img { max-width: 100%; }
   margin: 0;
 }
 
+/* Darshan tab: the list of darshan/aarti types as pills, above the notes
+   paragraph, inside the wide visitor-info-card. */
+.darshan-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.darshan-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: #fff5e9;
+  border: 1px solid rgba(165, 45, 21, 0.25);
+  color: #a52d15;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .visitor-info-link {
   display: inline-flex;
   align-items: center;

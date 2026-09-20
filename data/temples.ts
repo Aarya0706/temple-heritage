@@ -37,6 +37,16 @@ export type Temple = {
     dressCode: string;
     nearbyPlaces: { name: string; description: string }[];
   };
+  // Cultural-archive content shown as dedicated tabs on the temple detail
+  // page (History / Architecture / Darshan), separate from the shorter
+  // "Highlights" cards. Optional so older entries still type-check while
+  // this is being filled in temple by temple.
+  history?: string;
+  architecture?: string;
+  darshan?: {
+    types: string[];
+    notes: string;
+  };
 };
 
 export const temples: Temple[] = [
@@ -70,6 +80,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "Historic temple complex celebrated for its towering gopurams and vibrant sculpture.",
     description: "The Meenakshi Amman Temple is one of the most iconic temple complexes in Tamil Nadu. Its enormous gopurams, sculptural details and living traditions make Madurai a memorable heritage destination.",
+    history:
+      "Tradition holds the site was sacred long before recorded history, with the Pandya king Kulasekara Pandya credited with an early shrine to Meenakshi and Shiva. The complex seen today was largely rebuilt after Delhi Sultanate forces damaged the earlier temple in the 14th century, with the Nayak rulers of Madurai — especially Vishwanatha Nayak and Thirumalai Nayak — financing the 16th- and 17th-century reconstruction under chief architect Ariyanatha Mudaliar.",
+    architecture:
+      "A landmark of Dravidian architecture, the temple is built around 14 gopurams (gateway towers), the tallest rising roughly 170 feet above the southern entrance and covered in painted stucco figures. Inside, the Hall of Thousand Pillars showcases densely carved columns, and the Golden Lotus Tank anchors the older core of the complex.",
+    darshan: { types: ["General darshan", "Special/VIP darshan (paid, shorter queue)", "Evening ritual darshan"], notes: "Footwear, leather items and large bags stay outside; photography isn't allowed inside the sanctum, and modest Indian dress is expected." },
     timing: "5:00 AM – 12:30 PM, 4:00 PM – 10:00 PM",
     bestTime: "October – March",
     type: "Historic Temple",
@@ -114,6 +129,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "Ancient Krishna temple overlooking the sacred coastal city of Dwarka.",
     description: "Dwarkadhish Temple, also known as Jagat Mandir, is a major pilgrimage centre associated with Krishna and the ancient city of Dwarka.",
+    history:
+      "Local tradition credits Krishna's great-grandson Vajranabha with raising the first shrine here, on the site believed to be Krishna's residence, over two thousand years ago. Archaeological evidence points to a structure at least that old, though the five-storey temple seen today was rebuilt in the 15th-16th century.",
+    architecture:
+      "Jagat Mandir is built in Chalukya style, its five-storey sanctum supported by 72 pillars and topped by a carved spire roughly 50m tall. Two gateways, Swarg Dwar (entry) and Moksha Dwar (exit), flank the shrine, and a flag bearing sun-and-moon motifs is changed several times a day atop the tower.",
+    darshan: { types: ["General darshan", "Mangala Aarti", "Shringar Darshan", "Shayan Aarti"], notes: "A dip in the Gomti river is traditional before entering through Swarg Dwar; darshan pauses briefly between the morning and evening sessions." },
     timing: "6:30 AM – 1:00 PM, 5:00 PM – 9:30 PM",
     bestTime: "November – February",
     type: "Vaishnav Temple",
@@ -158,6 +178,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "Sacred coastal pilgrimage centre famous for the Rath Yatra tradition.",
     description: "The Jagannath Temple in Puri is one of India's most important pilgrimage destinations and the spiritual heart of the city.",
+    history:
+      "An earlier shrine on the site is thought to predate the 12th century, but the temple as it stands was founded by Anantavarman Chodaganga of the Eastern Ganga dynasty in the early 1100s and expanded by his successors, including later Gajapati kings.",
+    architecture:
+      "Built in Kalinga style, the complex centres on a roughly 65m vimana alongside the Jagamohana (porch), Nata Mandira (dance hall) and Bhoga Mandapa (offering hall), enclosed within two walls. The wooden images of Jagannath, Balabhadra and Subhadra are ceremonially replaced every 12-19 years in the Nabakalebara ritual, unlike the stone or metal deities of most Hindu temples.",
+    darshan: { types: ["General darshan", "Sahana Mela (touch darshan on specific days)", "Rath Yatra viewing"], notes: "Entry to the sanctum is reserved for practising Hindus; others can view the temple from the roof of the nearby Raghunandan Library." },
     timing: "5:00 AM – 11:00 PM (varies by ritual)",
     bestTime: "October – February",
     type: "Vaishnav Temple",
@@ -221,6 +246,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "One of the most revered Shiva temples on the banks of the Ganga.",
     description: "Kashi Vishwanath is a major Shiva pilgrimage site in Varanasi. A visit can be paired with the ghats, Ganga Aarti and the city's living cultural traditions.",
+    history:
+      "The temple has been destroyed and rebuilt multiple times through invasions, most notably razed under Aurangzeb in the 17th century. The structure seen today was commissioned in 1780 by the Maratha queen Ahilyabai Holkar, with the gold plating on its spires added later, in the 1830s, through a donation from Sikh ruler Maharaja Ranjit Singh.",
+    architecture:
+      "The temple's compact riverside layout is dominated by two gold-plated spires, which give it the popular name 'Golden Temple of Varanasi.' The recently built Kashi Vishwanath Corridor now links the shrine directly to the Ganga's ghats, easing what was historically a dense approach through Varanasi's old lanes.",
+    darshan: { types: ["General darshan", "Mangala Aarti (early morning)", "Shringar/Bhog Aarti", "Saptarshi Aarti"], notes: "Security screening is strict and phones/cameras generally aren't allowed near the sanctum; the Corridor makes the walk from the Ganga ghats much shorter than in the past." },
     timing: "3:00 AM – 11:00 PM",
     bestTime: "November – February",
     type: "Jyotirlinga",
@@ -272,6 +302,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "A Himalayan Shiva shrine surrounded by dramatic mountain landscapes.",
     description: "Kedarnath is one of the most revered Himalayan pilgrimage destinations and one of the twelve Jyotirlingas. The journey combines devotion with a challenging mountain trek.",
+    history:
+      "Tradition attributes the earliest shrine to the Pandavas of the Mahabharata, with Adi Shankaracharya credited with reviving the temple in the 8th century. Its remote, high-altitude setting has left it with little continuous documentary history, though it has functioned as a pilgrimage site for centuries.",
+    architecture:
+      "Built from massive, evenly cut grey stone slabs without mortar, the temple sits on a large platform against the Himalayan skyline at over 3,580m elevation. A stone statue of Nandi stands guard outside, and the conical rock inside the sanctum is worshipped as Shiva in his Sadashiva form.",
+    darshan: { types: ["General darshan", "Abhishekam (ritual bathing of the lingam)"], notes: "The temple is open only from roughly April/May to November due to snow; the final approach is a trek from Gaurikund, with helicopter services also available." },
     timing: "4:00 AM – 9:00 PM (seasonal)",
     bestTime: "May – October",
     type: "Jyotirlinga",
@@ -307,6 +342,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "A celebrated Shiva temple on the Arabian Sea coast.",
     description: "Somnath is traditionally regarded as the first of the twelve Jyotirlingas. Its coastal setting makes it especially striking at sunrise and sunset.",
+    history:
+      "Regarded as the first of the twelve Jyotirlingas, Somnath has been destroyed and rebuilt several times over a thousand years, including the well-documented raid by Mahmud of Ghazni in 1026. The present temple was reconstructed after independence at the initiative of Sardar Vallabhbhai Patel, with the sanctum consecrated in 1951 under the Shree Somnath Trust.",
+    architecture:
+      "Built in the Māru-Gurjara (Chaulukya/Solanki) style by Gujarat's sompura master masons, the temple has a roughly 50m shikhara over the garbhagriha, with a Sabha Mandap and Nritya Mandap in front, carved in sandstone and facing the sunrise over the Arabian Sea.",
+    darshan: { types: ["General darshan", "Sound and light show (evening)"], notes: "The temple sits directly on the coastline; the sea view in front of it is said to run uninterrupted all the way to Antarctica." },
     timing: "6:00 AM – 10:00 PM",
     bestTime: "October – February",
     type: "Jyotirlinga",
@@ -352,6 +392,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "Major Vaishnav pilgrimage centre in the Tirumala hills.",
     description: "The Tirumala Venkateswara Temple is one of the most visited pilgrimage destinations in India, known for its traditions, hill setting and elaborate visitor arrangements.",
+    history:
+      "Endowments to the temple are documented from as early as the 9th-10th century under the Pallava dynasty, and later rulers including the Cholas, Pandyas and the Vijayanagara emperor Krishnadevaraya expanded and richly endowed it; Krishnadevaraya's own statue still stands within the complex.",
+    architecture:
+      "Built in Dravidian style on Tirumala hill at about 853m elevation, the sanctum, Ananda Nilayam, has a gold-covered vimana and gates, entered through three successive gateways. Two circumambulation paths encircle the shrine, lined with pillared halls, the temple kitchen and other service buildings.",
+    darshan: { types: ["Sarva Darshan (free, general queue)", "Special Entry Darshan (paid, shorter queue)", "Suprabhatam (pre-dawn wake-up ritual)", "Various sevas"], notes: "Queues can run many hours during peak season; many pilgrims also have their heads tonsured nearby as an offering." },
     timing: "Varies by sewa and darshan",
     bestTime: "September – February",
     type: "Vaishnav Temple",
@@ -415,6 +460,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "Famous Ujjain Jyotirlinga temple with the renowned Bhasma Aarti.",
     description: "Mahakaleshwar is a prominent Shiva temple in Ujjain. The city itself is a major sacred centre with the Shipra river and a rich festival calendar.",
+    history:
+      "The temple has faced destruction and rebuilding across centuries, including damage during the Delhi Sultanate period; the structure seen today was largely rebuilt in the 18th century under the Maratha general Ranoji Shinde during Peshwa rule.",
+    architecture:
+      "The five-level temple blends Bhumija, Chalukya and Maratha architectural styles, with the main Shiva shrine on the lowest, partly underground level and further shrines — including Omkareshwar, and Nagchandreshwar on the top floor — stacked above it. It is the only Jyotirlinga temple with a south-facing sanctum.",
+    darshan: { types: ["Bhasma Aarti (pre-dawn ash ritual, advance booking needed)", "Morning and evening Aarti", "General darshan"], notes: "The Nagchandreshwar shrine on the top floor opens only on Nag Panchami; unlike most Shiva temples, this one keeps no midday closure." },
     timing: "3:00 AM – 11:00 PM",
     bestTime: "October – March",
     type: "Jyotirlinga",
@@ -468,6 +518,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "A revered Vishnu temple in the high Himalayas.",
     description: "Badrinath is one of the Char Dham pilgrimage sites and is set against the spectacular Himalayan landscape.",
+    history:
+      "Adi Shankaracharya is credited with establishing Badrinath as a pilgrimage site in the 9th century, discovering the deity in the Alaknanda river and enshrining it near the Tapt Kund hot springs; the temple structure seen today dates largely from the 16th century, after the kings of Garhwal moved the murti to its present location.",
+    architecture:
+      "The temple's brightly painted stone façade and conical, gold-capped roof over the sanctum give it a form some scholars trace to earlier Buddhist vihara design in the region. Inside, the Garbhagriha, Darshan Mandapa and Sabha Mandapa house a black stone image of Badrinarayan seated in meditation.",
+    darshan: { types: ["General darshan (free)", "Abhishekam and other sevas", "Maha Abhishek (early morning)"], notes: "The temple opens only about six months a year, roughly late April to November, closing for winter due to snow." },
     timing: "4:30 AM – 9:00 PM (seasonal)",
     bestTime: "May – October",
     type: "Char Dham",
@@ -503,6 +558,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "A vast modern temple complex famed for its craftsmanship and cultural exhibitions.",
     description: "Swaminarayan Akshardham is a sprawling temple complex in Delhi built with intricate stone carving, showcasing Indian art, architecture and spirituality through its exhibitions and gardens.",
+    history:
+      "Conceived by Yogiji Maharaj in the late 1960s and realised under his successor Pramukh Swami Maharaj, the complex was built between 2000 and 2005 by the BAPS Swaminarayan Sanstha, with thousands of artisans and volunteers completing it in about five years.",
+    architecture:
+      "The main monument is carved from pink Rajasthani sandstone and marble in traditional Hindu temple style, without structural steel, and carries more than 20,000 sculpted figures drawing on 8th-12th century craftsmanship from sites across India. The complex also includes exhibition halls, gardens and a stepped water feature, the Yagnapurush Kund.",
+    darshan: { types: ["General darshan", "Exhibition and boat-ride ticketed experiences (separate from darshan)"], notes: "Phones, cameras and bags must be left at the free cloakroom before entry; the mandir itself doesn't allow photography inside." },
     timing: "9:30 AM – 6:30 PM (closed Mondays)",
     bestTime: "October – March",
     type: "Modern Temple",
@@ -548,6 +608,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "A UNESCO World Heritage chariot-shaped temple dedicated to the Sun God.",
     description: "Konark Sun Temple is a 13th-century marvel built in the shape of a colossal stone chariot with intricately carved wheels, dedicated to the Hindu Sun God Surya.",
+    history:
+      "Built around 1250 CE by King Narasimhadeva I of the Eastern Ganga dynasty, the temple is generally understood as a monument to Surya and, by tradition, also a commemoration of a military victory. Much of its towering sanctum tower collapsed centuries ago; what remains, including the surviving assembly hall, was declared a UNESCO World Heritage Site in 1984.",
+    architecture:
+      "Conceived as a colossal stone chariot for the sun god, the temple is carved with 24 elaborately detailed wheels, several doubling as working sundials, and was originally meant to be drawn by seven stone horses. Its Kalinga-style elements include the Jagamohana (assembly hall), Natmandir (dance hall) and the remains of the Vimana.",
+    darshan: { types: ["Daytime viewing (monument, not an active shrine)", "Sound and light show (evening)"], notes: "Konark functions today as a protected monument rather than a site of daily worship, so there's no formal darshan ritual — visits are self-paced." },
     timing: "6:00 AM – 8:00 PM",
     bestTime: "October – February",
     type: "Historic Temple",
@@ -592,6 +657,11 @@ export const temples: Temple[] = [
     ],
     shortDescription: "A UNESCO World Heritage Chola-era temple famed for its towering vimana.",
     description: "Built by Raja Raja Chola I in the 11th century, Brihadeeswarar Temple is a masterpiece of Dravidian architecture, renowned for its massive vimana tower and intricate Chola-era sculpture.",
+    history:
+      "Commissioned by the Chola emperor Raja Raja Chola I, the temple was built between roughly 1003 and 1010 CE and consecrated in his 25th regnal year, making it just over a thousand years old. Later dynasties, including the Pandyas, Vijayanagara rulers, Nayaks and Marathas, added structures such as the surrounding fort and gateway without altering the original sanctum.",
+    architecture:
+      "Built almost entirely from granite quarried some 60km away, the vimana rises about 66m — one of the tallest temple towers in India — topped by a single 80-tonne dome stone. A monolithic granite Nandi guards the entrance, and the sanctum is known for casting no shadow on the ground at midday.",
+    darshan: { types: ["General darshan", "Evening Aarti"], notes: "The temple remains an active place of daily worship even as a UNESCO World Heritage Site, alongside its companion Great Living Chola Temples at Gangaikonda Cholapuram and Darasuram." },
     timing: "6:00 AM – 12:30 PM, 4:00 PM – 8:30 PM",
     bestTime: "October – March",
     type: "Historic Temple",
@@ -639,6 +709,11 @@ export const temples: Temple[] = [
       "A revered Shiva temple at Srisailam, set amid the scenic Nallamala hills.",
     description:
       "Mallikarjuna Swamy Temple at Srisailam is one of the twelve Jyotirlinga shrines and an important pilgrimage centre in Andhra Pradesh.",
+    history:
+      "Inscriptional evidence from the Satavahana dynasty places worship at Srisailam as far back as the 2nd century CE, making it one of the older continuously used pilgrimage sites in the Deccan; successive dynasties added to the temple over the centuries.",
+    architecture:
+      "Built in Dravidian style on the Nallamala hills above the Krishna river, the temple is unusual in combining a Jyotirlinga (Mallikarjuna) and a Shakti Peetha (Bhramaramba) within the same complex — the only site in India where the two coincide.",
+    darshan: { types: ["General darshan", "Abhishekam"], notes: "Both the Jyotirlinga and Shakti Peetha shrines are typically visited together, since local tradition holds a visit to one is incomplete without the other." },
     timing: "Varies by darshan and seva",
     bestTime: "October – March",
     type: "Jyotirlinga",
@@ -691,6 +766,11 @@ export const temples: Temple[] = [
       "A sacred Jyotirlinga temple on Mandhata Island in the Narmada River.",
     description:
       "Omkareshwar Temple is one of the twelve Jyotirlingas and stands on Mandhata Island in the Narmada River in Madhya Pradesh.",
+    history:
+      "The temple's founding is undocumented, with local tradition attributing the site's sanctity to the story of King Mandhata's penance on the island that now bears his name; it has been referenced in the Skanda, Shiva and Vayu Puranas for centuries.",
+    architecture:
+      "Built in Nagara style on Mandhata Island, where the Narmada river splits into a shape resembling the Sanskrit 'Om,' the temple is a five-storey structure with a different Shiva form enshrined on each level, from the ground-floor Omkareshwar Jyotirlinga up to Gupteshwar on top.",
+    darshan: { types: ["General darshan", "Shayan Aarti (evening)"], notes: "Pilgrims commonly visit both Omkareshwar on the island and its twin shrine Mamleshwar on the riverbank, since the two are traditionally worshipped as one pilgrimage." },
     timing: "Varies by darshan and seva",
     bestTime: "October – March",
     type: "Jyotirlinga",
@@ -743,6 +823,11 @@ export const temples: Temple[] = [
       "A historic Shiva shrine surrounded by the forests and hills of the Western Ghats.",
     description:
       "Bhimashankar Temple is one of the twelve Jyotirlingas and is located in the Sahyadri hills of Maharashtra.",
+    history:
+      "Written references to the shrine and the Bhima river date back to the 13th century, though the temple structure visible today is largely the result of an 18th-century rebuilding funded by the Peshwa-era statesman Nana Phadnavis, with Chhatrapati Shivaji among the earlier patrons who endowed it.",
+    architecture:
+      "Set inside the Bhimashankar Wildlife Sanctuary in the Sahyadri hills, the temple blends older and 18th-century Nagara-style construction, with the Garbhagriha sitting at a lower level than the main hall, in keeping with other Shiva shrines in the region, and a self-manifested (swayambhu) lingam at its centre.",
+    darshan: { types: ["General darshan", "Abhishekam"], notes: "The temple sits inside a protected forest reserve, so a visit often combines darshan with a walk through habitat for the endangered Malabar giant squirrel." },
     timing: "4:30 AM – 9:30 PM",
     bestTime: "October – February",
     type: "Jyotirlinga",
@@ -795,6 +880,11 @@ export const temples: Temple[] = [
       "A sacred Jyotirlinga temple near Nashik, associated with the origin of the Godavari.",
     description:
       "Trimbakeshwar Temple is one of the twelve Jyotirlingas and lies near the source region of the Godavari River.",
+    history:
+      "The temple standing today replaced an earlier structure destroyed under Mughal rule and was built between about 1740 and 1760 by the Peshwa Balaji Baji Rao (Nanasaheb), with construction reportedly taking over three decades and hundreds of laborers.",
+    architecture:
+      "Built entirely of black basalt in the Hemadpanthi style, the temple is unusual for housing three small lingams — representing Brahma, Vishnu and Shiva — set into a shallow pit rather than standing upright as at most Shiva shrines; they're covered daily with a silver mask and, on festival days, a gold one topped by a jewelled crown.",
+    darshan: { types: ["General darshan (from the assembly hall)", "Special crown viewing (Mondays)"], notes: "Only temple priests approach the lingams directly; most visitors have darshan from the pillared hall a short distance away." },
     timing: "5:30 AM – 9:00 PM",
     bestTime: "October – March",
     type: "Jyotirlinga",
@@ -848,6 +938,11 @@ export const temples: Temple[] = [
       "A major Shiva pilgrimage centre in Deoghar and an important Jyotirlinga shrine.",
     description:
       "Baba Baidyanath Temple at Deoghar is one of the twelve Jyotirlinga shrines and a major pilgrimage destination in Jharkhand.",
+    history:
+      "Temple tradition ties its founding to the story of Ravana and a Jyotirlinga that was set down at Deoghar rather than reaching Lanka; documented custodianship is traced to the Raj Gidhaur family, and the temple is mentioned across the Shiva Purana and other older texts.",
+    architecture:
+      "The main shrine rises roughly 72 feet, its east-facing form likened to a blooming lotus, crowned with gold vessels donated by the Maharaja of Gidhaur and a trident-shaped Panchshul emblem. The complex includes 21 additional shrines, most notably the adjoining temple to Parvati as Jai Durga, linked to the main shrine by red ceremonial thread.",
+    darshan: { types: ["General darshan", "Jalabhishek (especially during Shravan)"], notes: "Vaidyanath is unusual among Jyotirlingas for also being a Shakti Peetha, so pilgrims typically have darshan at both the Shiva and Devi shrines in one visit." },
     timing: "4:00 AM – 9:00 PM",
     bestTime: "October – February",
     type: "Jyotirlinga",
@@ -900,6 +995,11 @@ export const temples: Temple[] = [
       "A revered coastal Shiva temple located near the pilgrimage city of Dwarka.",
     description:
       "Nageshwar is traditionally counted among the twelve Jyotirlinga shrines and is located in the Dwarka region of Gujarat.",
+    history:
+      "The temple's origin is tied to the Puranic story of Daruka and Daruki, demon rulers of a forest once known as Darukavana, where the devotee Supriya's faith in Shiva is credited with the Jyotirlinga's manifestation at this site.",
+    architecture:
+      "Unusually among Jyotirlinga temples, the sanctum sits underground rather than at ground level, with the temple's layout following a reclining-body plan in keeping with Vaastu Shastra. A roughly 25-metre seated statue of Shiva overlooks a garden and pond beside the temple, visible well before visitors reach the entrance.",
+    darshan: { types: ["General darshan"], notes: "The Jyotirlinga itself sits in an underground chamber, so darshan involves a short descent rather than the ground-level sanctum typical of most Shiva temples." },
     timing: "5:00 AM – 9:00 PM",
     bestTime: "October – February",
     type: "Jyotirlinga",
@@ -953,6 +1053,11 @@ export const temples: Temple[] = [
       "A celebrated Shiva temple famous for its monumental corridors and sacred wells.",
     description:
       "Ramanathaswamy Temple in Rameswaram is one of the twelve Jyotirlinga shrines and an important pilgrimage centre in Tamil Nadu.",
+    history:
+      "Temple tradition holds that Rama himself installed and worshipped a lingam here on his way back from Lanka; the temple was expanded by the Pandya dynasty from the 12th century, with its long corridors largely built under the 17th-century Setupati rulers of Ramanathapuram.",
+    architecture:
+      "Built in Dravidian style with granite and limestone, the temple is best known for having the longest corridor of any Hindu temple in India — over 1,200m, lined with more than 1,200 carved pillars. The sanctum holds two lingams side by side: the Ramalingam, said to have been made from sand, and the Vishvalingam, brought from Mount Kailash.",
+    darshan: { types: ["General darshan", "22 Theertham bathing ritual"], notes: "Pilgrims traditionally bathe in all 22 sacred wells inside the complex before darshan; photography isn't permitted inside." },
     timing: "5:00 AM – 1:00 PM, 3:00 PM – 9:00 PM",
     bestTime: "October – March",
     type: "Jyotirlinga",
@@ -1006,6 +1111,11 @@ export const temples: Temple[] = [
       "A historic Jyotirlinga shrine located near the Ellora Caves in Maharashtra.",
     description:
       "Grishneshwar Temple is one of the twelve Jyotirlingas and is located near the UNESCO-listed Ellora Caves in Maharashtra.",
+    history:
+      "The temple was damaged during Delhi Sultanate campaigns in the 13th-14th centuries, restored in the 16th century by Maloji Bhosale (grandfather of Chhatrapati Shivaji), and rebuilt into its current form in the 18th century under the patronage of the Maratha queen Ahilyabai Holkar.",
+    architecture:
+      "Built of red volcanic stone in a style associated with medieval Deccan temples, the shrine has a five-tiered shikhara carved with depictions of the Dashavatara (Vishnu's ten incarnations), across a complex covering roughly 44,000 square feet.",
+    darshan: { types: ["General darshan", "Abhishekam"], notes: "The temple is a common pairing with a visit to the neighbouring Ellora Caves, about 1.5km away." },
     timing: "5:30 AM – 9:30 PM",
     bestTime: "October – March",
     type: "Jyotirlinga",
