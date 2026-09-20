@@ -5,14 +5,21 @@
 // document, not a mostly-blank cover page followed by a grid of identical
 // dashed circles. So: header + stamps share page 1, every stamp is
 // color-coded by region (a real visual "different types of stamps" cue
-// instead of an arbitrary color rotation), and the grid is sized so a
-// fully-stamped passport (every temple in the catalog) still fits on a
-// single page -- it only spills onto a second page if the catalog grows
-// past what one page can hold.
+// instead of an arbitrary color rotation) with a legend explaining the
+// colors, and the grid is sized so a fully-stamped passport (every temple
+// in the catalog) still fits on a single page -- it only spills onto a
+// second page if the catalog grows past what one page can hold.
+//
+// Dashed rings are hand-drawn as short line segments rather than using
+// jsPDF's circle() + setLineDashPattern: jsPDF approximates a circle with
+// four Bezier arcs, and the dash pattern restarts at each arc's seam,
+// which makes dashes bunch up unevenly around the ring. Drawing our own
+// evenly-spaced segments avoids that.
 
 import { jsPDF } from "jspdf";
 import type { PassportData, PassportStamp } from "@/lib/passport";
 import type { Region } from "@/lib/yatra-stats";
+import { PASSPORT_MILESTONES } from "@/lib/passport-stats";
 
 const PAGE_W = 210;
 const PAGE_H = 297;
@@ -26,20 +33,25 @@ const HEADER_BG = "#5A3A22";
 const GOLD = "#D9A441";
 const CREAM = "#FDF8EF";
 
-/** One accent color + one-letter seal per region, so stamps read as
- *  distinct "types" at a glance instead of an arbitrary color rotation. */
-const REGION_STYLE: Record<Region, { color: string; code: string }> = {
-  "North India": { color: "#3A5B8C", code: "N" },
-  "South India": { color: "#B4472B", code: "S" },
-  "East India": { color: "#2E8C86", code: "E" },
-  "West India": { color: "#C48A2E", code: "W" },
-  "Central India": { color: "#4C7A3E", code: "C" },
-};
-const FALLBACK_STYLE = { color: "#7A6A5A", code: "\u2022" };
+/** One accent color per region, so stamps read as distinct "types" at a
+ *  glance instead of an arbitrary color rotation. Order here is also the
+ *  order the legend row is drawn in. */
+const REGION_COLORS: [Region, string][] = [
+  ["North India", "#3A5B8C"],
+  ["South India", "#B4472B"],
+  ["East India", "#2E8C86"],
+  ["West India", "#C48A2E"],
+  ["Central India", "#4C7A3E"],
+];
+const REGION_COLOR_MAP: Record<Region, string> = Object.fromEntries(REGION_COLORS) as Record<
+  Region,
+  string
+>;
+const FALLBACK_COLOR = "#7A6A5A";
 
-export function regionStyle(region: string | null): { color: string; code: string } {
-  if (region && region in REGION_STYLE) return REGION_STYLE[region as Region];
-  return FALLBACK_STYLE;
+export function regionColor(region: string | null): string {
+  if (region && region in REGION_COLOR_MAP) return REGION_COLOR_MAP[region as Region];
+  return FALLBACK_COLOR;
 }
 
 /** Short state code shown on the stamp -- falls back to the first three
@@ -63,6 +75,17 @@ export function abbreviateState(state: string | null): string {
   return STATE_ABBR[state] ?? state.slice(0, 3).toUpperCase();
 }
 
+/** The highest milestone reached at this stamp count, or null if the
+ *  passport has no stamps yet (PASSPORT_MILESTONES' lowest threshold is
+ *  1, so any passport with at least one stamp has a current milestone). */
+export function currentMilestoneLabel(stampCount: number): string | null {
+  let label: string | null = null;
+  for (const m of PASSPORT_MILESTONES) {
+    if (m.count <= stampCount) label = m.label;
+  }
+  return label;
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -71,41 +94,55 @@ function formatDate(iso: string): string {
   });
 }
 
-/** Draws one stamp: an outer dashed ring + inner solid ring in the
- *  region's color, a small circular seal at the top carrying the
- *  region's letter code, and the temple name/date centered inside. A
- *  slight random tilt on the text (not the -- rotationally symmetric --
- *  circles) gives it a hand-stamped feel without hurting legibility. */
+/** Hand-drawn dashed ring: evenly spaced short arcs rather than jsPDF's
+ *  native circle+dash-pattern combination (see file header comment). */
+function drawDashedCircle(
+  doc: jsPDF,
+  cx: number,
+  cy: number,
+  r: number,
+  dashDeg: number,
+  gapDeg: number
+) {
+  const stepDeg = dashDeg + gapDeg;
+  const steps = Math.max(1, Math.round(360 / stepDeg));
+  const actualStep = 360 / steps;
+  const actualDash = (dashDeg / stepDeg) * actualStep;
+
+  for (let i = 0; i < steps; i++) {
+    const startAngle = (i * actualStep * Math.PI) / 180;
+    const endAngle = ((i * actualStep + actualDash) * Math.PI) / 180;
+    doc.line(
+      cx + r * Math.cos(startAngle),
+      cy + r * Math.sin(startAngle),
+      cx + r * Math.cos(endAngle),
+      cy + r * Math.sin(endAngle)
+    );
+  }
+}
+
+/** Draws one stamp: an outer hand-dashed ring + inner solid ring in the
+ *  region's color, and the temple name/date centered inside. A slight
+ *  random tilt on the text (not the -- rotationally symmetric -- circles)
+ *  gives it a hand-stamped feel without hurting legibility. */
 function drawStamp(doc: jsPDF, cx: number, cy: number, size: number, stamp: PassportStamp) {
   const r = size / 2;
-  const { color, code } = regionStyle(stamp.region);
+  const color = regionColor(stamp.region);
   const tilt = (Math.random() - 0.5) * 6; // small +/-3deg wobble, text only
 
   doc.setDrawColor(color);
+  doc.setLineWidth(0.9);
+  drawDashedCircle(doc, cx, cy, r, 9, 7);
 
-  doc.setLineWidth(1);
-  doc.setLineDashPattern([1.4, 1.2], 0);
-  doc.circle(cx, cy, r, "S");
-
-  doc.setLineDashPattern([], 0);
   doc.setLineWidth(0.5);
-  doc.circle(cx, cy, r - 2.2, "S");
-
-  // Seal badge overlapping the top of the ring
-  const sealR = 3.4;
-  doc.setFillColor(color);
-  doc.circle(cx, cy - r, sealR, "F");
-  doc.setTextColor(CREAM);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.5);
-  doc.text(code, cx, cy - r + 1.6, { align: "center" });
+  doc.circle(cx, cy, r - 2.4, "S");
 
   // Temple name (wraps to at most 2 lines within the ring)
-  const nameLines: string[] = doc.splitTextToSize(stamp.templeName, size - 11).slice(0, 2);
   doc.setTextColor(color);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.4);
-  const nameStartY = cy - (nameLines.length - 1) * 2.6 - 1.5;
+  doc.setFontSize(6.6);
+  const nameLines: string[] = doc.splitTextToSize(stamp.templeName, size - 11).slice(0, 2);
+  const nameStartY = cy - (nameLines.length - 1) * 2.6 - 2;
   nameLines.forEach((line: string, i: number) => {
     doc.text(line, cx, nameStartY + i * 3.2, { align: "center", angle: tilt });
   });
@@ -123,46 +160,83 @@ function drawStamp(doc: jsPDF, cx: number, cy: number, size: number, stamp: Pass
   });
 }
 
+/** A single-line color key ("● North India  ● South India  ...") so the
+ *  region colors on the stamps mean something at a glance instead of
+ *  needing per-stamp labels. Returns the y position just below the row. */
+function drawRegionLegend(doc: jsPDF, y: number): number {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.2);
+
+  const dotR = 1.3;
+  const gapAfterDot = 2.2;
+  const gapBetweenEntries = 7;
+
+  const widths = REGION_COLORS.map(([name]) => doc.getTextWidth(name));
+  const entryWidths = widths.map((w) => dotR * 2 + gapAfterDot + w);
+  const totalWidth =
+    entryWidths.reduce((a, b) => a + b, 0) + gapBetweenEntries * (REGION_COLORS.length - 1);
+
+  let x = (PAGE_W - totalWidth) / 2;
+  REGION_COLORS.forEach(([name, color], i) => {
+    doc.setFillColor(color);
+    doc.circle(x + dotR, y - 1, dotR, "F");
+    doc.setTextColor(INK);
+    doc.text(name, x + dotR * 2 + gapAfterDot, y, { align: "left" });
+    x += entryWidths[i] + gapBetweenEntries;
+  });
+
+  return y;
+}
+
 function drawHeader(doc: jsPDF, data: PassportData, pct: number): number {
-  const headerH = 46;
+  const headerH = 48;
   doc.setFillColor(HEADER_BG);
   doc.rect(0, 0, PAGE_W, headerH, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
+  doc.setFontSize(19);
   doc.setTextColor(CREAM);
-  doc.text("PILGRIMAGE PASSPORT", PAGE_W / 2, 15, { align: "center" });
+  doc.text("PILGRIMAGE PASSPORT", PAGE_W / 2, 14, { align: "center" });
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text(data.username ?? "Traveler", PAGE_W / 2, 23, { align: "center" });
+  doc.setFontSize(10.5);
+  doc.text(data.username ?? "Traveler", PAGE_W / 2, 21, { align: "center" });
 
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(GOLD);
   doc.text(
     `${data.stamps.length} of ${data.totalTemples} sacred sites visited \u2014 ${pct}%`,
     PAGE_W / 2,
-    30,
+    27,
     { align: "center" }
   );
 
   // Progress bar
-  const barW = 120;
+  const barW = 110;
   const barX = (PAGE_W - barW) / 2;
-  const barY = 34;
+  const barY = 30.5;
   doc.setFillColor("#7A5A3E");
-  doc.roundedRect(barX, barY, barW, 2.4, 1.2, 1.2, "F");
+  doc.roundedRect(barX, barY, barW, 2.2, 1.1, 1.1, "F");
   doc.setFillColor(GOLD);
-  doc.roundedRect(barX, barY, Math.max((barW * pct) / 100, 2.4), 2.4, 1.2, 1.2, "F");
+  doc.roundedRect(barX, barY, Math.max((barW * pct) / 100, 2.2), 2.2, 1.1, 1.1, "F");
+
+  const milestone = currentMilestoneLabel(data.stamps.length);
+  if (milestone) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(CREAM);
+    doc.text(`Milestone: ${milestone}`, PAGE_W / 2, 37.5, { align: "center" });
+  }
 
   const issueDate = new Date().toLocaleDateString("en-IN", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  doc.setFontSize(7.5);
-  doc.setTextColor(CREAM);
-  doc.text(`Issued ${issueDate}`, PAGE_W / 2, 41, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor("#D8C4AE");
+  doc.text(`Issued ${issueDate}`, PAGE_W / 2, 43.5, { align: "center" });
 
   return headerH;
 }
@@ -190,15 +264,18 @@ export function buildPassportPdfDoc(data: PassportData): jsPDF {
     return doc;
   }
 
+  const legendY = headerH + 7;
+  drawRegionLegend(doc, legendY);
+
   // Grid sized so a fully-stamped passport still fits on one page: 4
   // columns, full-bleed within the margins, tight enough rows that a
   // catalog of ~20 temples needs no second page.
   const cols = 4;
-  const stampSize = 34;
+  const stampSize = 33;
   const gapX = (PAGE_W - MARGIN_X * 2 - cols * stampSize) / (cols - 1);
-  const gapY = 8;
+  const gapY = 7;
   const rowH = stampSize + gapY;
-  const topOfGridPage1 = headerH + 10;
+  const topOfGridPage1 = legendY + 8;
   const rowsPerPage1 = Math.max(
     1,
     Math.floor((PAGE_H - topOfGridPage1 - MARGIN_BOTTOM) / rowH)
